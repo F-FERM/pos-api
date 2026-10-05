@@ -7,6 +7,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { writeFileSync } from 'fs';
+import { PermissionGuard } from './common/guards/permission.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -39,7 +40,11 @@ async function bootstrap() {
     }),
   );
   const reflector = app.get(Reflector);
-  app.useGlobalGuards(new JwtAuthGuard(reflector), new RolesGuard(reflector));
+  app.useGlobalGuards(
+    new JwtAuthGuard(reflector), 
+    new RolesGuard(reflector),
+    new PermissionGuard(reflector),
+  );
   app.enableCors({
     origin: ['http://localhost:3000', 'http://192.168.1.45:3000'],
     credentials: true,
