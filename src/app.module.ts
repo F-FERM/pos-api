@@ -10,6 +10,11 @@ import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './common/guards/roles.guard';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { CompanyModule } from './company/company.module';
+import { PrivilegeModule } from './privilege/privilege.module';
+import { PermissionGuard } from './common/guards/permission.guard';
+import { ModuleModule } from './module/module.module';
+import { SubscriptionPlanModule } from './subscription-plan/subscription-plan.module';
+import { SubscriptionModule } from './subscription/subscription.module';
 
 @Module({
   imports: [
@@ -20,6 +25,10 @@ import { CompanyModule } from './company/company.module';
     }),
     UserModule,
     CompanyModule,
+    PrivilegeModule,
+    ModuleModule,
+    SubscriptionPlanModule,
+    SubscriptionModule,
   ],
   controllers: [AppController],
   providers: [
@@ -31,6 +40,10 @@ import { CompanyModule } from './company/company.module';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionGuard,
     },
   ],
 })
