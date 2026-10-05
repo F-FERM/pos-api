@@ -39,6 +39,117 @@
           "Auth"
         ]
       }
+    },
+    "/api/company": {
+      "post": {
+        "operationId": "CompanyController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCompanyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Company"
+        ]
+      },
+      "get": {
+        "operationId": "CompanyController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Company"
+        ]
+      }
+    },
+    "/api/company/{id}": {
+      "get": {
+        "operationId": "CompanyController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Company"
+        ]
+      },
+      "patch": {
+        "operationId": "CompanyController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCompanyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Company"
+        ]
+      },
+      "delete": {
+        "operationId": "CompanyController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Company"
+        ]
+      }
     }
   },
   "info": {
@@ -74,6 +185,180 @@
           "username",
           "password"
         ]
+      },
+      "CompanyContactDto": {
+        "type": "object",
+        "properties": {
+          "primaryEmail": {
+            "type": "string"
+          },
+          "primaryPhone": {
+            "type": "string"
+          },
+          "alternatePhone": {
+            "type": "string"
+          },
+          "website": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "primaryEmail",
+          "primaryPhone"
+        ]
+      },
+      "CompanyAddressDto": {
+        "type": "object",
+        "properties": {
+          "line1": {
+            "type": "string"
+          },
+          "line2": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "postalCode": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string",
+            "example": "IN"
+          }
+        },
+        "required": [
+          "line1",
+          "city",
+          "state",
+          "postalCode",
+          "country"
+        ]
+      },
+      "CompanyTaxIdentifiersDto": {
+        "type": "object",
+        "properties": {
+          "vatNumber": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateCompanyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "legalName": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "industry": {
+            "type": "string",
+            "enum": [
+              "supermarket",
+              "spare_parts",
+              "dress_shop",
+              "pharmacy",
+              "electronics",
+              "general_retail",
+              "wholesale",
+              "other"
+            ]
+          },
+          "businessType": {
+            "type": "string",
+            "enum": [
+              "retail",
+              "wholesale",
+              "retail_wholesale",
+              "service"
+            ]
+          },
+          "contact": {
+            "$ref": "#/components/schemas/CompanyContactDto"
+          },
+          "address": {
+            "$ref": "#/components/schemas/CompanyAddressDto"
+          },
+          "taxIdentifiers": {
+            "$ref": "#/components/schemas/CompanyTaxIdentifiersDto"
+          }
+        },
+        "required": [
+          "name",
+          "code",
+          "slug",
+          "industry",
+          "businessType",
+          "contact",
+          "address"
+        ]
+      },
+      "UpdateCompanyDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "legalName": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "industry": {
+            "type": "string",
+            "enum": [
+              "supermarket",
+              "spare_parts",
+              "dress_shop",
+              "pharmacy",
+              "electronics",
+              "general_retail",
+              "wholesale",
+              "other"
+            ]
+          },
+          "businessType": {
+            "type": "string",
+            "enum": [
+              "retail",
+              "wholesale",
+              "retail_wholesale",
+              "service"
+            ]
+          },
+          "contact": {
+            "$ref": "#/components/schemas/CompanyContactDto"
+          },
+          "address": {
+            "$ref": "#/components/schemas/CompanyAddressDto"
+          },
+          "taxIdentifiers": {
+            "$ref": "#/components/schemas/CompanyTaxIdentifiersDto"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending_verification",
+              "active",
+              "suspended",
+              "inactive"
+            ]
+          }
+        }
       }
     }
   }
