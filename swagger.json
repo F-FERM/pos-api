@@ -40,6 +40,147 @@
         ]
       }
     },
+    "/api/user": {
+      "post": {
+        "operationId": "UserController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create user",
+        "tags": [
+          "User"
+        ]
+      },
+      "get": {
+        "operationId": "UserController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all users",
+        "tags": [
+          "User"
+        ]
+      }
+    },
+    "/api/user/{id}": {
+      "get": {
+        "operationId": "UserController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get user by id",
+        "tags": [
+          "User"
+        ]
+      },
+      "patch": {
+        "operationId": "UserController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update user",
+        "tags": [
+          "User"
+        ]
+      },
+      "delete": {
+        "operationId": "UserController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete user",
+        "tags": [
+          "User"
+        ]
+      }
+    },
     "/api/company": {
       "post": {
         "operationId": "CompanyController_create",
@@ -59,18 +200,45 @@
             "description": ""
           }
         },
+        "summary": "Create company",
         "tags": [
           "Company"
         ]
       },
       "get": {
         "operationId": "CompanyController_findAll",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
           }
         },
+        "summary": "Get all companies",
         "tags": [
           "Company"
         ]
@@ -94,6 +262,7 @@
             "description": ""
           }
         },
+        "summary": "Get company by id",
         "tags": [
           "Company"
         ]
@@ -125,6 +294,7 @@
             "description": ""
           }
         },
+        "summary": "Update company",
         "tags": [
           "Company"
         ]
@@ -146,8 +316,431 @@
             "description": ""
           }
         },
+        "summary": "Delete company",
         "tags": [
           "Company"
+        ]
+      }
+    },
+    "/api/privilege": {
+      "post": {
+        "operationId": "PrivilegeController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePrivilegesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "create privilege",
+        "tags": [
+          "Privilege"
+        ]
+      },
+      "get": {
+        "operationId": "PrivilegeController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "get all privileges",
+        "tags": [
+          "Privilege"
+        ]
+      }
+    },
+    "/api/privilege/{id}": {
+      "get": {
+        "operationId": "PrivilegeController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "get privilege by id",
+        "tags": [
+          "Privilege"
+        ]
+      },
+      "patch": {
+        "operationId": "PrivilegeController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePrivilegesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "update privilege",
+        "tags": [
+          "Privilege"
+        ]
+      },
+      "delete": {
+        "operationId": "PrivilegeController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "delete privilege",
+        "tags": [
+          "Privilege"
+        ]
+      }
+    },
+    "/api/module": {
+      "get": {
+        "operationId": "ModuleController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "get all modules",
+        "tags": [
+          "Module"
+        ]
+      }
+    },
+    "/api/module/{id}": {
+      "get": {
+        "operationId": "ModuleController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "get module by id",
+        "tags": [
+          "Module"
+        ]
+      }
+    },
+    "/api/sub-module": {
+      "get": {
+        "operationId": "SubModuleController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all submodules",
+        "tags": [
+          "SubModule"
+        ]
+      }
+    },
+    "/api/sub-module/{id}": {
+      "get": {
+        "operationId": "SubModuleController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get submodule by ID",
+        "tags": [
+          "SubModule"
+        ]
+      }
+    },
+    "/api/sub-module/module/{moduleId}": {
+      "get": {
+        "operationId": "SubModuleController_findByModule",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get submodules by module ID",
+        "tags": [
+          "SubModule"
+        ]
+      }
+    },
+    "/api/subscription": {
+      "post": {
+        "operationId": "SubscriptionController_createSubscription",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubscriptionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create subscription (Superadmin)",
+        "tags": [
+          "Subscriptions"
+        ]
+      },
+      "get": {
+        "operationId": "SubscriptionController_getAllSubscriptions",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "planCode",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all subscriptions (Superadmin)",
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
+    "/api/subscription/{id}": {
+      "patch": {
+        "operationId": "SubscriptionController_updateSubscription",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubscriptionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update subscription (Superadmin)",
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
+    "/api/subscription/renew/{companyId}": {
+      "post": {
+        "operationId": "SubscriptionController_renewSubscription",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenewSubscriptionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Renew subscription (Superadmin)",
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
+    "/api/subscription/{id}/cancel": {
+      "patch": {
+        "operationId": "SubscriptionController_cancelSubscription",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Cancel subscription (Superadmin)",
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
+    "/api/subscription/company/{companyId}": {
+      "get": {
+        "operationId": "SubscriptionController_getSubscriptionByCompany",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get subscription by company id",
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
+    "/api/subscription/status/{companyId}": {
+      "get": {
+        "operationId": "SubscriptionController_getSubscriptionStatus",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get subscription status by company id",
+        "tags": [
+          "Subscriptions"
         ]
       }
     }
@@ -185,6 +778,59 @@
           "username",
           "password"
         ]
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "privilegeId": {
+            "type": "string"
+          },
+          "companyId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "email",
+          "password",
+          "privilegeId",
+          "companyId"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "privilegeId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
       },
       "CompanyContactDto": {
         "type": "object",
@@ -359,6 +1005,230 @@
             ]
           }
         }
+      },
+      "SubModulePermissionDto": {
+        "type": "object",
+        "properties": {
+          "subModuleId": {
+            "type": "string"
+          },
+          "canCreate": {
+            "type": "boolean"
+          },
+          "canRead": {
+            "type": "boolean"
+          },
+          "canUpdate": {
+            "type": "boolean"
+          },
+          "canDelete": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "subModuleId",
+          "canCreate",
+          "canRead",
+          "canUpdate",
+          "canDelete"
+        ]
+      },
+      "CreatePrivilegesDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Sales Executive"
+          },
+          "description": {
+            "type": "string"
+          },
+          "modules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubModulePermissionDto"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "modules",
+          "permissions"
+        ]
+      },
+      "UpdatePrivilegesDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Sales Executive"
+          },
+          "description": {
+            "type": "string"
+          },
+          "modules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubModulePermissionDto"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "modules",
+          "permissions"
+        ]
+      },
+      "CreateSubscriptionDto": {
+        "type": "object",
+        "properties": {
+          "companyId": {
+            "type": "string"
+          },
+          "planId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "trial",
+              "active",
+              "expired",
+              "suspended",
+              "cancelled"
+            ]
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "trialStartDate": {
+            "type": "string"
+          },
+          "trialEndDate": {
+            "type": "string"
+          },
+          "billingCycle": {
+            "type": "string",
+            "enum": [
+              "monthly",
+              "quarterly",
+              "half_yearly",
+              "yearly",
+              "lifetime"
+            ]
+          },
+          "priceMinor": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "companyId",
+          "planId",
+          "status"
+        ]
+      },
+      "UpdateSubscriptionDto": {
+        "type": "object",
+        "properties": {
+          "companyId": {
+            "type": "string"
+          },
+          "planId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "trial",
+              "active",
+              "expired",
+              "suspended",
+              "cancelled"
+            ]
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "trialStartDate": {
+            "type": "string"
+          },
+          "trialEndDate": {
+            "type": "string"
+          },
+          "billingCycle": {
+            "type": "string",
+            "enum": [
+              "monthly",
+              "quarterly",
+              "half_yearly",
+              "yearly",
+              "lifetime"
+            ]
+          },
+          "priceMinor": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "autoRenew": {
+            "type": "boolean"
+          },
+          "cancellationReason": {
+            "type": "string"
+          }
+        }
+      },
+      "RenewSubscriptionDto": {
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "type": "string",
+            "description": "New start date of the renewed period"
+          },
+          "endDate": {
+            "type": "string",
+            "description": "New end date of the renewed period"
+          },
+          "billingCycle": {
+            "type": "string",
+            "enum": [
+              "monthly",
+              "quarterly",
+              "half_yearly",
+              "yearly",
+              "lifetime"
+            ]
+          },
+          "priceMinor": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "startDate",
+          "endDate"
+        ]
       }
     }
   }
