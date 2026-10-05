@@ -29,6 +29,11 @@ export enum LogActions {
   CREATE_UNIT = 'CREATE_UNIT',
   UPDATE_UNIT = 'UPDATE_UNIT',
   DELETE_UNIT = 'DELETE_UNIT',
+
+  // Subscription Plan
+  CREATE_SUBSCRIPTION_PLAN = 'CREATE_SUBSCRIPTION_PLAN',
+  UPDATE_SUBSCRIPTION_PLAN = 'UPDATE_SUBSCRIPTION_PLAN',
+  DELETE_SUBSCRIPTION_PLAN = 'DELETE_SUBSCRIPTION_PLAN',
 }
 
 export enum LogEntityType {
@@ -37,4 +42,5 @@ export enum LogEntityType {
   PRIVILEGE = 'Privilege',
   SUBSCRIPTION = 'Subscription',
   UNIT = 'Unit',
+  SUBSCRIPTION_PLAN = 'SubscriptionPlan',
 }
