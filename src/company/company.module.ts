@@ -13,7 +13,6 @@ import { LogModule } from '../log/log.module';
     ]),
     forwardRef(() => UserModule),
     LogModule,
-    UserModule,
   ],
   controllers: [CompanyController],
   providers: [CompanyService],
