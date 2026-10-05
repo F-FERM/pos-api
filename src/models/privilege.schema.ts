@@ -26,7 +26,7 @@ export class Privileges extends BaseSchema {
   companyId: Types.ObjectId;
 }
 
-export const privilegesSchema = SchemaFactory.createForClass(Privileges);
+export const PrivilegesSchema = SchemaFactory.createForClass(Privileges);
 export const PrivilegesSchemaName = Privileges.name;
 
 // privileges model constants field names
