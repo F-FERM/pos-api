@@ -1,0 +1,5 @@
+export enum LogStatus {
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
+  PARTIAL_SUCCESS = 'PARTIAL_SUCCESS',
+}
