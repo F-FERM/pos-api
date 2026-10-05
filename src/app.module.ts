@@ -9,6 +9,7 @@ import { mongooseConnectionString } from './config/config';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './common/guards/roles.guard';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { CompanyModule } from './company/company.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
       isGlobal: true,
     }),
     UserModule,
+    CompanyModule,
   ],
   controllers: [AppController],
   providers: [
