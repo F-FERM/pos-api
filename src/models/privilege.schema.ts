@@ -24,6 +24,35 @@ export class Privileges extends BaseSchema {
     ref: 'Company',
   })
   companyId: Types.ObjectId;
+
+  @Prop({
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Module' }],
+    default: [],
+  })
+  modules: Types.ObjectId[];
+
+  @Prop({
+    type: [
+      {
+        subModuleId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'SubModule',
+        },
+        canCreate: { type: Boolean, default: false },
+        canRead: { type: Boolean, default: false },
+        canUpdate: { type: Boolean, default: false },
+        canDelete: { type: Boolean, default: false },
+      },
+    ],
+    default: [],
+  })
+  subModulePermissions: {
+    subModuleId: Types.ObjectId;
+    canCreate: boolean;
+    canRead: boolean;
+    canUpdate: boolean;
+    canDelete: boolean;
+  }[];
 }
 
 export const PrivilegesSchema = SchemaFactory.createForClass(Privileges);
@@ -38,4 +67,6 @@ export const PrivilegesModelConstants: { [K in keyof Privileges]: K } = {
   createdBy: 'createdBy',
   isSystemGenerated: 'isSystemGenerated',
   companyId: 'companyId',
+  modules: 'modules',
+  subModulePermissions: 'subModulePermissions',
 };
