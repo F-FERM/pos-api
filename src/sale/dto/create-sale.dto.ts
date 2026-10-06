@@ -62,6 +62,15 @@ export class CreateSaleDto {
   @IsMongoId()
   customerId?: string;
 
+  @ApiPropertyOptional({
+    description: 'Number of customer loyalty points to redeem for a discount',
+    example: 50,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  redeemLoyaltyPoints?: number;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsMongoId()
