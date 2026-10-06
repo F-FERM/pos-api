@@ -32,7 +32,11 @@ export class StaffController {
   @CheckPermission({ subModule: SUB_MODULES.STAFF, action: ACTIONS.CREATE })
   @Post()
   create(@Body() dto: CreateStaffDto, @Req() req: AuthedRequest) {
-    return this.staffService.createStaff(dto, req.user.userId, req);
+    return this.staffService.createStaff(
+      { ...dto, companyId: req.user.companyId },
+      req.user.userId,
+      req,
+    );
   }
 
   @ApiOperation({ summary: 'Get all store staff members' })
