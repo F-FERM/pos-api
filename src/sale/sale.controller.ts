@@ -29,7 +29,11 @@ export class SaleController {
   @CheckPermission({ subModule: SUB_MODULES.SALE, action: ACTIONS.CREATE })
   @Post()
   create(@Body() dto: CreateSaleDto, @Req() req: AuthedRequest) {
-    return this.saleService.createSale(dto, req.user.userId, req);
+    return this.saleService.createSale(
+      { ...dto, companyId: req.user.companyId },
+      req.user.userId,
+      req,
+    );
   }
 
   @ApiOperation({ summary: 'Reprint sale invoice receipt' })

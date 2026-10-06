@@ -69,7 +69,11 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
     super(saleModel);
   }
 
-  async createSale(dto: CreateSaleDto, userId: string, req: AuthedRequest) {
+  async createSale(
+    dto: CreateSaleDto & { companyId: string },
+    userId: string,
+    req: AuthedRequest,
+  ) {
     try {
       const ipAddress = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);
