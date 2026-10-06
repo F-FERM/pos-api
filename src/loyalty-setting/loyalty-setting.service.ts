@@ -95,7 +95,7 @@ export class LoyaltySettingService extends GenericDatabase<
   }
 
   async upsertSetting(
-    dto: UpdateLoyaltySettingDto,
+    dto: UpdateLoyaltySettingDto & { companyId: string },
     userId: string,
     req: AuthedRequest,
   ) {
