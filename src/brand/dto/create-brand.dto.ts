@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
-  IsMongoId,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -19,10 +18,6 @@ export class CreateBrandDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @ApiProperty()
-  @IsMongoId()
-  companyId: string;
 
   @ApiPropertyOptional()
   @IsOptional()
