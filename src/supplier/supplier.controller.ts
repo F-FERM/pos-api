@@ -30,7 +30,11 @@ export class SupplierController {
   @CheckPermission({ subModule: SUB_MODULES.SUPPLIER, action: ACTIONS.CREATE })
   @Post()
   create(@Body() dto: CreateSupplierDto, @Req() req: AuthedRequest) {
-    return this.supplierService.createSupplier(dto, req.user.userId, req);
+    return this.supplierService.createSupplier(
+      { ...dto, companyId: req.user.companyId },
+      req.user.userId,
+      req,
+    );
   }
 
   @ApiOperation({ summary: 'Get all suppliers' })
