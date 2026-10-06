@@ -23,6 +23,7 @@ import { LogService } from '../log/log.service';
 import { CompanyService } from '../company/company.service';
 import { UserService } from '../user/user.service';
 import { NumberSettingsService } from '../number-settings/number-settings.service';
+import { PrinterService } from '../printer/printer.service';
 import { AuthedRequest } from '../utils/common.types';
 import { LogActions, LogEntityType, LogStatus, numberSettingsDocumentType } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
@@ -42,6 +43,7 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
     private readonly companyService: CompanyService,
     private readonly userService: UserService,
     private readonly numberSettingsService: NumberSettingsService,
+    private readonly printerService: PrinterService,
   ) {
     super(saleModel);
   }
@@ -58,7 +60,7 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
 
       const saleStatus = dto.status || SaleStatus.COMPLETED;
 
-      return await this.runTransaction(async (session: ClientSession) => {
+      const saleResult = await this.runTransaction(async (session: ClientSession) => {
         let subtotal = 0;
         let discountTotal = 0;
         let taxTotal = 0;
@@ -116,7 +118,6 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
         const changeAmount =
           dto.paidAmount > grandTotal ? dto.paidAmount - grandTotal : 0;
 
-        // Auto-generate invoice number using configured Number Settings
         const invoiceNumber = await this.numberSettingsService.generateNumber(
           dto.companyId,
           userId,
@@ -159,7 +160,6 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
             );
           }
 
-          // Registered Customer Handling: Credit Ledger & Configurable Loyalty Points
           if (dto.customerId) {
             const company = await this.companyService.genericFindOne(
               { _id: dto.companyId },
@@ -212,13 +212,40 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
           status: LogStatus.SUCCESS,
         });
 
-        return {
-          success: true,
-          message: 'Sale created successfully',
-          data: created,
-          statusCode: HttpStatus.CREATED,
-        };
+        return created;
       });
+
+      // Handle Thermal Printing if Sale Status is COMPLETED
+      let printResult: any = null;
+      if (saleStatus === SaleStatus.COMPLETED) {
+        try {
+          const populatedSale = await this.saleModel
+            .findById(saleResult._id)
+            .populate('customerId', 'name phone email loyaltyPoints');
+
+          printResult = await this.printerService.printSaleReceipt(
+            populatedSale?.toObject() || saleResult.toObject(),
+            dto.companyId,
+            dto.counterName,
+            false,
+          );
+        } catch (printError) {
+          console.error('Thermal printing error during sale:', printError);
+        }
+      }
+
+      return {
+        success: true,
+        message:
+          saleStatus === SaleStatus.COMPLETED
+            ? 'Sale completed and printed successfully'
+            : 'Sale saved / held successfully',
+        data: {
+          sale: saleResult,
+          print: printResult,
+        },
+        statusCode: HttpStatus.CREATED,
+      };
     } catch (error: unknown) {
       const ipAddress = await this.getClientIpAddress(req);
       await this.logService.createLog({
@@ -240,6 +267,78 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
         throw new BadRequestException(error.message);
       }
       throw new BadRequestException('Error processing sale');
+    }
+  }
+
+  async reprintSale(
+    id: string,
+    counterName: string | undefined,
+    userId: string,
+    companyId: string,
+    req: AuthedRequest,
+  ) {
+    try {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.userService.validateAuthenticatedUser(userId);
+
+      const sale = await this.saleModel
+        .findOne({
+          _id: new Types.ObjectId(id),
+          companyId: new Types.ObjectId(companyId),
+          isDeleted: false,
+        })
+        .populate('customerId', 'name phone email loyaltyPoints');
+
+      if (!sale) {
+        throw new NotFoundException('Sale record not found');
+      }
+
+      const printResult = await this.printerService.printSaleReceipt(
+        sale.toObject(),
+        companyId,
+        counterName,
+        true,
+      );
+
+      await this.logService.createLog({
+        companyId: new Types.ObjectId(companyId),
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.PRINT_SALE,
+        entityType: LogEntityType.SALE,
+        entityId: new Types.ObjectId(id),
+        description: `Sale ${sale.invoiceNumber} reprinted`,
+        ipAddress,
+        path: req.url,
+        status: LogStatus.SUCCESS,
+      });
+
+      return {
+        success: true,
+        message: 'Sale receipt reprinted successfully',
+        data: printResult,
+        statusCode: HttpStatus.OK,
+      };
+    } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: new Types.ObjectId(companyId),
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.PRINT_SALE,
+        entityType: LogEntityType.SALE,
+        entityId: new Types.ObjectId(id),
+        description: `Failed to reprint sale receipt`,
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Error re-printing sale receipt');
     }
   }
 
