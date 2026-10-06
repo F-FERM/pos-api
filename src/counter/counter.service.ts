@@ -20,6 +20,7 @@ import { UserService } from '../user/user.service';
 import { AuthedRequest } from '../utils/common.types';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
+import { DEFAULT_COMPANY_COUNTER } from '../common/seeds/counter.data';
 
 @Injectable()
 export class CounterService extends GenericDatabase<Model<CounterDocument>> {
@@ -47,10 +48,7 @@ export class CounterService extends GenericDatabase<Model<CounterDocument>> {
     if (existing) return existing;
 
     const counterData = {
-      name: 'Main Counter',
-      code: 'CNT-01',
-      isDefault: true,
-      isActive: true,
+      ...DEFAULT_COMPANY_COUNTER,
       companyId: new Types.ObjectId(companyId),
       createdBy: new Types.ObjectId(userId),
       isDeleted: false,
