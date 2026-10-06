@@ -2531,7 +2531,31 @@
             "description": ""
           }
         },
-        "summary": "Public test endpoint: Generate a sample sticker label design using seed default data without auth or company ID",
+        "summary": "Public test endpoint: Generate a sample sticker label design JSON using seed default data without auth or company ID",
+        "tags": [
+          "Label Designer"
+        ]
+      }
+    },
+    "/api/label-designer/test-print/html": {
+      "get": {
+        "operationId": "LabelDesignerController_sendTestLabelPrintHtml",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Public HTML preview endpoint: Returns direct HTML rendered sticker label view for browser testing",
         "tags": [
           "Label Designer"
         ]
