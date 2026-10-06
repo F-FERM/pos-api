@@ -15,6 +15,13 @@ export enum numberSettingsDocumentType {
   BILL = 'BILL',
 }
 
+export enum RefundMethod {
+  CASH = 'CASH',
+  CARD = 'CARD',
+  UPI = 'UPI',
+  STORE_CREDIT = 'STORE_CREDIT',
+}
+
 export enum LogActions {
   // Company
   CREATE_COMPANY = 'CREATE_COMPANY',
