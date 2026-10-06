@@ -86,6 +86,10 @@ export enum LogActions {
   CANCEL_SALE = 'CANCEL_SALE',
   PRINT_SALE = 'PRINT_SALE',
 
+  // Sale Return & Refund
+  CREATE_SALE_RETURN = 'CREATE_SALE_RETURN',
+  DELETE_SALE_RETURN = 'DELETE_SALE_RETURN',
+
   // Expense
   CREATE_EXPENSE = 'CREATE_EXPENSE',
   DELETE_EXPENSE = 'DELETE_EXPENSE',
@@ -127,6 +131,7 @@ export enum LogEntityType {
   CUSTOMER = 'Customer',
   REGISTER_SESSION = 'RegisterSession',
   SALE = 'Sale',
+  SALE_RETURN = 'SaleReturn',
   EXPENSE = 'Expense',
   NUMBER_SETTING = 'NumberSetting',
   PRINTER = 'Printer',
