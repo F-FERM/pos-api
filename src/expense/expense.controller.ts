@@ -28,7 +28,11 @@ export class ExpenseController {
   @CheckPermission({ subModule: SUB_MODULES.EXPENSE, action: ACTIONS.CREATE })
   @Post()
   create(@Body() dto: CreateExpenseDto, @Req() req: AuthedRequest) {
-    return this.expenseService.createExpense(dto, req.user.userId, req);
+    return this.expenseService.createExpense(
+      { ...dto, companyId: req.user.companyId },
+      req.user.userId,
+      req,
+    );
   }
 
   @ApiOperation({ summary: 'Get all expenses' })
