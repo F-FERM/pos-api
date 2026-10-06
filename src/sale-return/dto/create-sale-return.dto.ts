@@ -11,7 +11,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { RefundMethod } from '../../models/sale-return.schema';
+import { RefundMethod } from '../../utils/common.enum';
 
 export class CreateSaleReturnItemDto {
   @ApiProperty({ description: 'Product ID being returned' })
