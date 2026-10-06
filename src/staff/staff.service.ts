@@ -50,7 +50,11 @@ export class StaffService extends GenericDatabase<Model<StaffDocument>> {
     super(staffModel);
   }
 
-  async createStaff(dto: CreateStaffDto, userId: string, req: AuthedRequest) {
+  async createStaff(
+    dto: CreateStaffDto & { companyId: string },
+    userId: string,
+    req: AuthedRequest,
+  ) {
     try {
       const ipAddress = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);
