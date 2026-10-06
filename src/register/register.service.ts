@@ -10,9 +10,11 @@ import { GenericDatabase } from '../helper/genericDatabase';
 import {
   RegisterSession,
   RegisterSessionDocument,
+  RegisterSessionModelConstants,
   RegisterSessionSchemaName,
   RegisterSessionStatus,
 } from '../models/register-session.schema';
+import { UserModelConstants } from '../models/user.schema';
 import { OpenRegisterDto } from './dto/open-register.dto';
 import { CloseRegisterDto } from './dto/close-register.dto';
 import { LogService } from '../log/log.service';
@@ -117,7 +119,12 @@ export class RegisterService extends GenericDatabase<
           status: RegisterSessionStatus.OPEN,
           isDeleted: false,
         })
-        .populate('userId', 'username name');
+        .populate([
+          {
+            path: RegisterSessionModelConstants.userId,
+            select: `${UserModelConstants.username} ${UserModelConstants.name}`,
+          },
+        ]);
 
       return {
         success: true,
