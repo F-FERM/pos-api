@@ -23,8 +23,8 @@ export const DEFAULT_NUMBER_SETTINGS: DefaultNumberSettingConfig[] = [
     nextNumber: 1,
   },
   {
-    docType: numberSettingsDocumentType.CREDIT_NOTE,
-    prefix: 'CN-',
+    docType: numberSettingsDocumentType.SALE_RETURN,
+    prefix: 'SR-',
     nextNumber: 1,
   },
 ];
@@ -33,5 +33,5 @@ export const DEFAULT_PREFIX_MAP: Record<numberSettingsDocumentType, string> = {
   [numberSettingsDocumentType.INVOICE]: 'INV-',
   [numberSettingsDocumentType.PURCHASE_ORDER]: 'PO-',
   [numberSettingsDocumentType.BILL]: 'BILL-',
-  [numberSettingsDocumentType.CREDIT_NOTE]: 'CN-',
+  [numberSettingsDocumentType.SALE_RETURN]: 'SR-',
 };
