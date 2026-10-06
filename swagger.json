@@ -2991,6 +2991,39 @@
           }
         }
       },
+      "CompanyRegionalSettingsDto": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string",
+            "example": "INR",
+            "default": "INR"
+          },
+          "currencySymbol": {
+            "type": "string",
+            "example": "₹",
+            "default": "₹"
+          },
+          "loyaltyAmountPerPoint": {
+            "type": "number",
+            "example": 100,
+            "default": 100,
+            "description": "Amount spent in rupees/currency to earn 1 loyalty point"
+          },
+          "minLoyaltyPointsToRedeem": {
+            "type": "number",
+            "example": 50,
+            "default": 50,
+            "description": "Minimum loyalty points required in customer balance before redemption is allowed"
+          },
+          "loyaltyPointMonetaryValue": {
+            "type": "number",
+            "example": 1,
+            "default": 1,
+            "description": "Monetary discount value in rupees per 1 redeemed loyalty point (e.g. 1 point = ₹1)"
+          }
+        }
+      },
       "CreateCompanyDto": {
         "type": "object",
         "properties": {
@@ -3036,6 +3069,9 @@
           },
           "taxIdentifiers": {
             "$ref": "#/components/schemas/CompanyTaxIdentifiersDto"
+          },
+          "regional": {
+            "$ref": "#/components/schemas/CompanyRegionalSettingsDto"
           }
         },
         "required": [
@@ -3093,6 +3129,9 @@
           },
           "taxIdentifiers": {
             "$ref": "#/components/schemas/CompanyTaxIdentifiersDto"
+          },
+          "regional": {
+            "$ref": "#/components/schemas/CompanyRegionalSettingsDto"
           },
           "status": {
             "type": "string",
@@ -4236,6 +4275,11 @@
           },
           "customerId": {
             "type": "string"
+          },
+          "redeemLoyaltyPoints": {
+            "type": "number",
+            "description": "Number of customer loyalty points to redeem for a discount",
+            "example": 50
           },
           "registerSessionId": {
             "type": "string"
