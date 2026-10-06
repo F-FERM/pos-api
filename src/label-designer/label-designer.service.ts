@@ -20,6 +20,7 @@ import { CompanyService } from '../company/company.service';
 import { LogService } from '../log/log.service';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { AuthedRequest } from '../utils/common.types';
+import { DEFAULT_TEST_LABEL_DATA } from '../common/seeds/label-designer.data';
 
 export interface GeneratedLabelUnit {
   productId: string;
@@ -154,6 +155,59 @@ export class LabelDesignerService extends GenericDatabase<
         throw new BadRequestException(error.message);
       }
       throw new BadRequestException('Error generating barcode labels');
+    }
+  }
+
+  async generateTestLabel(companyId?: string) {
+    try {
+      let storeName = DEFAULT_TEST_LABEL_DATA.companyName;
+      let currency = '₹';
+
+      if (companyId && this.isValidMongoId(companyId)) {
+        const company = await this.companyModel.findOne({
+          _id: new Types.ObjectId(companyId),
+          isDeleted: false,
+        });
+        if (company?.name) {
+          storeName = company.name.trim();
+        }
+        if (company?.regional?.currencySymbol) {
+          currency = company.regional.currencySymbol;
+        }
+      }
+
+      const barcodeSvg = generateCode128Svg(DEFAULT_TEST_LABEL_DATA.barcode, 42);
+      const formattedPrice = `PRICE: ${currency}${DEFAULT_TEST_LABEL_DATA.rawPrice}`;
+
+      const labelUnit: GeneratedLabelUnit = {
+        productId: 'test-product-001',
+        productName: DEFAULT_TEST_LABEL_DATA.productName,
+        companyName: storeName,
+        barcode: DEFAULT_TEST_LABEL_DATA.barcode,
+        barcodeSvg,
+        price: formattedPrice,
+        rawPrice: DEFAULT_TEST_LABEL_DATA.rawPrice,
+      };
+
+      const htmlTemplate = this.buildPrintableHtml([labelUnit], 1);
+
+      return {
+        success: true,
+        message: 'Test barcode sticker label generated successfully',
+        data: {
+          totalLabelsCount: 1,
+          labelSize: '50x25',
+          columns: 1,
+          labels: [labelUnit],
+          html: htmlTemplate,
+        },
+        statusCode: HttpStatus.OK,
+      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Error generating test barcode label');
     }
   }
 
