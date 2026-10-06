@@ -102,6 +102,9 @@ export enum LogActions {
   CREATE_COUNTER = 'CREATE_COUNTER',
   UPDATE_COUNTER = 'UPDATE_COUNTER',
   DELETE_COUNTER = 'DELETE_COUNTER',
+
+  // Label Designer
+  GENERATE_LABEL = 'GENERATE_LABEL',
 }
 
 export enum LogEntityType {
@@ -123,4 +126,5 @@ export enum LogEntityType {
   NUMBER_SETTING = 'NumberSetting',
   PRINTER = 'Printer',
   COUNTER = 'Counter',
+  LABEL_DESIGNER = 'LabelDesigner',
 }
