@@ -12,12 +12,14 @@ import {
   Sale,
   SaleDocument,
   SaleItem,
+  SaleModelConstants,
   SaleSchemaName,
   SaleStatus,
 } from '../models/sale.schema';
-import { ProductDocument, ProductSchemaName } from '../models/product.schema';
-import { CustomerDocument, CustomerSchemaName } from '../models/customer.schema';
-import { RegisterSessionDocument, RegisterSessionSchemaName } from '../models/register-session.schema';
+import { ProductDocument, ProductModelConstants, ProductSchemaName } from '../models/product.schema';
+import { CustomerDocument, CustomerModelConstants, CustomerSchemaName } from '../models/customer.schema';
+import { RegisterSessionDocument, RegisterSessionModelConstants, RegisterSessionSchemaName } from '../models/register-session.schema';
+import { UserModelConstants } from '../models/user.schema';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { LogService } from '../log/log.service';
 import { CompanyService } from '../company/company.service';
@@ -215,13 +217,17 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
         return created;
       });
 
-      // Handle Thermal Printing if Sale Status is COMPLETED
       let printResult: any = null;
       if (saleStatus === SaleStatus.COMPLETED) {
         try {
           const populatedSale = await this.saleModel
             .findById(saleResult._id)
-            .populate('customerId', 'name phone email loyaltyPoints');
+            .populate([
+              {
+                path: SaleModelConstants.customerId,
+                select: `${CustomerModelConstants.name} ${CustomerModelConstants.phone} ${CustomerModelConstants.email} ${CustomerModelConstants.loyaltyPoints}`,
+              },
+            ]);
 
           printResult = await this.printerService.printSaleReceipt(
             populatedSale?.toObject() || saleResult.toObject(),
@@ -287,7 +293,12 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
           companyId: new Types.ObjectId(companyId),
           isDeleted: false,
         })
-        .populate('customerId', 'name phone email loyaltyPoints');
+        .populate([
+          {
+            path: SaleModelConstants.customerId,
+            select: `${CustomerModelConstants.name} ${CustomerModelConstants.phone} ${CustomerModelConstants.email} ${CustomerModelConstants.loyaltyPoints}`,
+          },
+        ]);
 
       if (!sale) {
         throw new NotFoundException('Sale record not found');
@@ -383,10 +394,24 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
       const [data, totalCount] = await Promise.all([
         this.saleModel
           .find(filter)
-          .populate('customerId', 'name phone email loyaltyPoints balanceDue')
-          .populate('registerSessionId', 'openingCash status openedAt')
-          .populate('createdBy', 'username name')
-          .populate('items.productId', 'name sku barcode unitOfMeasure')
+          .populate([
+            {
+              path: SaleModelConstants.customerId,
+              select: `${CustomerModelConstants.name} ${CustomerModelConstants.phone} ${CustomerModelConstants.email} ${CustomerModelConstants.loyaltyPoints} ${CustomerModelConstants.balanceDue}`,
+            },
+            {
+              path: SaleModelConstants.registerSessionId,
+              select: `${RegisterSessionModelConstants.openingCash} ${RegisterSessionModelConstants.status} ${RegisterSessionModelConstants.openedAt}`,
+            },
+            {
+              path: SaleModelConstants.createdBy,
+              select: `${UserModelConstants.username} ${UserModelConstants.name}`,
+            },
+            {
+              path: 'items.productId',
+              select: `${ProductModelConstants.name} ${ProductModelConstants.sku} ${ProductModelConstants.barcode} ${ProductModelConstants.unitOfMeasure}`,
+            },
+          ])
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit),
@@ -434,10 +459,24 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
 
       const sale = await this.saleModel
         .findOne(filter)
-        .populate('customerId', 'name phone email address loyaltyPoints balanceDue')
-        .populate('registerSessionId', 'openingCash status openedAt')
-        .populate('createdBy', 'username name')
-        .populate('items.productId', 'name sku barcode unitOfMeasure');
+        .populate([
+          {
+            path: SaleModelConstants.customerId,
+            select: `${CustomerModelConstants.name} ${CustomerModelConstants.phone} ${CustomerModelConstants.email} ${CustomerModelConstants.address} ${CustomerModelConstants.loyaltyPoints} ${CustomerModelConstants.balanceDue}`,
+          },
+          {
+            path: SaleModelConstants.registerSessionId,
+            select: `${RegisterSessionModelConstants.openingCash} ${RegisterSessionModelConstants.status} ${RegisterSessionModelConstants.openedAt}`,
+          },
+          {
+            path: SaleModelConstants.createdBy,
+            select: `${UserModelConstants.username} ${UserModelConstants.name}`,
+          },
+          {
+            path: 'items.productId',
+            select: `${ProductModelConstants.name} ${ProductModelConstants.sku} ${ProductModelConstants.barcode} ${ProductModelConstants.unitOfMeasure}`,
+          },
+        ]);
 
       if (!sale) {
         throw new NotFoundException('Sale not found');
