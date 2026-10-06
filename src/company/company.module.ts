@@ -5,6 +5,8 @@ import { CompanyController } from './company.controller';
 import { CompanySchema, CompanySchemaName } from '../models/company.schema';
 import { UserModule } from '../user/user.module';
 import { LogModule } from '../log/log.module';
+import { NumberSettingsModule } from '../number-settings/number-settings.module';
+import { CounterModule } from '../counter/counter.module';
 
 @Module({
   imports: [
@@ -13,6 +15,8 @@ import { LogModule } from '../log/log.module';
     ]),
     forwardRef(() => UserModule),
     LogModule,
+    NumberSettingsModule,
+    CounterModule,
   ],
   controllers: [CompanyController],
   providers: [CompanyService],
