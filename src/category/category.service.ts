@@ -8,7 +8,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { GenericDatabase } from '../helper/genericDatabase';
 import {
+  Category,
   CategoryDocument,
+  CategoryModelConstants,
   CategorySchemaName,
 } from '../models/category.schema';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -136,7 +138,12 @@ export class CategoryService extends GenericDatabase<Model<CategoryDocument>> {
       const [data, totalCount] = await Promise.all([
         this.categoryModel
           .find(filter)
-          .populate('parentId', 'name code')
+          .populate([
+            {
+              path: CategoryModelConstants.parentId,
+              select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
+            },
+          ])
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit),
@@ -184,7 +191,12 @@ export class CategoryService extends GenericDatabase<Model<CategoryDocument>> {
 
       const category = await this.categoryModel
         .findOne(filter)
-        .populate('parentId', 'name code');
+        .populate([
+          {
+            path: CategoryModelConstants.parentId,
+            select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
+          },
+        ]);
 
       if (!category) {
         throw new NotFoundException('Category not found');
