@@ -89,10 +89,6 @@ export class CreateSaleDto {
   @IsEnum(SaleStatus)
   status?: SaleStatus;
 
-  @ApiProperty()
-  @IsMongoId()
-  companyId: string;
-
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
