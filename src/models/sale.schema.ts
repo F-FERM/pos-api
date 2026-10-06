@@ -7,7 +7,7 @@ export type SaleDocument = Sale & Document;
 //TODO: update sale status enum's
 export enum SaleStatus {
   COMPLETED = 'COMPLETED',
-  PARKED = 'PARKED',
+  SAVE = 'SAVE',
   CANCELLED = 'CANCELLED',
 }
 
@@ -16,7 +16,6 @@ export enum PaymentMethod {
   CARD = 'CARD',
   UPI = 'UPI',
   CREDIT = 'CREDIT',
-  SPLIT = 'SPLIT',
 }
 
 @Schema({ _id: false })
