@@ -34,7 +34,7 @@ export class CustomerService extends GenericDatabase<Model<CustomerDocument>> {
   }
 
   async createCustomer(
-    dto: CreateCustomerDto,
+    dto: CreateCustomerDto & { companyId: string },
     userId: string,
     req: AuthedRequest,
   ) {
