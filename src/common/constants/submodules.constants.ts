@@ -12,4 +12,5 @@ export const SUB_MODULES = {
   REGISTER: 'register',
   SALE: 'sale',
   EXPENSE: 'expense',
+  NUMBER_SETTING: 'number-setting',
 } as const;
