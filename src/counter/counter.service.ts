@@ -10,8 +10,10 @@ import { GenericDatabase } from '../helper/genericDatabase';
 import {
   Counter,
   CounterDocument,
+  CounterModelConstants,
   CounterSchemaName,
 } from '../models/counter.schema';
+import { UserModelConstants } from '../models/user.schema';
 import { CreateCounterDto } from './dto/create-counter.dto';
 import { UpdateCounterDto } from './dto/update-counter.dto';
 import { LogService } from '../log/log.service';
@@ -180,7 +182,12 @@ export class CounterService extends GenericDatabase<Model<CounterDocument>> {
       const [data, totalCount] = await Promise.all([
         this.counterModel
           .find(filter)
-          .populate('createdBy', 'username name')
+          .populate([
+            {
+              path: CounterModelConstants.createdBy,
+              select: `${UserModelConstants.username} ${UserModelConstants.name}`,
+            },
+          ])
           .sort({ isDefault: -1, createdAt: -1 })
           .skip(skip)
           .limit(limit),
@@ -228,7 +235,12 @@ export class CounterService extends GenericDatabase<Model<CounterDocument>> {
 
       const counter = await this.counterModel
         .findOne(filter)
-        .populate('createdBy', 'username name');
+        .populate([
+          {
+            path: CounterModelConstants.createdBy,
+            select: `${UserModelConstants.username} ${UserModelConstants.name}`,
+          },
+        ]);
 
       if (!counter) {
         throw new NotFoundException('Counter not found');
