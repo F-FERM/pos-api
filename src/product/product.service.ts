@@ -111,7 +111,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
   }
 
   async createProduct(
-    dto: CreateProductDto,
+    dto: CreateProductDto & { companyId: string },
     userId: string,
     req: AuthedRequest,
   ) {

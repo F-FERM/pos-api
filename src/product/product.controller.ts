@@ -31,7 +31,11 @@ export class ProductController {
   @CheckPermission({ subModule: SUB_MODULES.PRODUCT, action: ACTIONS.CREATE })
   @Post()
   create(@Body() dto: CreateProductDto, @Req() req: AuthedRequest) {
-    return this.productService.createProduct(dto, req.user.userId, req);
+    return this.productService.createProduct(
+      { ...dto, companyId: req.user.companyId },
+      req.user.userId,
+      req,
+    );
   }
 
   @ApiOperation({ summary: 'Get all products' })

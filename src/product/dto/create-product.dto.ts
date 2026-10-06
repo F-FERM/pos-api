@@ -24,13 +24,6 @@ export class CreateProductDto {
   name: string;
 
   @ApiProperty({
-    description: 'Company / Tenant ID (Required)',
-    example: '65f123456789abcdef123456',
-  })
-  @IsMongoId()
-  companyId: string;
-
-  @ApiProperty({
     description: 'Selling price per unit (Required)',
     example: 450.0,
   })
