@@ -30,7 +30,11 @@ export class CustomerController {
   @CheckPermission({ subModule: SUB_MODULES.CUSTOMER, action: ACTIONS.CREATE })
   @Post()
   create(@Body() dto: CreateCustomerDto, @Req() req: AuthedRequest) {
-    return this.customerService.createCustomer(dto, req.user.userId, req);
+    return this.customerService.createCustomer(
+      { ...dto, companyId: req.user.companyId },
+      req.user.userId,
+      req,
+    );
   }
 
   @ApiOperation({ summary: 'Get all customers' })
