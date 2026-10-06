@@ -30,6 +30,7 @@ import { CounterModule } from './counter/counter.module';
 import { LabelDesignerModule } from './label-designer/label-designer.module';
 import { StaffModule } from './staff/staff.module';
 import { SaleReturnModule } from './sale-return/sale-return.module';
+import { LoyaltySettingModule } from './loyalty-setting/loyalty-setting.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { SaleReturnModule } from './sale-return/sale-return.module';
     LabelDesignerModule,
     StaffModule,
     SaleReturnModule,
+    LoyaltySettingModule,
   ],
   controllers: [AppController],
   providers: [
