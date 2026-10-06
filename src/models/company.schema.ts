@@ -128,15 +128,6 @@ class CompanyRegionalSettings {
 
   @Prop({ type: Number, required: true, min: 1, max: 12, default: 4 })
   fiscalYearStartMonth: number;
-
-  @Prop({ type: Number, default: 100, min: 1 })
-  loyaltyAmountPerPoint: number;
-
-  @Prop({ type: Number, default: 50, min: 0 })
-  minLoyaltyPointsToRedeem: number;
-
-  @Prop({ type: Number, default: 1, min: 0 })
-  loyaltyPointMonetaryValue: number;
 }
 
 @Schema({ _id: false })
