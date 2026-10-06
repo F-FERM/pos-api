@@ -2560,6 +2560,147 @@
           "Label Designer"
         ]
       }
+    },
+    "/api/staff": {
+      "post": {
+        "operationId": "StaffController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStaffDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create new staff member (auto converts to user account)",
+        "tags": [
+          "Staff"
+        ]
+      },
+      "get": {
+        "operationId": "StaffController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all store staff members",
+        "tags": [
+          "Staff"
+        ]
+      }
+    },
+    "/api/staff/{id}": {
+      "get": {
+        "operationId": "StaffController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get staff member details by ID",
+        "tags": [
+          "Staff"
+        ]
+      },
+      "patch": {
+        "operationId": "StaffController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStaffDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update staff member details and user account",
+        "tags": [
+          "Staff"
+        ]
+      },
+      "delete": {
+        "operationId": "StaffController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete staff member and linked user account",
+        "tags": [
+          "Staff"
+        ]
+      }
     }
   },
   "info": {
@@ -4202,6 +4343,92 @@
           "items",
           "companyId"
         ]
+      },
+      "CreateStaffDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Cashier"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+919876543210"
+          },
+          "email": {
+            "type": "string",
+            "example": "cashier@store.com"
+          },
+          "designation": {
+            "type": "string",
+            "example": "Cashier",
+            "description": "Designation / Staff Role (e.g. Cashier, Salesperson, Manager, Store Keeper)",
+            "default": "Cashier"
+          },
+          "pin": {
+            "type": "string",
+            "example": "1234",
+            "description": "4-6 digit quick login PIN / password for POS terminal login"
+          },
+          "privilegeId": {
+            "type": "string",
+            "description": "Privilege ID assigning staff permissions"
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "name",
+          "phone",
+          "designation",
+          "pin",
+          "privilegeId",
+          "companyId"
+        ]
+      },
+      "UpdateStaffDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Cashier"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+919876543210"
+          },
+          "email": {
+            "type": "string",
+            "example": "cashier@store.com"
+          },
+          "designation": {
+            "type": "string",
+            "example": "Cashier",
+            "description": "Designation / Staff Role (e.g. Cashier, Salesperson, Manager, Store Keeper)",
+            "default": "Cashier"
+          },
+          "pin": {
+            "type": "string",
+            "example": "1234",
+            "description": "4-6 digit quick login PIN / password for POS terminal login"
+          },
+          "privilegeId": {
+            "type": "string",
+            "description": "Privilege ID assigning staff permissions"
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        }
       }
     }
   }
