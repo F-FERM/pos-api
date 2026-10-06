@@ -4,6 +4,12 @@ export enum LogStatus {
   PARTIAL_SUCCESS = 'PARTIAL_SUCCESS',
 }
 
+export enum numberSettingsDocumentType {
+  INVOICE = 'INVOICE',
+  PURCHASE_ORDER = 'PURCHASE_ORDER',
+  BILL = 'BILL',
+}
+
 export enum LogActions {
   // Company
   CREATE_COMPANY = 'CREATE_COMPANY',
@@ -77,6 +83,9 @@ export enum LogActions {
   // Expense
   CREATE_EXPENSE = 'CREATE_EXPENSE',
   DELETE_EXPENSE = 'DELETE_EXPENSE',
+
+  // Number Settings
+  UPDATE_NUMBER_SETTING = 'UPDATE_NUMBER_SETTING',
 }
 
 export enum LogEntityType {
@@ -95,4 +104,5 @@ export enum LogEntityType {
   REGISTER_SESSION = 'RegisterSession',
   SALE = 'Sale',
   EXPENSE = 'Expense',
+  NUMBER_SETTING = 'NumberSetting',
 }
