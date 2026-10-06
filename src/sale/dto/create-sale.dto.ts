@@ -68,12 +68,12 @@ export class CreateSaleDto {
   registerSessionId?: string;
 
   @ApiPropertyOptional({
-    description: 'Name of the counter/register making the sale (e.g. Counter 1)',
-    example: 'Counter 1',
+    description: 'Counter ID of the checkout station making the sale',
+    example: '65f123456789abcdef123456',
   })
   @IsOptional()
-  @IsString()
-  counterName?: string;
+  @IsMongoId()
+  counterId?: string;
 
   @ApiPropertyOptional({ enum: SaleStatus, default: SaleStatus.COMPLETED })
   @IsOptional()
