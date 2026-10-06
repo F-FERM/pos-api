@@ -922,6 +922,1169 @@
           "Subscriptions"
         ]
       }
+    },
+    "/api/category": {
+      "post": {
+        "operationId": "CategoryController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create category",
+        "tags": [
+          "Category"
+        ]
+      },
+      "get": {
+        "operationId": "CategoryController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all categories",
+        "tags": [
+          "Category"
+        ]
+      }
+    },
+    "/api/category/{id}": {
+      "get": {
+        "operationId": "CategoryController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get category by ID",
+        "tags": [
+          "Category"
+        ]
+      },
+      "patch": {
+        "operationId": "CategoryController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update category",
+        "tags": [
+          "Category"
+        ]
+      },
+      "delete": {
+        "operationId": "CategoryController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete category",
+        "tags": [
+          "Category"
+        ]
+      }
+    },
+    "/api/brand": {
+      "post": {
+        "operationId": "BrandController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBrandDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create brand",
+        "tags": [
+          "Brand"
+        ]
+      },
+      "get": {
+        "operationId": "BrandController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all brands",
+        "tags": [
+          "Brand"
+        ]
+      }
+    },
+    "/api/brand/{id}": {
+      "get": {
+        "operationId": "BrandController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get brand by ID",
+        "tags": [
+          "Brand"
+        ]
+      },
+      "patch": {
+        "operationId": "BrandController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBrandDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update brand",
+        "tags": [
+          "Brand"
+        ]
+      },
+      "delete": {
+        "operationId": "BrandController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete brand",
+        "tags": [
+          "Brand"
+        ]
+      }
+    },
+    "/api/product": {
+      "post": {
+        "operationId": "ProductController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create product",
+        "tags": [
+          "Product"
+        ]
+      },
+      "get": {
+        "operationId": "ProductController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "brandId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "supplierId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lowStockOnly",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all products",
+        "tags": [
+          "Product"
+        ]
+      }
+    },
+    "/api/product/generate-barcode": {
+      "get": {
+        "operationId": "ProductController_generateBarcode",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Auto-generate unique product barcode for POS frontend",
+        "tags": [
+          "Product"
+        ]
+      }
+    },
+    "/api/product/scan/{barcode}": {
+      "get": {
+        "operationId": "ProductController_findByBarcode",
+        "parameters": [
+          {
+            "name": "barcode",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Find product by barcode (Quick Scan)",
+        "tags": [
+          "Product"
+        ]
+      }
+    },
+    "/api/product/{id}": {
+      "get": {
+        "operationId": "ProductController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get product by ID",
+        "tags": [
+          "Product"
+        ]
+      },
+      "patch": {
+        "operationId": "ProductController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update product",
+        "tags": [
+          "Product"
+        ]
+      },
+      "delete": {
+        "operationId": "ProductController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete product",
+        "tags": [
+          "Product"
+        ]
+      }
+    },
+    "/api/supplier": {
+      "post": {
+        "operationId": "SupplierController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupplierDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create supplier",
+        "tags": [
+          "Supplier"
+        ]
+      },
+      "get": {
+        "operationId": "SupplierController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all suppliers",
+        "tags": [
+          "Supplier"
+        ]
+      }
+    },
+    "/api/supplier/{id}": {
+      "get": {
+        "operationId": "SupplierController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get supplier by ID",
+        "tags": [
+          "Supplier"
+        ]
+      },
+      "patch": {
+        "operationId": "SupplierController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSupplierDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update supplier",
+        "tags": [
+          "Supplier"
+        ]
+      },
+      "delete": {
+        "operationId": "SupplierController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete supplier",
+        "tags": [
+          "Supplier"
+        ]
+      }
+    },
+    "/api/customer": {
+      "post": {
+        "operationId": "CustomerController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create customer",
+        "tags": [
+          "Customer"
+        ]
+      },
+      "get": {
+        "operationId": "CustomerController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all customers",
+        "tags": [
+          "Customer"
+        ]
+      }
+    },
+    "/api/customer/{id}": {
+      "get": {
+        "operationId": "CustomerController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get customer by ID",
+        "tags": [
+          "Customer"
+        ]
+      },
+      "patch": {
+        "operationId": "CustomerController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update customer",
+        "tags": [
+          "Customer"
+        ]
+      },
+      "delete": {
+        "operationId": "CustomerController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete customer",
+        "tags": [
+          "Customer"
+        ]
+      }
+    },
+    "/api/register/open": {
+      "post": {
+        "operationId": "RegisterController_open",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenRegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Open register shift session",
+        "tags": [
+          "Register"
+        ]
+      }
+    },
+    "/api/register/current": {
+      "get": {
+        "operationId": "RegisterController_getCurrent",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get current active register session",
+        "tags": [
+          "Register"
+        ]
+      }
+    },
+    "/api/register/{id}/close": {
+      "patch": {
+        "operationId": "RegisterController_close",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseRegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Close register shift session",
+        "tags": [
+          "Register"
+        ]
+      }
+    },
+    "/api/sale": {
+      "post": {
+        "operationId": "SaleController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSaleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create new POS sale / invoice",
+        "tags": [
+          "Sale"
+        ]
+      },
+      "get": {
+        "operationId": "SaleController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "COMPLETED",
+                "PARKED",
+                "CANCELLED"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentMethod",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "CASH",
+                "CARD",
+                "UPI",
+                "CREDIT",
+                "SPLIT"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all sales history",
+        "tags": [
+          "Sale"
+        ]
+      }
+    },
+    "/api/sale/{id}": {
+      "get": {
+        "operationId": "SaleController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get sale by ID",
+        "tags": [
+          "Sale"
+        ]
+      }
+    },
+    "/api/sale/{id}/cancel": {
+      "patch": {
+        "operationId": "SaleController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Cancel sale and restock inventory",
+        "tags": [
+          "Sale"
+        ]
+      }
+    },
+    "/api/expense": {
+      "post": {
+        "operationId": "ExpenseController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExpenseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create expense",
+        "tags": [
+          "Expense"
+        ]
+      },
+      "get": {
+        "operationId": "ExpenseController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all expenses",
+        "tags": [
+          "Expense"
+        ]
+      }
+    },
+    "/api/expense/{id}": {
+      "delete": {
+        "operationId": "ExpenseController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete expense",
+        "tags": [
+          "Expense"
+        ]
+      }
+    },
+    "/api/purchase": {
+      "post": {
+        "operationId": "PurchaseController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePurchaseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create purchase bill & adjust stock",
+        "tags": [
+          "Purchase"
+        ]
+      },
+      "get": {
+        "operationId": "PurchaseController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all purchase bills",
+        "tags": [
+          "Purchase"
+        ]
+      }
+    },
+    "/api/purchase/{id}": {
+      "get": {
+        "operationId": "PurchaseController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get purchase bill by ID",
+        "tags": [
+          "Purchase"
+        ]
+      }
     }
   },
   "info": {
@@ -1665,6 +2828,684 @@
         "required": [
           "startDate",
           "endDate"
+        ]
+      },
+      "CreateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "string"
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "companyId"
+        ]
+      },
+      "UpdateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "string"
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateBrandDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "companyId"
+        ]
+      },
+      "UpdateBrandDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateProductDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Product name (Required for all business types - Supermarket, Dress Shop, Spare Parts)",
+            "example": "Basmati Rice 5kg / Men Casual Shirt Blue L / Brake Pad Swift"
+          },
+          "companyId": {
+            "type": "string",
+            "description": "Company / Tenant ID (Required)",
+            "example": "65f123456789abcdef123456"
+          },
+          "sellingPrice": {
+            "type": "number",
+            "description": "Selling price per unit (Required)",
+            "example": 450
+          },
+          "sku": {
+            "type": "string",
+            "description": "Stock Keeping Unit / Product Code",
+            "example": "SKU-10023"
+          },
+          "barcode": {
+            "type": "string",
+            "description": "Product barcode string for scanner checkout",
+            "example": "2012345678901"
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "Category ID",
+            "example": "65f987654321abcdef654321"
+          },
+          "brandId": {
+            "type": "string",
+            "description": "Brand ID",
+            "example": "65f987654321abcdef654323"
+          },
+          "supplierId": {
+            "type": "string",
+            "description": "Supplier ID",
+            "example": "65f987654321abcdef654324"
+          },
+          "unitOfMeasure": {
+            "type": "string",
+            "default": "PCS",
+            "description": "Unit of measure (e.g. PCS, KG, G, LTR, BOX, NOS)",
+            "example": "PCS"
+          },
+          "costPrice": {
+            "type": "number",
+            "default": 0,
+            "description": "Purchase cost price per unit",
+            "example": 300
+          },
+          "mrp": {
+            "type": "number",
+            "description": "Maximum Retail Price (Printed MRP for Supermarkets / Grocery)",
+            "example": 500
+          },
+          "taxRate": {
+            "type": "number",
+            "default": 0,
+            "description": "Tax percentage rate (GST/VAT)",
+            "example": 5
+          },
+          "isTaxInclusive": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether selling price is inclusive of tax",
+            "example": true
+          },
+          "stockQuantity": {
+            "type": "number",
+            "default": 0,
+            "description": "Initial stock quantity on hand",
+            "example": 50
+          },
+          "minStockAlert": {
+            "type": "number",
+            "default": 5,
+            "description": "Minimum stock alert threshold",
+            "example": 5
+          },
+          "hasBatchExpiry": {
+            "type": "boolean",
+            "default": false,
+            "description": "Perishable item flag for batch/expiry tracking (Grocery)",
+            "example": false
+          },
+          "partNumber": {
+            "type": "string",
+            "description": "Part / OEM Number (For Spare Parts & Hardware stores)",
+            "example": "BP-SWIFT-2020"
+          },
+          "size": {
+            "type": "string",
+            "description": "Size (For Dress / Apparel / Shoe shops)",
+            "example": "XL / 42"
+          },
+          "color": {
+            "type": "string",
+            "description": "Color (For Dress / Apparel shops)",
+            "example": "Navy Blue"
+          },
+          "description": {
+            "type": "string",
+            "description": "Product description or notes",
+            "example": "Premium Cotton Comfort Fit Shirt"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true,
+            "description": "Product active status",
+            "example": true
+          }
+        },
+        "required": [
+          "name",
+          "companyId",
+          "sellingPrice"
+        ]
+      },
+      "UpdateProductDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Product name (Required for all business types - Supermarket, Dress Shop, Spare Parts)",
+            "example": "Basmati Rice 5kg / Men Casual Shirt Blue L / Brake Pad Swift"
+          },
+          "companyId": {
+            "type": "string",
+            "description": "Company / Tenant ID (Required)",
+            "example": "65f123456789abcdef123456"
+          },
+          "sellingPrice": {
+            "type": "number",
+            "description": "Selling price per unit (Required)",
+            "example": 450
+          },
+          "sku": {
+            "type": "string",
+            "description": "Stock Keeping Unit / Product Code",
+            "example": "SKU-10023"
+          },
+          "barcode": {
+            "type": "string",
+            "description": "Product barcode string for scanner checkout",
+            "example": "2012345678901"
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "Category ID",
+            "example": "65f987654321abcdef654321"
+          },
+          "brandId": {
+            "type": "string",
+            "description": "Brand ID",
+            "example": "65f987654321abcdef654323"
+          },
+          "supplierId": {
+            "type": "string",
+            "description": "Supplier ID",
+            "example": "65f987654321abcdef654324"
+          },
+          "unitOfMeasure": {
+            "type": "string",
+            "default": "PCS",
+            "description": "Unit of measure (e.g. PCS, KG, G, LTR, BOX, NOS)",
+            "example": "PCS"
+          },
+          "costPrice": {
+            "type": "number",
+            "default": 0,
+            "description": "Purchase cost price per unit",
+            "example": 300
+          },
+          "mrp": {
+            "type": "number",
+            "description": "Maximum Retail Price (Printed MRP for Supermarkets / Grocery)",
+            "example": 500
+          },
+          "taxRate": {
+            "type": "number",
+            "default": 0,
+            "description": "Tax percentage rate (GST/VAT)",
+            "example": 5
+          },
+          "isTaxInclusive": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether selling price is inclusive of tax",
+            "example": true
+          },
+          "stockQuantity": {
+            "type": "number",
+            "default": 0,
+            "description": "Initial stock quantity on hand",
+            "example": 50
+          },
+          "minStockAlert": {
+            "type": "number",
+            "default": 5,
+            "description": "Minimum stock alert threshold",
+            "example": 5
+          },
+          "hasBatchExpiry": {
+            "type": "boolean",
+            "default": false,
+            "description": "Perishable item flag for batch/expiry tracking (Grocery)",
+            "example": false
+          },
+          "partNumber": {
+            "type": "string",
+            "description": "Part / OEM Number (For Spare Parts & Hardware stores)",
+            "example": "BP-SWIFT-2020"
+          },
+          "size": {
+            "type": "string",
+            "description": "Size (For Dress / Apparel / Shoe shops)",
+            "example": "XL / 42"
+          },
+          "color": {
+            "type": "string",
+            "description": "Color (For Dress / Apparel shops)",
+            "example": "Navy Blue"
+          },
+          "description": {
+            "type": "string",
+            "description": "Product description or notes",
+            "example": "Premium Cotton Comfort Fit Shirt"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true,
+            "description": "Product active status",
+            "example": true
+          }
+        }
+      },
+      "CreateSupplierDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "contactPerson": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "taxId": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "balanceDue": {
+            "type": "number",
+            "default": 0
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "name",
+          "phone",
+          "companyId"
+        ]
+      },
+      "UpdateSupplierDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "contactPerson": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "taxId": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "balanceDue": {
+            "type": "number",
+            "default": 0
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "CreateCustomerDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "creditLimit": {
+            "type": "number",
+            "default": 0
+          },
+          "balanceDue": {
+            "type": "number",
+            "default": 0
+          },
+          "loyaltyPoints": {
+            "type": "number",
+            "default": 0
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "name",
+          "phone",
+          "companyId"
+        ]
+      },
+      "UpdateCustomerDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "creditLimit": {
+            "type": "number",
+            "default": 0
+          },
+          "balanceDue": {
+            "type": "number",
+            "default": 0
+          },
+          "loyaltyPoints": {
+            "type": "number",
+            "default": 0
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      },
+      "OpenRegisterDto": {
+        "type": "object",
+        "properties": {
+          "openingCash": {
+            "type": "number",
+            "default": 0
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "openingCash",
+          "companyId"
+        ]
+      },
+      "CloseRegisterDto": {
+        "type": "object",
+        "properties": {
+          "closingCash": {
+            "type": "number"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "closingCash"
+        ]
+      },
+      "CreateSaleItemDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unitPrice": {
+            "type": "number"
+          },
+          "discountAmount": {
+            "type": "number",
+            "default": 0
+          },
+          "taxRate": {
+            "type": "number",
+            "default": 0
+          }
+        },
+        "required": [
+          "productId",
+          "quantity",
+          "unitPrice"
+        ]
+      },
+      "CreateSaleDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateSaleItemDto"
+            }
+          },
+          "paidAmount": {
+            "type": "number"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "CARD",
+              "UPI",
+              "CREDIT",
+              "SPLIT"
+            ],
+            "default": "CASH"
+          },
+          "customerId": {
+            "type": "string"
+          },
+          "registerSessionId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "COMPLETED",
+              "PARKED",
+              "CANCELLED"
+            ],
+            "default": "COMPLETED"
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
+          "paidAmount",
+          "paymentMethod",
+          "companyId"
+        ]
+      },
+      "CreateExpenseDto": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "default": "CASH"
+          },
+          "description": {
+            "type": "string"
+          },
+          "referenceNo": {
+            "type": "string"
+          },
+          "expenseDate": {
+            "type": "string"
+          },
+          "companyId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "amount",
+          "companyId"
+        ]
+      },
+      "CreatePurchaseItemDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "costPrice": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "productId",
+          "quantity",
+          "costPrice"
+        ]
+      },
+      "CreatePurchaseDto": {
+        "type": "object",
+        "properties": {
+          "billNumber": {
+            "type": "string"
+          },
+          "supplierId": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePurchaseItemDto"
+            }
+          },
+          "paidAmount": {
+            "type": "number"
+          },
+          "purchaseDate": {
+            "type": "string"
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "billNumber",
+          "supplierId",
+          "items",
+          "paidAmount",
+          "companyId"
         ]
       }
     }
