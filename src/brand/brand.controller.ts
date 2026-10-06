@@ -30,7 +30,11 @@ export class BrandController {
   @CheckPermission({ subModule: SUB_MODULES.PRODUCT, action: ACTIONS.CREATE })
   @Post()
   create(@Body() dto: CreateBrandDto, @Req() req: AuthedRequest) {
-    return this.brandService.createBrand(dto, req.user.userId, req);
+    return this.brandService.createBrand(
+      { ...dto, companyId: req.user.companyId },
+      req.user.userId,
+      req,
+    );
   }
 
   @ApiOperation({ summary: 'Get all brands' })
