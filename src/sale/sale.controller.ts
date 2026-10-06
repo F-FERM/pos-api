@@ -32,6 +32,23 @@ export class SaleController {
     return this.saleService.createSale(dto, req.user.userId, req);
   }
 
+  @ApiOperation({ summary: 'Reprint sale invoice receipt' })
+  @CheckPermission({ subModule: SUB_MODULES.SALE, action: ACTIONS.READ })
+  @Post(':id/reprint')
+  reprint(
+    @Param('id', ParseObjectIdPipe) id: string,
+    @Query('counterId') counterId: string,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.saleService.reprintSale(
+      id,
+      counterId,
+      req.user.userId,
+      req.user.companyId,
+      req,
+    );
+  }
+
   @ApiOperation({ summary: 'Get all sales history' })
   @ApiQuery({ name: 'status', required: false, enum: SaleStatus })
   @ApiQuery({ name: 'paymentMethod', required: false, enum: PaymentMethod })
