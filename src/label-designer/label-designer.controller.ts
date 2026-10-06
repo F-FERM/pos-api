@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Query, Req } from '@nestjs/common';
+import { Body, Controller, Get, Header, Post, Query, Req } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { LabelDesignerService } from './label-designer.service';
 import { GenerateLabelDto } from './dto/generate-label.dto';
@@ -26,13 +26,28 @@ export class LabelDesignerController {
     return this.labelDesignerService.generateLabels(dto, req.user.userId, req);
   }
 
+
+  //TODO: Add proper authorization guards for superadmin routes
   @ApiOperation({
     summary:
-      'Public test endpoint: Generate a sample sticker label design using seed default data without auth or company ID',
+      'Public test endpoint: Generate a sample sticker label design JSON using seed default data without auth or company ID',
   })
   @Public()
   @Post('test-print')
   sendTestLabelPrint(@Query('companyId') companyId?: string) {
     return this.labelDesignerService.generateTestLabel(companyId);
+  }
+
+  //TODO: Add proper authorization guards for superadmin routes
+  @ApiOperation({
+    summary:
+      'Public HTML preview endpoint: Returns direct HTML rendered sticker label view for browser testing',
+  })
+  @Public()
+  @Get('test-print/html')
+  @Header('Content-Type', 'text/html')
+  async sendTestLabelPrintHtml(@Query('companyId') companyId?: string) {
+    const result = await this.labelDesignerService.generateTestLabel(companyId);
+    return result.data.html;
   }
 }
