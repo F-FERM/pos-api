@@ -13,7 +13,7 @@ export enum numberSettingsDocumentType {
   INVOICE = 'INVOICE',
   PURCHASE_ORDER = 'PURCHASE_ORDER',
   BILL = 'BILL',
-  CREDIT_NOTE = 'CREDIT_NOTE',
+  SALE_RETURN = 'SALE_RETURN',
 }
 
 export enum RefundMethod {
@@ -96,6 +96,7 @@ export enum LogActions {
 
   // Sale Return & Refund
   CREATE_SALE_RETURN = 'CREATE_SALE_RETURN',
+  UPDATE_SALE_RETURN = 'UPDATE_SALE_RETURN',
   DELETE_SALE_RETURN = 'DELETE_SALE_RETURN',
 
   // Expense
