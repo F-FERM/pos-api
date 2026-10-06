@@ -36,7 +36,11 @@ export class SaleReturnController {
   })
   @Post()
   create(@Body() dto: CreateSaleReturnDto, @Req() req: AuthedRequest) {
-    return this.saleReturnService.createSaleReturn(dto, req.user.userId, req);
+    return this.saleReturnService.createSaleReturn(
+      { ...dto, companyId: req.user.companyId },
+      req.user.userId,
+      req,
+    );
   }
 
   @ApiOperation({ summary: 'Get all processed sale returns & refunds' })
