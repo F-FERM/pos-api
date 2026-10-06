@@ -25,6 +25,8 @@ import { SaleModule } from './sale/sale.module';
 import { ExpenseModule } from './expense/expense.module';
 import { PurchaseModule } from './purchase/purchase.module';
 import { NumberSettingsModule } from './number-settings/number-settings.module';
+import { PrinterModule } from './printer/printer.module';
+import { CounterModule } from './counter/counter.module';
 
 @Module({
   imports: [
@@ -49,6 +51,8 @@ import { NumberSettingsModule } from './number-settings/number-settings.module';
     ExpenseModule,
     PurchaseModule,
     NumberSettingsModule,
+    PrinterModule,
+    CounterModule,
   ],
   controllers: [AppController],
   providers: [
