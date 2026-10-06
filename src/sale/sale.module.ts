@@ -14,6 +14,7 @@ import { CompanyModule } from '../company/company.module';
 import { UserModule } from '../user/user.module';
 import { NumberSettingsModule } from '../number-settings/number-settings.module';
 import { PrinterModule } from '../printer/printer.module';
+import { LoyaltySettingModule } from '../loyalty-setting/loyalty-setting.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { PrinterModule } from '../printer/printer.module';
     UserModule,
     NumberSettingsModule,
     PrinterModule,
+    LoyaltySettingModule,
   ],
   controllers: [SaleController],
   providers: [SaleService],
