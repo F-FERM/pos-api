@@ -33,6 +33,7 @@ import {
   PaperWidth,
 } from '../utils/common.enum';
 import { AuthedRequest } from '../utils/common.types';
+import { DEFAULT_TEST_SALE_DATA } from '../common/seeds/printer.data';
 
 export interface PrintReceiptPayload {
   sale: any;
@@ -456,6 +457,109 @@ export class PrinterService extends GenericDatabase<Model<PrinterDocument>> {
       },
       statusCode: HttpStatus.OK,
     };
+  }
+
+  async sendTestPrint(
+    printerId: string | undefined,
+    counterId: string | undefined,
+    userId: string,
+    companyId: string,
+    req: AuthedRequest,
+  ) {
+    try {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.userService.validateAuthenticatedUser(userId);
+      await this.companyService.validateCompany(companyId, userId);
+
+      let printer: PrinterDocument | null = null;
+
+      if (printerId && Types.ObjectId.isValid(printerId)) {
+        printer = await this.printerModel.findOne({
+          _id: new Types.ObjectId(printerId),
+          companyId: new Types.ObjectId(companyId),
+          isDeleted: false,
+        });
+      }
+
+      if (!printer) {
+        printer = await this.resolvePrinterForCounter(companyId, counterId);
+      }
+
+      const company = await this.companyModel.findOne({
+        _id: new Types.ObjectId(companyId),
+        isDeleted: false,
+      });
+
+      const paperWidth = printer?.paperWidth || PaperWidth.MM_80;
+
+      const payload: PrintReceiptPayload = {
+        sale: DEFAULT_TEST_SALE_DATA,
+        company: company?.toObject() || { name: 'DEFAULT STORE' },
+      };
+
+      const receiptText = this.formatRetailReceipt(payload, {
+        paperWidth,
+        reprint: false,
+      });
+
+      let physicalPrintStatus: 'sent' | 'failed' | 'skipped' = 'skipped';
+      let physicalPrintError: string | null = null;
+
+      if (printer) {
+        try {
+          await this.sendToThermalPrinter(
+            printer.printerIp,
+            paperWidth,
+            payload,
+            false,
+          );
+          physicalPrintStatus = 'sent';
+        } catch (err: any) {
+          physicalPrintStatus = 'failed';
+          physicalPrintError = err?.message || String(err);
+        }
+      } else {
+        physicalPrintError = 'No active printer configured for test print';
+      }
+
+      await this.logService.createLog({
+        companyId: new Types.ObjectId(companyId),
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.PRINT_SALE,
+        entityType: LogEntityType.PRINTER,
+        entityId: printer ? new Types.ObjectId(printer._id) : new Types.ObjectId(),
+        description: `Test print sent (${physicalPrintStatus})`,
+        ipAddress,
+        path: req.url,
+        status: LogStatus.SUCCESS,
+      });
+
+      return {
+        success: true,
+        message: 'Test print process completed',
+        data: {
+          testSale: DEFAULT_TEST_SALE_DATA,
+          receiptText,
+          printedAt: new Date(),
+          printer: printer
+            ? {
+                id: printer._id.toString(),
+                name: printer.printerName,
+                ip: printer.printerIp,
+                paperWidth,
+              }
+            : null,
+          physicalPrintStatus,
+          physicalPrintError,
+        },
+        statusCode: HttpStatus.OK,
+      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Failed to process test print');
+    }
   }
 
   async createPrinter(
