@@ -41,6 +41,7 @@ import { LogService } from '../log/log.service';
 import { CompanyService } from '../company/company.service';
 import { UserService } from '../user/user.service';
 import { NumberSettingsService } from '../number-settings/number-settings.service';
+import { LoyaltySettingService } from '../loyalty-setting/loyalty-setting.service';
 import { AuthedRequest } from '../utils/common.types';
 import {
   LogActions,
@@ -70,6 +71,7 @@ export class SaleReturnService extends GenericDatabase<
     private readonly companyService: CompanyService,
     private readonly userService: UserService,
     private readonly numberSettingsService: NumberSettingsService,
+    private readonly loyaltySettingService: LoyaltySettingService,
   ) {
     super(saleReturnModel);
   }
@@ -209,12 +211,15 @@ export class SaleReturnService extends GenericDatabase<
         }
 
         if (sale.customerId) {
-          const company = await this.companyService.genericFindOne(
-            { _id: dto.companyId },
-            { session },
-          );
-          const loyaltyRate = company?.regional?.loyaltyAmountPerPoint || 100;
-          const loyaltyPointsToDeduct = totalRefundAmount / loyaltyRate;
+          const loyaltySettingRes =
+            await this.loyaltySettingService.getSetting(dto.companyId);
+          const loyaltyConfig = loyaltySettingRes.data;
+
+          const loyaltyRate = loyaltyConfig?.loyaltyAmountPerPoint || 100;
+          const loyaltyPointsToDeduct =
+            loyaltyConfig?.isEnabled !== false
+              ? totalRefundAmount / loyaltyRate
+              : 0;
 
           const customerInc: Record<string, number> = {
             loyaltyPoints: -loyaltyPointsToDeduct,
@@ -420,12 +425,13 @@ export class SaleReturnService extends GenericDatabase<
 
         // Adjust loyalty points / store credit if customer exists
         if (existingReturn.customerId && refundDiff !== 0) {
-          const company = await this.companyService.genericFindOne(
-            { _id: companyId },
-            { session },
-          );
-          const loyaltyRate = company?.regional?.loyaltyAmountPerPoint || 100;
-          const pointsDelta = refundDiff / loyaltyRate;
+          const loyaltySettingRes =
+            await this.loyaltySettingService.getSetting(companyId);
+          const loyaltyConfig = loyaltySettingRes.data;
+
+          const loyaltyRate = loyaltyConfig?.loyaltyAmountPerPoint || 100;
+          const pointsDelta =
+            loyaltyConfig?.isEnabled !== false ? refundDiff / loyaltyRate : 0;
 
           const customerInc: Record<string, number> = {
             loyaltyPoints: -pointsDelta,
@@ -679,13 +685,15 @@ export class SaleReturnService extends GenericDatabase<
 
         // Restore loyalty points & store credit
         if (saleReturn.customerId) {
-          const company = await this.companyService.genericFindOne(
-            { _id: companyId },
-            { session },
-          );
-          const loyaltyRate = company?.regional?.loyaltyAmountPerPoint || 100;
+          const loyaltySettingRes =
+            await this.loyaltySettingService.getSetting(companyId);
+          const loyaltyConfig = loyaltySettingRes.data;
+
+          const loyaltyRate = loyaltyConfig?.loyaltyAmountPerPoint || 100;
           const loyaltyPointsToRestore =
-            saleReturn.totalRefundAmount / loyaltyRate;
+            loyaltyConfig?.isEnabled !== false
+              ? saleReturn.totalRefundAmount / loyaltyRate
+              : 0;
 
           const customerInc: Record<string, number> = {
             loyaltyPoints: loyaltyPointsToRestore,
