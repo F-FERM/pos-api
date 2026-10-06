@@ -51,8 +51,4 @@ export class GenerateLabelDto {
   @IsNumber()
   @Min(1)
   columns?: number;
-
-  @ApiProperty()
-  @IsMongoId()
-  companyId: string;
 }
