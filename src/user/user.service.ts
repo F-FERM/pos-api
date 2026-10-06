@@ -197,7 +197,12 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
         this.userModel
           .find(filter)
           .select(`-${UserModelConstants.password}`)
-          .populate(UserModelConstants.privilegeId)
+          .populate([
+            {
+              path: UserModelConstants.privilegeId,
+              select: `${PrivilegesModelConstants.name} ${PrivilegesModelConstants.roles} ${PrivilegesModelConstants.description}`,
+            },
+          ])
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit),
@@ -247,7 +252,12 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
       const user = await this.userModel
         .findOne(filter)
         .select(`-${UserModelConstants.password}`)
-        .populate(UserModelConstants.privilegeId);
+        .populate([
+          {
+            path: UserModelConstants.privilegeId,
+            select: `${PrivilegesModelConstants.name} ${PrivilegesModelConstants.roles} ${PrivilegesModelConstants.description}`,
+          },
+        ]);
       if (!user) {
         throw new NotFoundException('User not found');
       }
