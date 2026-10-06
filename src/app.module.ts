@@ -29,6 +29,7 @@ import { PrinterModule } from './printer/printer.module';
 import { CounterModule } from './counter/counter.module';
 import { LabelDesignerModule } from './label-designer/label-designer.module';
 import { StaffModule } from './staff/staff.module';
+import { SaleReturnModule } from './sale-return/sale-return.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { StaffModule } from './staff/staff.module';
     CounterModule,
     LabelDesignerModule,
     StaffModule,
+    SaleReturnModule,
   ],
   controllers: [AppController],
   providers: [
