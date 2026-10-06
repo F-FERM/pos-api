@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   DefaultValuePipe,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -73,6 +74,27 @@ export class SaleReturnController {
       req.user.userId,
       req.user.companyId,
       req.user.roles,
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      'Cancel/Delete sale return (reverses stock restock and restores loyalty points)',
+  })
+  @CheckPermission({
+    subModule: SUB_MODULES.SALE_RETURN,
+    action: ACTIONS.DELETE,
+  })
+  @Delete(':id')
+  remove(
+    @Param('id', ParseObjectIdPipe) id: string,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.saleReturnService.deleteSaleReturn(
+      id,
+      req.user.userId,
+      req.user.companyId,
+      req,
     );
   }
 }
