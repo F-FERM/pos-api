@@ -30,10 +30,6 @@ export class CreateCategoryDto {
   @IsMongoId()
   parentId?: string;
 
-  @ApiProperty()
-  @IsMongoId()
-  companyId: string;
-
   @ApiPropertyOptional()
   @IsOptional()
   @IsBoolean()
