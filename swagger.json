@@ -1831,7 +1831,7 @@
             "schema": {
               "enum": [
                 "COMPLETED",
-                "PARKED",
+                "SAVE",
                 "CANCELLED"
               ],
               "type": "string"
@@ -1846,8 +1846,7 @@
                 "CASH",
                 "CARD",
                 "UPI",
-                "CREDIT",
-                "SPLIT"
+                "CREDIT"
               ],
               "type": "string"
             }
@@ -1859,6 +1858,38 @@
           }
         },
         "summary": "Get all sales history",
+        "tags": [
+          "Sale"
+        ]
+      }
+    },
+    "/api/sale/{id}/reprint": {
+      "post": {
+        "operationId": "SaleController_reprint",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "counterId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Reprint sale invoice receipt",
         "tags": [
           "Sale"
         ]
@@ -1998,6 +2029,147 @@
         "summary": "Get number setting by document type",
         "tags": [
           "Number Settings"
+        ]
+      }
+    },
+    "/api/printer": {
+      "post": {
+        "operationId": "PrinterController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePrinterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create store / counter printer",
+        "tags": [
+          "Printer"
+        ]
+      },
+      "get": {
+        "operationId": "PrinterController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all store printers",
+        "tags": [
+          "Printer"
+        ]
+      }
+    },
+    "/api/printer/{id}": {
+      "get": {
+        "operationId": "PrinterController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get printer by ID",
+        "tags": [
+          "Printer"
+        ]
+      },
+      "patch": {
+        "operationId": "PrinterController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePrinterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update printer configuration",
+        "tags": [
+          "Printer"
+        ]
+      },
+      "delete": {
+        "operationId": "PrinterController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete printer configuration",
+        "tags": [
+          "Printer"
         ]
       }
     },
@@ -3476,8 +3648,7 @@
               "CASH",
               "CARD",
               "UPI",
-              "CREDIT",
-              "SPLIT"
+              "CREDIT"
             ],
             "default": "CASH"
           },
@@ -3487,11 +3658,16 @@
           "registerSessionId": {
             "type": "string"
           },
+          "counterId": {
+            "type": "string",
+            "description": "Counter ID of the checkout station making the sale",
+            "example": "65f123456789abcdef123456"
+          },
           "status": {
             "type": "string",
             "enum": [
               "COMPLETED",
-              "PARKED",
+              "SAVE",
               "CANCELLED"
             ],
             "default": "COMPLETED"
@@ -3533,6 +3709,89 @@
         "required": [
           "docType"
         ]
+      },
+      "CreatePrinterDto": {
+        "type": "object",
+        "properties": {
+          "printerName": {
+            "type": "string",
+            "description": "Name of the thermal printer",
+            "example": "Counter 1 Thermal Printer"
+          },
+          "printerIp": {
+            "type": "string",
+            "description": "Printer IP address (e.g. 192.168.1.100) or Windows USB spooler name",
+            "example": "192.168.1.100"
+          },
+          "counterId": {
+            "type": "string",
+            "description": "Counter ID bound to this printer",
+            "example": "65f123456789abcdef123456"
+          },
+          "paperWidth": {
+            "type": "string",
+            "enum": [
+              "58mm",
+              "80mm"
+            ],
+            "default": "80mm",
+            "description": "Thermal receipt paper width: 58mm or 80mm",
+            "example": "80mm"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "default": false,
+            "description": "Set as default printer for the store/company",
+            "example": false
+          },
+          "companyId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "printerName",
+          "printerIp",
+          "companyId"
+        ]
+      },
+      "UpdatePrinterDto": {
+        "type": "object",
+        "properties": {
+          "printerName": {
+            "type": "string",
+            "description": "Name of the thermal printer",
+            "example": "Counter 1 Thermal Printer"
+          },
+          "printerIp": {
+            "type": "string",
+            "description": "Printer IP address (e.g. 192.168.1.100) or Windows USB spooler name",
+            "example": "192.168.1.100"
+          },
+          "counterId": {
+            "type": "string",
+            "description": "Counter ID bound to this printer",
+            "example": "65f123456789abcdef123456"
+          },
+          "paperWidth": {
+            "type": "string",
+            "enum": [
+              "58mm",
+              "80mm"
+            ],
+            "default": "80mm",
+            "description": "Thermal receipt paper width: 58mm or 80mm",
+            "example": "80mm"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "default": false,
+            "description": "Set as default printer for the store/company",
+            "example": false
+          },
+          "companyId": {
+            "type": "string"
+          }
+        }
       },
       "CreateExpenseDto": {
         "type": "object",
