@@ -13,6 +13,10 @@ import {
 import { UserService } from '../user/user.service';
 import { numberSettingsDocumentType } from '../utils/common.enum';
 import { GenericDatabase } from '../helper/genericDatabase';
+import {
+  DEFAULT_NUMBER_SETTINGS,
+  DEFAULT_PREFIX_MAP,
+} from '../common/seeds/number-settings.data';
 
 @Injectable()
 export class NumberSettingsService extends GenericDatabase<
@@ -114,33 +118,20 @@ export class NumberSettingsService extends GenericDatabase<
         throw new BadRequestException('Invalid user ID');
       }
 
-      const documentTypes = [
-        numberSettingsDocumentType.INVOICE,
-        numberSettingsDocumentType.PURCHASE_ORDER,
-        numberSettingsDocumentType.BILL,
-      ];
-
-      const prefixMap: Record<numberSettingsDocumentType, string> = {
-        [numberSettingsDocumentType.INVOICE]: 'INV-',
-        [numberSettingsDocumentType.PURCHASE_ORDER]: 'PO-',
-        [numberSettingsDocumentType.BILL]: 'BILL-',
-      };
-
-      for (const docType of documentTypes) {
-        const prefix = prefixMap[docType] || 'DOC-';
+      for (const config of DEFAULT_NUMBER_SETTINGS) {
         try {
           await this.createDefaultSetting(
             companyId,
             userId,
-            docType,
+            config.docType,
             {
-              prefix,
-              nextNumber: 1,
+              prefix: config.prefix,
+              nextNumber: config.nextNumber,
             },
             session,
           );
         } catch (error) {
-          console.log(`Failed to create setting for ${docType}:`, error);
+          console.log(`Failed to create setting for ${config.docType}:`, error);
         }
       }
     } catch (error: unknown) {
@@ -314,13 +305,7 @@ export class NumberSettingsService extends GenericDatabase<
   }
 
   private getPrefix(docType: numberSettingsDocumentType): string {
-    const map: Record<numberSettingsDocumentType, string> = {
-      [numberSettingsDocumentType.INVOICE]: 'INV-',
-      [numberSettingsDocumentType.PURCHASE_ORDER]: 'PO-',
-      [numberSettingsDocumentType.BILL]: 'BILL-',
-    };
-
-    return map[docType] || 'DOC-';
+    return DEFAULT_PREFIX_MAP[docType] || 'DOC-';
   }
 
   async getAllSettings(
