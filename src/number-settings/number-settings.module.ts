@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { NumberSettingsController } from './number-settings.controller';
 import { NumberSettingsService } from './number-settings.service';
@@ -14,8 +14,8 @@ import { UserModule } from '../user/user.module';
     MongooseModule.forFeature([
       { name: NumberSettingSchemaName, schema: NumberSettingSchema },
     ]),
-    CompanyModule,
-    UserModule,
+    forwardRef(() => CompanyModule),
+    forwardRef(() => UserModule),
   ],
   controllers: [NumberSettingsController],
   providers: [NumberSettingsService],

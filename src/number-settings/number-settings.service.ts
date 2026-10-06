@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -25,7 +27,9 @@ export class NumberSettingsService extends GenericDatabase<
   constructor(
     @InjectModel(NumberSettingSchemaName)
     private readonly model: Model<NumberSettingDocument>,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
+    @Inject(forwardRef(() => CompanyService))
     private readonly companyService: CompanyService,
   ) {
     super(model);

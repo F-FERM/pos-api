@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  forwardRef,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -30,7 +32,9 @@ export class CounterService extends GenericDatabase<Model<CounterDocument>> {
     @InjectModel(CounterSchemaName)
     private readonly counterModel: Model<CounterDocument>,
     private readonly logService: LogService,
+    @Inject(forwardRef(() => CompanyService))
     private readonly companyService: CompanyService,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
   ) {
     super(counterModel);
