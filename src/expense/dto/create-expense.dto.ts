@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDateString,
-  IsMongoId,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -39,8 +38,4 @@ export class CreateExpenseDto {
   @IsOptional()
   @IsDateString()
   expenseDate?: string;
-
-  @ApiProperty()
-  @IsMongoId()
-  companyId: string;
 }
