@@ -18,4 +18,5 @@ export const SUB_MODULES = {
   LABEL_DESIGNER: 'label-designer',
   STAFF: 'staff',
   SALE_RETURN: 'sale-return',
+  LOYALTY_SETTING: 'loyalty-setting',
 } as const;
