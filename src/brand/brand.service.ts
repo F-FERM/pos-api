@@ -29,7 +29,11 @@ export class BrandService extends GenericDatabase<Model<BrandDocument>> {
     super(brandModel);
   }
 
-  async createBrand(dto: CreateBrandDto, userId: string, req: AuthedRequest) {
+  async createBrand(
+    dto: CreateBrandDto & { companyId: string },
+    userId: string,
+    req: AuthedRequest,
+  ) {
     try {
       const ipAddress = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);
