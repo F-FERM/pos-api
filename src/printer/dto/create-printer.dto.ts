@@ -55,8 +55,4 @@ export class CreatePrinterDto {
   @IsOptional()
   @IsBoolean()
   isDefault?: boolean;
-
-  @ApiProperty()
-  @IsMongoId()
-  companyId: string;
 }

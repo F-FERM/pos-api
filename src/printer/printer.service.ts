@@ -479,7 +479,7 @@ export class PrinterService extends GenericDatabase<Model<PrinterDocument>> {
   }
 
   async createPrinter(
-    dto: CreatePrinterDto,
+    dto: CreatePrinterDto & { companyId: string },
     userId: string,
     req: AuthedRequest,
   ) {
