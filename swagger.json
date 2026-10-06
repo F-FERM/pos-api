@@ -322,6 +322,236 @@
         ]
       }
     },
+    "/api/number-settings": {
+      "post": {
+        "operationId": "NumberSettingsController_upsert",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNumberSettingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create or Update number setting",
+        "tags": [
+          "Number Settings"
+        ]
+      },
+      "get": {
+        "description": "Retrieves all number settings configured for the authenticated user's company.",
+        "operationId": "NumberSettingsController_getAll",
+        "parameters": [],
+        "responses": {
+          "404": {
+            "description": "No number settings found for this company"
+          }
+        },
+        "summary": "Get all number settings for the company",
+        "tags": [
+          "Number Settings"
+        ]
+      }
+    },
+    "/api/number-settings/{id}": {
+      "get": {
+        "description": "Retrieves a specific number setting configuration using its unique ID.",
+        "operationId": "NumberSettingsController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Number setting not found"
+          }
+        },
+        "summary": "Get number setting by ID",
+        "tags": [
+          "Number Settings"
+        ]
+      }
+    },
+    "/api/number-settings/doc-type/{docType}": {
+      "get": {
+        "description": "Retrieves the number setting configuration for a specific document type.",
+        "operationId": "NumberSettingsController_getByDocType",
+        "parameters": [
+          {
+            "name": "docType",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Number setting not found"
+          }
+        },
+        "summary": "Get number setting by document type",
+        "tags": [
+          "Number Settings"
+        ]
+      }
+    },
+    "/api/counter": {
+      "post": {
+        "operationId": "CounterController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCounterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create checkout counter",
+        "tags": [
+          "Counter"
+        ]
+      },
+      "get": {
+        "operationId": "CounterController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all store counters",
+        "tags": [
+          "Counter"
+        ]
+      }
+    },
+    "/api/counter/{id}": {
+      "get": {
+        "operationId": "CounterController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get counter by ID",
+        "tags": [
+          "Counter"
+        ]
+      },
+      "patch": {
+        "operationId": "CounterController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCounterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update counter details",
+        "tags": [
+          "Counter"
+        ]
+      },
+      "delete": {
+        "operationId": "CounterController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete counter",
+        "tags": [
+          "Counter"
+        ]
+      }
+    },
     "/api/privilege": {
       "post": {
         "operationId": "PrivilegeController_create",
@@ -1943,95 +2173,6 @@
         ]
       }
     },
-    "/api/number-settings": {
-      "post": {
-        "operationId": "NumberSettingsController_upsert",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateNumberSettingDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "summary": "Create or Update number setting",
-        "tags": [
-          "Number Settings"
-        ]
-      },
-      "get": {
-        "description": "Retrieves all number settings configured for the authenticated user's company.",
-        "operationId": "NumberSettingsController_getAll",
-        "parameters": [],
-        "responses": {
-          "404": {
-            "description": "No number settings found for this company"
-          }
-        },
-        "summary": "Get all number settings for the company",
-        "tags": [
-          "Number Settings"
-        ]
-      }
-    },
-    "/api/number-settings/{id}": {
-      "get": {
-        "description": "Retrieves a specific number setting configuration using its unique ID.",
-        "operationId": "NumberSettingsController_getById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "404": {
-            "description": "Number setting not found"
-          }
-        },
-        "summary": "Get number setting by ID",
-        "tags": [
-          "Number Settings"
-        ]
-      }
-    },
-    "/api/number-settings/doc-type/{docType}": {
-      "get": {
-        "description": "Retrieves the number setting configuration for a specific document type.",
-        "operationId": "NumberSettingsController_getByDocType",
-        "parameters": [
-          {
-            "name": "docType",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "404": {
-            "description": "Number setting not found"
-          }
-        },
-        "summary": "Get number setting by document type",
-        "tags": [
-          "Number Settings"
-        ]
-      }
-    },
     "/api/printer": {
       "post": {
         "operationId": "PrinterController_create",
@@ -2346,6 +2487,55 @@
           "Purchase"
         ]
       }
+    },
+    "/api/label-designer/generate": {
+      "post": {
+        "operationId": "LabelDesignerController_generateLabels",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateLabelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Generate barcode thermal sticker labels (Company -> Product Name -> Barcode Lines -> Barcode Value -> Price)",
+        "tags": [
+          "Label Designer"
+        ]
+      }
+    },
+    "/api/label-designer/test-print": {
+      "post": {
+        "operationId": "LabelDesignerController_sendTestLabelPrint",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Public test endpoint: Generate a sample sticker label design using seed default data without auth or company ID",
+        "tags": [
+          "Label Designer"
+        ]
+      }
     }
   },
   "info": {
@@ -2606,6 +2796,91 @@
               "suspended",
               "inactive"
             ]
+          }
+        }
+      },
+      "UpdateNumberSettingDto": {
+        "type": "object",
+        "properties": {
+          "docType": {
+            "type": "string",
+            "enum": [
+              "INVOICE",
+              "PURCHASE_ORDER",
+              "BILL"
+            ]
+          },
+          "prefix": {
+            "type": "string",
+            "example": "INV-"
+          },
+          "nextNumber": {
+            "type": "number",
+            "example": 1
+          }
+        },
+        "required": [
+          "docType"
+        ]
+      },
+      "CreateCounterDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the checkout counter / register station",
+            "example": "Counter 1"
+          },
+          "code": {
+            "type": "string",
+            "description": "Counter code / identifier",
+            "example": "CNT-01"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "default": false,
+            "description": "Set as default counter for the store/company",
+            "example": false
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "name",
+          "code",
+          "companyId"
+        ]
+      },
+      "UpdateCounterDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the checkout counter / register station",
+            "example": "Counter 1"
+          },
+          "code": {
+            "type": "string",
+            "description": "Counter code / identifier",
+            "example": "CNT-01"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "default": false,
+            "description": "Set as default counter for the store/company",
+            "example": false
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
           }
         }
       },
@@ -3686,30 +3961,6 @@
           "companyId"
         ]
       },
-      "UpdateNumberSettingDto": {
-        "type": "object",
-        "properties": {
-          "docType": {
-            "type": "string",
-            "enum": [
-              "INVOICE",
-              "PURCHASE_ORDER",
-              "BILL"
-            ]
-          },
-          "prefix": {
-            "type": "string",
-            "example": "INV-"
-          },
-          "nextNumber": {
-            "type": "number",
-            "example": 1
-          }
-        },
-        "required": [
-          "docType"
-        ]
-      },
       "CreatePrinterDto": {
         "type": "object",
         "properties": {
@@ -3877,6 +4128,54 @@
           "supplierId",
           "items",
           "paidAmount",
+          "companyId"
+        ]
+      },
+      "LabelItemDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "description": "Product ObjectId"
+          },
+          "quantity": {
+            "type": "number",
+            "example": 10,
+            "description": "Number of sticker labels to print for this product"
+          }
+        },
+        "required": [
+          "productId",
+          "quantity"
+        ]
+      },
+      "GenerateLabelDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LabelItemDto"
+            }
+          },
+          "labelSize": {
+            "type": "string",
+            "example": "50x25",
+            "description": "Sticker size dimension in mm (e.g. 50x25, 38x25, 40x30)",
+            "default": "50x25"
+          },
+          "columns": {
+            "type": "number",
+            "example": 2,
+            "description": "Number of sticker columns per row (e.g. 1 for single roll, 2 for 2-up, 3 for 3-up)",
+            "default": 1
+          },
+          "companyId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "items",
           "companyId"
         ]
       }
