@@ -97,6 +97,11 @@ export enum LogActions {
   CREATE_PRINTER = 'CREATE_PRINTER',
   UPDATE_PRINTER = 'UPDATE_PRINTER',
   DELETE_PRINTER = 'DELETE_PRINTER',
+
+  // Counter
+  CREATE_COUNTER = 'CREATE_COUNTER',
+  UPDATE_COUNTER = 'UPDATE_COUNTER',
+  DELETE_COUNTER = 'DELETE_COUNTER',
 }
 
 export enum LogEntityType {
@@ -117,4 +122,5 @@ export enum LogEntityType {
   EXPENSE = 'Expense',
   NUMBER_SETTING = 'NumberSetting',
   PRINTER = 'Printer',
+  COUNTER = 'Counter',
 }
