@@ -35,7 +35,7 @@ export class CategoryService extends GenericDatabase<Model<CategoryDocument>> {
   }
 
   async createCategory(
-    dto: CreateCategoryDto,
+    dto: CreateCategoryDto & { companyId: string },
     userId: string,
     req: AuthedRequest,
   ) {
