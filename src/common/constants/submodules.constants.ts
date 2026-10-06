@@ -17,4 +17,5 @@ export const SUB_MODULES = {
   COUNTER: 'counter',
   LABEL_DESIGNER: 'label-designer',
   STAFF: 'staff',
+  SALE_RETURN: 'sale-return',
 } as const;
