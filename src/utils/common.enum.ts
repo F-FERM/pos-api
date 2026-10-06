@@ -13,6 +13,7 @@ export enum numberSettingsDocumentType {
   INVOICE = 'INVOICE',
   PURCHASE_ORDER = 'PURCHASE_ORDER',
   BILL = 'BILL',
+  CREDIT_NOTE = 'CREDIT_NOTE',
 }
 
 export enum RefundMethod {
