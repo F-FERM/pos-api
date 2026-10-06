@@ -95,7 +95,6 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
         [CompanyModelConstants.createdBy]: new Types.ObjectId(userId),
       });
 
-      // Auto-create default number settings & default checkout counter for new company
       try {
         await this.numberSettingsService.createDefaultSettingsForCompany(
           created._id.toString(),
@@ -185,7 +184,12 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
       const [data, totalCount] = await Promise.all([
         this.companyModel
           .find(filter)
-          .populate('ownerId', 'username name email')
+          .populate([
+            {
+              path: CompanyModelConstants.ownerId,
+              select: `${UserModelConstants.username} ${UserModelConstants.name} ${UserModelConstants.email}`,
+            },
+          ])
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit),
@@ -229,7 +233,12 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
 
       const company = await this.companyModel
         .findOne(filter)
-        .populate('ownerId', 'username name email');
+        .populate([
+          {
+            path: CompanyModelConstants.ownerId,
+            select: `${UserModelConstants.username} ${UserModelConstants.name} ${UserModelConstants.email}`,
+          },
+        ]);
       if (!company) {
         throw new NotFoundException('Company not found');
       }
