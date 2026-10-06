@@ -15,9 +15,12 @@ import { GenericDatabase } from '../helper/genericDatabase';
 import {
   Printer,
   PrinterDocument,
+  PrinterModelConstants,
   PrinterSchemaName,
 } from '../models/printer.schema';
 import { CompanyDocument, CompanySchemaName } from '../models/company.schema';
+import { CounterModelConstants } from '../models/counter.schema';
+import { UserModelConstants } from '../models/user.schema';
 import { CreatePrinterDto } from './dto/create-printer.dto';
 import { UpdatePrinterDto } from './dto/update-printer.dto';
 import { UserService } from '../user/user.service';
@@ -564,8 +567,16 @@ export class PrinterService extends GenericDatabase<Model<PrinterDocument>> {
       const [data, totalCount] = await Promise.all([
         this.printerModel
           .find(filter)
-          .populate('counterId', 'name code')
-          .populate('createdBy', 'username name')
+          .populate([
+            {
+              path: PrinterModelConstants.counterId,
+              select: `${CounterModelConstants.name} ${CounterModelConstants.code}`,
+            },
+            {
+              path: PrinterModelConstants.createdBy,
+              select: `${UserModelConstants.username} ${UserModelConstants.name}`,
+            },
+          ])
           .sort({ isDefault: -1, createdAt: -1 })
           .skip(skip)
           .limit(limit),
@@ -613,8 +624,16 @@ export class PrinterService extends GenericDatabase<Model<PrinterDocument>> {
 
       const printer = await this.printerModel
         .findOne(filter)
-        .populate('counterId', 'name code')
-        .populate('createdBy', 'username name');
+        .populate([
+          {
+            path: PrinterModelConstants.counterId,
+            select: `${CounterModelConstants.name} ${CounterModelConstants.code}`,
+          },
+          {
+            path: PrinterModelConstants.createdBy,
+            select: `${UserModelConstants.username} ${UserModelConstants.name}`,
+          },
+        ]);
 
       if (!printer) {
         throw new NotFoundException('Printer not found');
