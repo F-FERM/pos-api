@@ -30,7 +30,11 @@ export class CounterController {
   @CheckPermission({ subModule: SUB_MODULES.COUNTER, action: ACTIONS.CREATE })
   @Post()
   create(@Body() dto: CreateCounterDto, @Req() req: AuthedRequest) {
-    return this.counterService.createCounter(dto, req.user.userId, req);
+    return this.counterService.createCounter(
+      { ...dto, companyId: req.user.companyId },
+      req.user.userId,
+      req,
+    );
   }
 
   @ApiOperation({ summary: 'Get all store counters' })
