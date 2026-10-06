@@ -2,7 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsEmail,
-  IsMongoId,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -49,10 +48,6 @@ export class CreateCustomerDto {
   @IsNumber()
   @Min(0)
   loyaltyPoints?: number;
-
-  @ApiProperty()
-  @IsMongoId()
-  companyId: string;
 
   @ApiPropertyOptional({ default: true })
   @IsOptional()
