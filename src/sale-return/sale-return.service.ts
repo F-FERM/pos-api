@@ -164,12 +164,12 @@ export class SaleReturnService extends GenericDatabase<
 
         const totalRefundAmount = subtotalRefund + taxRefund;
 
-        let returnNumber = `RET-${Date.now().toString().slice(-6)}`;
+        let returnNumber = `CN-${Date.now().toString().slice(-6)}`;
         try {
           returnNumber = await this.numberSettingsService.generateNumber(
             dto.companyId,
             userId,
-            numberSettingsDocumentType.BILL,
+            numberSettingsDocumentType.CREDIT_NOTE,
             session,
           );
         } catch {
@@ -244,7 +244,7 @@ export class SaleReturnService extends GenericDatabase<
           action: LogActions.CREATE_SALE_RETURN,
           entityType: LogEntityType.SALE_RETURN,
           entityId: new Types.ObjectId(createdReturn._id),
-          description: `Sale return ${createdReturn.returnNumber} processed for invoice ${sale.invoiceNumber} (Refund: ${totalRefundAmount})`,
+          description: `Sale return / credit note ${createdReturn.returnNumber} processed for invoice ${sale.invoiceNumber} (Refund: ${totalRefundAmount})`,
           ipAddress,
           path: req.url,
           status: LogStatus.SUCCESS,
@@ -412,6 +412,123 @@ export class SaleReturnService extends GenericDatabase<
         throw new BadRequestException(error.message);
       }
       throw new BadRequestException('Error fetching sale return record');
+    }
+  }
+
+  async deleteSaleReturn(
+    id: string,
+    userId: string,
+    companyId: string,
+    req: AuthedRequest,
+  ) {
+    try {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.userService.validateAuthenticatedUser(userId);
+
+      const saleReturn = await this.genericFindOne({
+        _id: id,
+        companyId: new Types.ObjectId(companyId),
+        isDeleted: false,
+      });
+
+      if (!saleReturn) {
+        throw new NotFoundException('Active sale return record not found');
+      }
+
+      return await this.runTransaction(async (session: ClientSession) => {
+        // Reverse inventory stock addition (deduct returned stock back)
+        for (const item of saleReturn.items) {
+          await this.productModel.updateOne(
+            { _id: item.productId },
+            { $inc: { stockQuantity: -item.quantity } },
+            { session },
+          );
+        }
+
+        // Restore loyalty points & store credit
+        if (saleReturn.customerId) {
+          const company = await this.companyService.genericFindOne(
+            { _id: companyId },
+            { session },
+          );
+          const loyaltyRate = company?.regional?.loyaltyAmountPerPoint || 100;
+          const loyaltyPointsToRestore =
+            saleReturn.totalRefundAmount / loyaltyRate;
+
+          const customerInc: Record<string, number> = {
+            loyaltyPoints: loyaltyPointsToRestore,
+          };
+
+          if (saleReturn.refundMethod === RefundMethod.STORE_CREDIT) {
+            customerInc.balanceDue = saleReturn.totalRefundAmount;
+          }
+
+          await this.customerModel.updateOne(
+            { _id: saleReturn.customerId },
+            { $inc: customerInc },
+            { session },
+          );
+        }
+
+        // Restore cash register session
+        if (
+          saleReturn.registerSessionId &&
+          saleReturn.refundMethod === RefundMethod.CASH
+        ) {
+          await this.registerModel.updateOne(
+            { _id: saleReturn.registerSessionId },
+            { $inc: { totalSalesCash: saleReturn.totalRefundAmount } },
+            { session },
+          );
+        }
+
+        const updated = await this.genericUpdateOne(
+          id,
+          { isDeleted: true },
+          { session },
+        );
+
+        await this.logService.createLog({
+          companyId: new Types.ObjectId(companyId),
+          createdBy: new Types.ObjectId(userId),
+          action: LogActions.DELETE_SALE_RETURN,
+          entityType: LogEntityType.SALE_RETURN,
+          entityId: new Types.ObjectId(id),
+          description: `Sale return ${saleReturn.returnNumber} cancelled/deleted and stock/loyalty points restored`,
+          ipAddress,
+          path: req.url,
+          status: LogStatus.SUCCESS,
+        });
+
+        return {
+          success: true,
+          message:
+            'Sale return cancelled and inventory/loyalty points restored successfully',
+          data: updated,
+          statusCode: HttpStatus.OK,
+        };
+      });
+    } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: new Types.ObjectId(companyId),
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.DELETE_SALE_RETURN,
+        entityType: LogEntityType.SALE_RETURN,
+        entityId: new Types.ObjectId(id),
+        description: 'Failed to delete sale return',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Error deleting sale return');
     }
   }
 }
