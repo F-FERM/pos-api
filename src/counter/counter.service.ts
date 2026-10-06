@@ -71,7 +71,7 @@ export class CounterService extends GenericDatabase<Model<CounterDocument>> {
   }
 
   async createCounter(
-    dto: CreateCounterDto,
+    dto: CreateCounterDto & { companyId: string },
     userId: string,
     req: AuthedRequest,
   ) {
