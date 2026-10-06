@@ -34,7 +34,7 @@ export class SupplierService extends GenericDatabase<Model<SupplierDocument>> {
   }
 
   async createSupplier(
-    dto: CreateSupplierDto,
+    dto: CreateSupplierDto & { companyId: string },
     userId: string,
     req: AuthedRequest,
   ) {
