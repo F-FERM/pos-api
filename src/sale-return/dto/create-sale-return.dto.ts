@@ -52,10 +52,6 @@ export class CreateSaleReturnDto {
   @IsMongoId()
   registerSessionId?: string;
 
-  @ApiProperty()
-  @IsMongoId()
-  companyId: string;
-
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
