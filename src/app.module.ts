@@ -24,6 +24,7 @@ import { RegisterModule } from './register/register.module';
 import { SaleModule } from './sale/sale.module';
 import { ExpenseModule } from './expense/expense.module';
 import { PurchaseModule } from './purchase/purchase.module';
+import { NumberSettingsModule } from './number-settings/number-settings.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { PurchaseModule } from './purchase/purchase.module';
     SaleModule,
     ExpenseModule,
     PurchaseModule,
+    NumberSettingsModule,
   ],
   controllers: [AppController],
   providers: [
