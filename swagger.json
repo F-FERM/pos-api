@@ -2788,6 +2788,38 @@
           "Sale Return"
         ]
       },
+      "patch": {
+        "operationId": "SaleReturnController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSaleReturnDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update sale return details / returned quantities (recalculates inventory stock and refunds)",
+        "tags": [
+          "Sale Return"
+        ]
+      },
       "delete": {
         "operationId": "SaleReturnController_remove",
         "parameters": [
@@ -3082,7 +3114,7 @@
               "INVOICE",
               "PURCHASE_ORDER",
               "BILL",
-              "CREDIT_NOTE"
+              "SALE_RETURN"
             ]
           },
           "prefix": {
@@ -4603,6 +4635,41 @@
           "refundMethod",
           "companyId"
         ]
+      },
+      "UpdateSaleReturnDto": {
+        "type": "object",
+        "properties": {
+          "saleId": {
+            "type": "string",
+            "description": "Original Sale Invoice ObjectId"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateSaleReturnItemDto"
+            }
+          },
+          "refundMethod": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "CARD",
+              "UPI",
+              "STORE_CREDIT"
+            ],
+            "default": "CASH"
+          },
+          "registerSessionId": {
+            "type": "string",
+            "description": "Active POS cash register session ID"
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
       }
     }
   }
