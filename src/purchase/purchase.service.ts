@@ -40,7 +40,7 @@ export class PurchaseService extends GenericDatabase<Model<PurchaseDocument>> {
   }
 
   async createPurchase(
-    dto: CreatePurchaseDto,
+    dto: CreatePurchaseDto & { companyId: string },
     userId: string,
     req: AuthedRequest,
   ) {

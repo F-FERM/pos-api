@@ -27,7 +27,11 @@ export class PurchaseController {
   @CheckPermission({ subModule: SUB_MODULES.PURCHASE, action: ACTIONS.CREATE })
   @Post()
   create(@Body() dto: CreatePurchaseDto, @Req() req: AuthedRequest) {
-    return this.purchaseService.createPurchase(dto, req.user.userId, req);
+    return this.purchaseService.createPurchase(
+      { ...dto, companyId: req.user.companyId },
+      req.user.userId,
+      req,
+    );
   }
 
   @ApiOperation({ summary: 'Get all purchase bills' })

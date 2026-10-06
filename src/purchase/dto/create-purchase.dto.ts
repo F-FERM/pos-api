@@ -54,10 +54,6 @@ export class CreatePurchaseDto {
   @IsDateString()
   purchaseDate?: string;
 
-  @ApiProperty()
-  @IsMongoId()
-  companyId: string;
-
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
