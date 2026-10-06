@@ -2701,6 +2701,93 @@
           "Staff"
         ]
       }
+    },
+    "/api/sale-return": {
+      "post": {
+        "operationId": "SaleReturnController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSaleReturnDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Process POS sale return & refund (restocks inventory, adjusts customer loyalty/ledger)",
+        "tags": [
+          "Sale Return"
+        ]
+      },
+      "get": {
+        "operationId": "SaleReturnController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all processed sale returns & refunds",
+        "tags": [
+          "Sale Return"
+        ]
+      }
+    },
+    "/api/sale-return/{id}": {
+      "get": {
+        "operationId": "SaleReturnController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get sale return details by ID",
+        "tags": [
+          "Sale Return"
+        ]
+      }
     }
   },
   "info": {
@@ -4429,6 +4516,70 @@
             "default": true
           }
         }
+      },
+      "CreateSaleReturnItemDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "description": "Product ID being returned"
+          },
+          "quantity": {
+            "type": "number",
+            "example": 1,
+            "description": "Quantity of item returned"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Defective product / damaged",
+            "description": "Reason for return/refund"
+          }
+        },
+        "required": [
+          "productId",
+          "quantity"
+        ]
+      },
+      "CreateSaleReturnDto": {
+        "type": "object",
+        "properties": {
+          "saleId": {
+            "type": "string",
+            "description": "Original Sale Invoice ObjectId"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateSaleReturnItemDto"
+            }
+          },
+          "refundMethod": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "CARD",
+              "UPI",
+              "STORE_CREDIT"
+            ],
+            "default": "CASH"
+          },
+          "registerSessionId": {
+            "type": "string",
+            "description": "Active POS cash register session ID"
+          },
+          "companyId": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "saleId",
+          "items",
+          "refundMethod",
+          "companyId"
+        ]
       }
     }
   }
