@@ -1,0 +1,1 @@
+1.while register new company auto seed default number settings
