@@ -21,6 +21,7 @@ import { UserService } from '../user/user.service';
 import { LogService } from '../log/log.service';
 import { NumberSettingsService } from '../number-settings/number-settings.service';
 import { CounterService } from '../counter/counter.service';
+import { LoyaltySettingService } from '../loyalty-setting/loyalty-setting.service';
 import { AuthedRequest } from '../utils/common.types';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
@@ -36,6 +37,7 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
     private readonly logService: LogService,
     private readonly numberSettingsService: NumberSettingsService,
     private readonly counterService: CounterService,
+    private readonly loyaltySettingService: LoyaltySettingService,
   ) {
     super(companyModel);
   }
@@ -95,12 +97,17 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
         [CompanyModelConstants.createdBy]: new Types.ObjectId(userId),
       });
 
+      // Auto-create default number settings, counter, and loyalty program settings
       try {
         await this.numberSettingsService.createDefaultSettingsForCompany(
           created._id.toString(),
           userId,
         );
         await this.counterService.createDefaultCounterForCompany(
+          created._id.toString(),
+          userId,
+        );
+        await this.loyaltySettingService.createDefaultSettingForCompany(
           created._id.toString(),
           userId,
         );
