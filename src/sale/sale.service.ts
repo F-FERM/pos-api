@@ -16,20 +16,15 @@ import {
   SaleStatus,
 } from '../models/sale.schema';
 import { ProductDocument, ProductSchemaName } from '../models/product.schema';
-import {
-  CustomerDocument,
-  CustomerSchemaName,
-} from '../models/customer.schema';
-import {
-  RegisterSessionDocument,
-  RegisterSessionSchemaName,
-} from '../models/register-session.schema';
+import { CustomerDocument, CustomerSchemaName } from '../models/customer.schema';
+import { RegisterSessionDocument, RegisterSessionSchemaName } from '../models/register-session.schema';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { LogService } from '../log/log.service';
 import { CompanyService } from '../company/company.service';
 import { UserService } from '../user/user.service';
+import { NumberSettingsService } from '../number-settings/number-settings.service';
 import { AuthedRequest } from '../utils/common.types';
-import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
+import { LogActions, LogEntityType, LogStatus, numberSettingsDocumentType } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
 
 @Injectable()
@@ -46,15 +41,9 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
     private readonly logService: LogService,
     private readonly companyService: CompanyService,
     private readonly userService: UserService,
+    private readonly numberSettingsService: NumberSettingsService,
   ) {
     super(saleModel);
-  }
-
-  //TODO: Implement a invoice number generation logic, currently using a simple timestamp-based approach, move this to company settings for customization
-  private generateInvoiceNumber(): string {
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const randomStr = Math.floor(1000 + Math.random() * 9000);
-    return `INV-${dateStr}-${randomStr}`;
   }
 
   async createSale(dto: CreateSaleDto, userId: string, req: AuthedRequest) {
@@ -126,7 +115,14 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
         const grandTotal = Math.max(0, subtotal - discountTotal + taxTotal);
         const changeAmount =
           dto.paidAmount > grandTotal ? dto.paidAmount - grandTotal : 0;
-        const invoiceNumber = this.generateInvoiceNumber();
+
+        // Auto-generate invoice number using configured Number Settings
+        const invoiceNumber = await this.numberSettingsService.generateNumber(
+          dto.companyId,
+          userId,
+          numberSettingsDocumentType.INVOICE,
+          session,
+        );
 
         const created = await this.genericCreateOne(
           {
@@ -163,10 +159,26 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
             );
           }
 
-          if (dto.customerId && dto.paymentMethod === PaymentMethod.CREDIT) {
+          // Registered Customer Handling: Credit Ledger & Configurable Loyalty Points
+          if (dto.customerId) {
+            const company = await this.companyService.genericFindOne(
+              { _id: dto.companyId },
+              { session },
+            );
+            const loyaltyRate = company?.regional?.loyaltyAmountPerPoint || 100;
+            const earnedLoyaltyPoints = grandTotal / loyaltyRate;
+
+            const customerInc: Record<string, number> = {
+              loyaltyPoints: earnedLoyaltyPoints,
+            };
+
+            if (dto.paymentMethod === PaymentMethod.CREDIT) {
+              customerInc.balanceDue = grandTotal;
+            }
+
             await this.customerModel.updateOne(
               { _id: dto.customerId },
-              { $inc: { balanceDue: grandTotal } },
+              { $inc: customerInc },
               { session },
             );
           }
@@ -272,7 +284,7 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
       const [data, totalCount] = await Promise.all([
         this.saleModel
           .find(filter)
-          .populate('customerId', 'name phone email')
+          .populate('customerId', 'name phone email loyaltyPoints balanceDue')
           .populate('registerSessionId', 'openingCash status openedAt')
           .populate('createdBy', 'username name')
           .populate('items.productId', 'name sku barcode unitOfMeasure')
@@ -323,7 +335,7 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
 
       const sale = await this.saleModel
         .findOne(filter)
-        .populate('customerId', 'name phone email address')
+        .populate('customerId', 'name phone email address loyaltyPoints balanceDue')
         .populate('registerSessionId', 'openingCash status openedAt')
         .populate('createdBy', 'username name')
         .populate('items.productId', 'name sku barcode unitOfMeasure');
@@ -375,10 +387,25 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
           );
         }
 
-        if (sale.customerId && sale.paymentMethod === PaymentMethod.CREDIT) {
+        if (sale.customerId) {
+          const company = await this.companyService.genericFindOne(
+            { _id: companyId },
+            { session },
+          );
+          const loyaltyRate = company?.regional?.loyaltyAmountPerPoint || 100;
+          const pointsToDeduct = sale.grandTotal / loyaltyRate;
+
+          const customerInc: Record<string, number> = {
+            loyaltyPoints: -pointsToDeduct,
+          };
+
+          if (sale.paymentMethod === PaymentMethod.CREDIT) {
+            customerInc.balanceDue = -sale.grandTotal;
+          }
+
           await this.customerModel.updateOne(
             { _id: sale.customerId },
-            { $inc: { balanceDue: -sale.grandTotal } },
+            { $inc: customerInc },
             { session },
           );
         }
@@ -395,7 +422,7 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
           action: LogActions.CANCEL_SALE,
           entityType: LogEntityType.SALE,
           entityId: new Types.ObjectId(id),
-          description: `Sale ${sale.invoiceNumber} cancelled and stock restored`,
+          description: `Sale ${sale.invoiceNumber} cancelled and stock/loyalty points restored`,
           ipAddress,
           path: req.url,
           status: LogStatus.SUCCESS,
@@ -403,7 +430,7 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
 
         return {
           success: true,
-          message: 'Sale cancelled and inventory restored successfully',
+          message: 'Sale cancelled and inventory/loyalty points restored successfully',
           data: updated,
           statusCode: HttpStatus.OK,
         };
