@@ -123,6 +123,9 @@ export enum LogActions {
   CREATE_STAFF = 'CREATE_STAFF',
   UPDATE_STAFF = 'UPDATE_STAFF',
   DELETE_STAFF = 'DELETE_STAFF',
+
+  // Loyalty Settings
+  UPDATE_LOYALTY_SETTING = 'UPDATE_LOYALTY_SETTING',
 }
 
 export enum LogEntityType {
@@ -147,4 +150,5 @@ export enum LogEntityType {
   COUNTER = 'Counter',
   LABEL_DESIGNER = 'LabelDesigner',
   STAFF = 'Staff',
+  LOYALTY_SETTING = 'LoyaltySetting',
 }
