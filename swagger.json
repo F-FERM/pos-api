@@ -2787,6 +2787,28 @@
         "tags": [
           "Sale Return"
         ]
+      },
+      "delete": {
+        "operationId": "SaleReturnController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Cancel/Delete sale return (reverses stock restock and restores loyalty points)",
+        "tags": [
+          "Sale Return"
+        ]
       }
     }
   },
@@ -3059,7 +3081,8 @@
             "enum": [
               "INVOICE",
               "PURCHASE_ORDER",
-              "BILL"
+              "BILL",
+              "CREDIT_NOTE"
             ]
           },
           "prefix": {
