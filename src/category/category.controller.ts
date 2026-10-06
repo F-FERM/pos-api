@@ -30,7 +30,11 @@ export class CategoryController {
   @CheckPermission({ subModule: SUB_MODULES.PRODUCT, action: ACTIONS.CREATE })
   @Post()
   create(@Body() dto: CreateCategoryDto, @Req() req: AuthedRequest) {
-    return this.categoryService.createCategory(dto, req.user.userId, req);
+    return this.categoryService.createCategory(
+      { ...dto, companyId: req.user.companyId },
+      req.user.userId,
+      req,
+    );
   }
 
   @ApiOperation({ summary: 'Get all categories' })
