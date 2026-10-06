@@ -19,6 +19,8 @@ import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { UserService } from '../user/user.service';
 import { LogService } from '../log/log.service';
+import { NumberSettingsService } from '../number-settings/number-settings.service';
+import { CounterService } from '../counter/counter.service';
 import { AuthedRequest } from '../utils/common.types';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
@@ -32,23 +34,27 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly logService: LogService,
+    private readonly numberSettingsService: NumberSettingsService,
+    private readonly counterService: CounterService,
   ) {
     super(companyModel);
   }
 
   async validateCompany(
     companyId: string,
-    userId: string,
+    userId?: string,
   ): Promise<CompanyDocument> {
     try {
       if (!this.isValidMongoId(companyId)) {
         throw new BadRequestException('Invalid company id');
       }
-      if (!this.isValidMongoId(userId)) {
+      if (userId && !this.isValidMongoId(userId)) {
         throw new BadRequestException('Invalid user id');
       }
 
-      await this.userService.validateAuthenticatedUser(userId);
+      if (userId) {
+        await this.userService.validateAuthenticatedUser(userId);
+      }
       const company = await this.genericFindOne({ _id: companyId });
       if (!company) {
         throw new NotFoundException('Company not found');
@@ -88,6 +94,20 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
         [CompanyModelConstants.ownerId]: new Types.ObjectId(userId),
         [CompanyModelConstants.createdBy]: new Types.ObjectId(userId),
       });
+
+      // Auto-create default number settings & default checkout counter for new company
+      try {
+        await this.numberSettingsService.createDefaultSettingsForCompany(
+          created._id.toString(),
+          userId,
+        );
+        await this.counterService.createDefaultCounterForCompany(
+          created._id.toString(),
+          userId,
+        );
+      } catch (initErr) {
+        console.warn('Failed to auto-seed defaults for new company:', initErr);
+      }
 
       await this.logService.createLog({
         companyId: new Types.ObjectId(created._id),
@@ -165,6 +185,7 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
       const [data, totalCount] = await Promise.all([
         this.companyModel
           .find(filter)
+          .populate('ownerId', 'username name email')
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit),
@@ -206,7 +227,9 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
         }
       }
 
-      const company: CompanyDocument | null = await this.genericFindOne(filter);
+      const company = await this.companyModel
+        .findOne(filter)
+        .populate('ownerId', 'username name email');
       if (!company) {
         throw new NotFoundException('Company not found');
       }
