@@ -15,4 +15,5 @@ export const SUB_MODULES = {
   NUMBER_SETTING: 'number-setting',
   PRINTER: 'printer',
   COUNTER: 'counter',
+  LABEL_DESIGNER: 'label-designer',
 } as const;
