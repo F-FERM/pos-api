@@ -3,4 +3,13 @@ export const SUB_MODULES = {
   USER: 'user',
   PRIVILEGE: 'privilege',
   SUBSCRIPTION: 'subscription',
+  CATEGORY: 'category',
+  BRAND: 'brand',
+  PRODUCT: 'product',
+  SUPPLIER: 'supplier',
+  PURCHASE: 'purchase',
+  CUSTOMER: 'customer',
+  REGISTER: 'register',
+  SALE: 'sale',
+  EXPENSE: 'expense',
 } as const;
