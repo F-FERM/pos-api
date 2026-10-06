@@ -110,7 +110,6 @@ export enum LogActions {
   CREATE_STAFF = 'CREATE_STAFF',
   UPDATE_STAFF = 'UPDATE_STAFF',
   DELETE_STAFF = 'DELETE_STAFF',
-  STAFF_PIN_LOGIN = 'STAFF_PIN_LOGIN',
 }
 
 export enum LogEntityType {
