@@ -49,10 +49,6 @@ export class CreateStaffDto {
   @IsMongoId()
   privilegeId: string;
 
-  @ApiProperty()
-  @IsMongoId()
-  companyId: string;
-
   @ApiPropertyOptional({ default: true })
   @IsOptional()
   @IsBoolean()
