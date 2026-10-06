@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
-  IsMongoId,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -35,10 +34,6 @@ export class CreateCounterDto {
   @IsOptional()
   @IsBoolean()
   isDefault?: boolean;
-
-  @ApiProperty()
-  @IsMongoId()
-  companyId: string;
 
   @ApiPropertyOptional({ default: true })
   @IsOptional()
