@@ -77,7 +77,7 @@ export class SaleReturnService extends GenericDatabase<
   }
 
   async createSaleReturn(
-    dto: CreateSaleReturnDto,
+    dto: CreateSaleReturnDto & { companyId: string },
     userId: string,
     req: AuthedRequest,
   ) {
