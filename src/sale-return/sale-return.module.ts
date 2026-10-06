@@ -17,6 +17,7 @@ import { LogModule } from '../log/log.module';
 import { CompanyModule } from '../company/company.module';
 import { UserModule } from '../user/user.module';
 import { NumberSettingsModule } from '../number-settings/number-settings.module';
+import { LoyaltySettingModule } from '../loyalty-setting/loyalty-setting.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { NumberSettingsModule } from '../number-settings/number-settings.module'
     CompanyModule,
     UserModule,
     NumberSettingsModule,
+    LoyaltySettingModule,
   ],
   controllers: [SaleReturnController],
   providers: [SaleReturnService],
