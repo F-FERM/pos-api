@@ -13,4 +13,6 @@ export const SUB_MODULES = {
   SALE: 'sale',
   EXPENSE: 'expense',
   NUMBER_SETTING: 'number-setting',
+  PRINTER: 'printer',
+  COUNTER: 'counter',
 } as const;
