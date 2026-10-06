@@ -37,7 +37,11 @@ export class RegisterService extends GenericDatabase<
     super(registerModel);
   }
 
-  async openRegister(dto: OpenRegisterDto, userId: string, req: AuthedRequest) {
+  async openRegister(
+    dto: OpenRegisterDto & { companyId: string },
+    userId: string,
+    req: AuthedRequest,
+  ) {
     try {
       const ipAddress = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);

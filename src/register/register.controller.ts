@@ -18,7 +18,11 @@ export class RegisterController {
   @CheckPermission({ subModule: SUB_MODULES.REGISTER, action: ACTIONS.CREATE })
   @Post('open')
   open(@Body() dto: OpenRegisterDto, @Req() req: AuthedRequest) {
-    return this.registerService.openRegister(dto, req.user.userId, req);
+    return this.registerService.openRegister(
+      { ...dto, companyId: req.user.companyId },
+      req.user.userId,
+      req,
+    );
   }
 
   @ApiOperation({ summary: 'Get current active register session' })
