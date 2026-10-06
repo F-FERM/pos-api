@@ -33,7 +33,7 @@ export class ExpenseService extends GenericDatabase<Model<ExpenseDocument>> {
   }
 
   async createExpense(
-    dto: CreateExpenseDto,
+    dto: CreateExpenseDto & { companyId: string },
     userId: string,
     req: AuthedRequest,
   ) {
