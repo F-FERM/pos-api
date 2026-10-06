@@ -38,6 +38,7 @@ import { CompanyService } from '../company/company.service';
 import { UserService } from '../user/user.service';
 import { NumberSettingsService } from '../number-settings/number-settings.service';
 import { PrinterService } from '../printer/printer.service';
+import { LoyaltySettingService } from '../loyalty-setting/loyalty-setting.service';
 import { AuthedRequest } from '../utils/common.types';
 import {
   LogActions,
@@ -63,6 +64,7 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
     private readonly userService: UserService,
     private readonly numberSettingsService: NumberSettingsService,
     private readonly printerService: PrinterService,
+    private readonly loyaltySettingService: LoyaltySettingService,
   ) {
     super(saleModel);
   }
@@ -134,10 +136,9 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
             });
           }
 
-          const company = await this.companyService.genericFindOne(
-            { _id: dto.companyId },
-            { session },
-          );
+          const loyaltySettingRes =
+            await this.loyaltySettingService.getSetting(dto.companyId);
+          const loyaltyConfig = loyaltySettingRes.data;
 
           let loyaltyPointsRedeemed = 0;
           let loyaltyDiscountAmount = 0;
@@ -146,6 +147,12 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
             if (!dto.customerId) {
               throw new BadRequestException(
                 'Customer ID is required to redeem loyalty points',
+              );
+            }
+
+            if (loyaltyConfig && !loyaltyConfig.isEnabled) {
+              throw new BadRequestException(
+                'Store loyalty program is currently disabled',
               );
             }
 
@@ -163,9 +170,10 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
               );
             }
 
-            const minPoints = company?.regional?.minLoyaltyPointsToRedeem ?? 50;
+            const minPoints =
+              loyaltyConfig?.minLoyaltyPointsToRedeem ?? 50;
             const pointValue =
-              company?.regional?.loyaltyPointMonetaryValue ?? 1;
+              loyaltyConfig?.loyaltyPointMonetaryValue ?? 1;
 
             if (customer.loyaltyPoints < minPoints) {
               throw new BadRequestException(
@@ -188,12 +196,13 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
           const changeAmount =
             dto.paidAmount > grandTotal ? dto.paidAmount - grandTotal : 0;
 
-          const invoiceNumber = await this.numberSettingsService.generateNumber(
-            dto.companyId,
-            userId,
-            numberSettingsDocumentType.INVOICE,
-            session,
-          );
+          const invoiceNumber =
+            await this.numberSettingsService.generateNumber(
+              dto.companyId,
+              userId,
+              numberSettingsDocumentType.INVOICE,
+              session,
+            );
 
           const created = await this.genericCreateOne(
             {
@@ -234,8 +243,11 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
 
             if (dto.customerId) {
               const loyaltyRate =
-                company?.regional?.loyaltyAmountPerPoint || 100;
-              const earnedLoyaltyPoints = grandTotal / loyaltyRate;
+                loyaltyConfig?.loyaltyAmountPerPoint || 100;
+              const earnedLoyaltyPoints =
+                loyaltyConfig?.isEnabled !== false
+                  ? grandTotal / loyaltyRate
+                  : 0;
               const loyaltyPointsDelta =
                 earnedLoyaltyPoints - loyaltyPointsRedeemed;
 
@@ -594,11 +606,11 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
         }
 
         if (sale.customerId) {
-          const company = await this.companyService.genericFindOne(
-            { _id: companyId },
-            { session },
-          );
-          const loyaltyRate = company?.regional?.loyaltyAmountPerPoint || 100;
+          const loyaltySettingRes =
+            await this.loyaltySettingService.getSetting(companyId);
+          const loyaltyConfig = loyaltySettingRes.data;
+
+          const loyaltyRate = loyaltyConfig?.loyaltyAmountPerPoint || 100;
           const pointsToDeduct = sale.grandTotal / loyaltyRate;
 
           const pointsRestored = sale.loyaltyPointsRedeemed || 0;
