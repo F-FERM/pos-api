@@ -30,7 +30,11 @@ export class PrinterController {
   @CheckPermission({ subModule: SUB_MODULES.PRINTER, action: ACTIONS.CREATE })
   @Post()
   create(@Body() dto: CreatePrinterDto, @Req() req: AuthedRequest) {
-    return this.printerService.createPrinter(dto, req.user.userId, req);
+    return this.printerService.createPrinter(
+      { ...dto, companyId: req.user.companyId },
+      req.user.userId,
+      req,
+    );
   }
 
   @ApiOperation({ summary: 'Get all store printers' })
