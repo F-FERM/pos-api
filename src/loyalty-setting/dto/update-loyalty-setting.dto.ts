@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsMongoId, IsNumber, IsOptional, Min } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsBoolean, IsNumber, IsOptional, Min } from 'class-validator';
 
 export class UpdateLoyaltySettingDto {
   @ApiPropertyOptional({
@@ -41,8 +41,4 @@ export class UpdateLoyaltySettingDto {
   @IsOptional()
   @IsBoolean()
   isEnabled?: boolean;
-
-  @ApiProperty()
-  @IsMongoId()
-  companyId: string;
 }
