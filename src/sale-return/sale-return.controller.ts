@@ -6,6 +6,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   Req,
@@ -14,6 +15,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ParseObjectIdPipe } from '@nestjs/mongoose';
 import { SaleReturnService } from './sale-return.service';
 import { CreateSaleReturnDto } from './dto/create-sale-return.dto';
+import { UpdateSaleReturnDto } from './dto/update-sale-return.dto';
 import { type AuthedRequest } from '../utils/common.types';
 import { CheckPermission } from '../common/decorators/check-permission.decorator';
 import { SUB_MODULES } from '../common/constants/submodules.constants';
@@ -74,6 +76,29 @@ export class SaleReturnController {
       req.user.userId,
       req.user.companyId,
       req.user.roles,
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      'Update sale return details / returned quantities (recalculates inventory stock and refunds)',
+  })
+  @CheckPermission({
+    subModule: SUB_MODULES.SALE_RETURN,
+    action: ACTIONS.UPDATE,
+  })
+  @Patch(':id')
+  update(
+    @Param('id', ParseObjectIdPipe) id: string,
+    @Body() dto: UpdateSaleReturnDto,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.saleReturnService.updateSaleReturn(
+      id,
+      dto,
+      req.user.userId,
+      req.user.companyId,
+      req,
     );
   }
 
