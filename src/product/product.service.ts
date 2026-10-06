@@ -10,8 +10,12 @@ import { GenericDatabase } from '../helper/genericDatabase';
 import {
   Product,
   ProductDocument,
+  ProductModelConstants,
   ProductSchemaName,
 } from '../models/product.schema';
+import { CategoryModelConstants } from '../models/category.schema';
+import { BrandModelConstants } from '../models/brand.schema';
+import { SupplierModelConstants } from '../models/supplier.schema';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { LogService } from '../log/log.service';
@@ -294,9 +298,20 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
       const [data, totalCount] = await Promise.all([
         this.productModel
           .find(filter)
-          .populate('categoryId', 'name code')
-          .populate('brandId', 'name')
-          .populate('supplierId', 'name phone contactPerson')
+          .populate([
+            {
+              path: ProductModelConstants.categoryId,
+              select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
+            },
+            {
+              path: ProductModelConstants.brandId,
+              select: BrandModelConstants.name,
+            },
+            {
+              path: ProductModelConstants.supplierId,
+              select: `${SupplierModelConstants.name} ${SupplierModelConstants.phone} ${SupplierModelConstants.contactPerson}`,
+            },
+          ])
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit),
@@ -338,9 +353,20 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
           isDeleted: false,
           isActive: true,
         })
-        .populate('categoryId', 'name code')
-        .populate('brandId', 'name')
-        .populate('supplierId', 'name phone contactPerson');
+        .populate([
+          {
+            path: ProductModelConstants.categoryId,
+            select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
+          },
+          {
+            path: ProductModelConstants.brandId,
+            select: BrandModelConstants.name,
+          },
+          {
+            path: ProductModelConstants.supplierId,
+            select: `${SupplierModelConstants.name} ${SupplierModelConstants.phone} ${SupplierModelConstants.contactPerson}`,
+          },
+        ]);
 
       if (!product) {
         throw new NotFoundException(
@@ -383,9 +409,20 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
 
       const product = await this.productModel
         .findOne(filter)
-        .populate('categoryId', 'name code')
-        .populate('brandId', 'name')
-        .populate('supplierId', 'name phone contactPerson');
+        .populate([
+          {
+            path: ProductModelConstants.categoryId,
+            select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
+          },
+          {
+            path: ProductModelConstants.brandId,
+            select: BrandModelConstants.name,
+          },
+          {
+            path: ProductModelConstants.supplierId,
+            select: `${SupplierModelConstants.name} ${SupplierModelConstants.phone} ${SupplierModelConstants.contactPerson}`,
+          },
+        ]);
 
       if (!product) {
         throw new NotFoundException('Product not found');
