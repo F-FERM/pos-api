@@ -105,6 +105,12 @@ export enum LogActions {
 
   // Label Designer
   GENERATE_LABEL = 'GENERATE_LABEL',
+
+  // Staff
+  CREATE_STAFF = 'CREATE_STAFF',
+  UPDATE_STAFF = 'UPDATE_STAFF',
+  DELETE_STAFF = 'DELETE_STAFF',
+  STAFF_PIN_LOGIN = 'STAFF_PIN_LOGIN',
 }
 
 export enum LogEntityType {
@@ -127,4 +133,5 @@ export enum LogEntityType {
   PRINTER = 'Printer',
   COUNTER = 'Counter',
   LABEL_DESIGNER = 'LabelDesigner',
+  STAFF = 'Staff',
 }
