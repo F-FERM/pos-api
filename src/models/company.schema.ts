@@ -10,7 +10,6 @@ import {
   TimeFormat,
 } from '../utils/enums/company.enums';
 
-
 //company address
 @Schema({ _id: false })
 class CompanyAddress {
@@ -101,7 +100,13 @@ class CompanyRegionalSettings {
   })
   currency: string;
 
-  @Prop({ type: String, required: true, default: '₹', trim: true, maxlength: 5 })
+  @Prop({
+    type: String,
+    required: true,
+    default: '₹',
+    trim: true,
+    maxlength: 5,
+  })
   currencySymbol: string;
 
   @Prop({ type: String, required: true, default: 'Asia/Kolkata', trim: true })
@@ -123,6 +128,9 @@ class CompanyRegionalSettings {
 
   @Prop({ type: Number, required: true, min: 1, max: 12, default: 4 })
   fiscalYearStartMonth: number;
+
+  @Prop({ type: Number, default: 100, min: 1 })
+  loyaltyAmountPerPoint: number;
 }
 
 @Schema({ _id: false })
