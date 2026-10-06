@@ -16,4 +16,5 @@ export const SUB_MODULES = {
   PRINTER: 'printer',
   COUNTER: 'counter',
   LABEL_DESIGNER: 'label-designer',
+  STAFF: 'staff',
 } as const;
