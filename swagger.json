@@ -549,6 +549,185 @@
         ]
       }
     },
+    "/api/subscription-plans": {
+      "get": {
+        "operationId": "SubscriptionPlanController_getAllActivePlans",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all active subscription plans",
+        "tags": [
+          "Subscription Plans"
+        ]
+      },
+      "post": {
+        "operationId": "SubscriptionPlanController_createCustomPlan",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubscriptionPlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create subscription plan (Superadmin)",
+        "tags": [
+          "Subscription Plans"
+        ]
+      }
+    },
+    "/api/subscription-plans/all": {
+      "get": {
+        "operationId": "SubscriptionPlanController_getAllPlans",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all subscription plans (Superadmin)",
+        "tags": [
+          "Subscription Plans"
+        ]
+      }
+    },
+    "/api/subscription-plans/{id}": {
+      "get": {
+        "operationId": "SubscriptionPlanController_getPlanById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get subscription plan by id",
+        "tags": [
+          "Subscription Plans"
+        ]
+      },
+      "patch": {
+        "operationId": "SubscriptionPlanController_updatePlan",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubscriptionPlanDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update subscription plan (Superadmin)",
+        "tags": [
+          "Subscription Plans"
+        ]
+      },
+      "delete": {
+        "operationId": "SubscriptionPlanController_deletePlan",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete subscription plan (Superadmin)",
+        "tags": [
+          "Subscription Plans"
+        ]
+      }
+    },
+    "/api/subscription-plans/code/{code}": {
+      "get": {
+        "operationId": "SubscriptionPlanController_getPlanByCode",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get subscription plan by code",
+        "tags": [
+          "Subscription Plans"
+        ]
+      }
+    },
+    "/api/subscription-plans/{id}/toggle-status": {
+      "patch": {
+        "operationId": "SubscriptionPlanController_togglePlanStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Toggle plan status (Superadmin)",
+        "tags": [
+          "Subscription Plans"
+        ]
+      }
+    },
     "/api/subscription": {
       "post": {
         "operationId": "SubscriptionController_createSubscription",
@@ -1090,6 +1269,264 @@
           "modules",
           "permissions"
         ]
+      },
+      "PlanLimitsDto": {
+        "type": "object",
+        "properties": {
+          "maxUsers": {
+            "type": "number",
+            "default": 5
+          },
+          "maxTerminals": {
+            "type": "number",
+            "default": 1
+          },
+          "maxProducts": {
+            "type": "number",
+            "default": -1
+          },
+          "maxCustomers": {
+            "type": "number",
+            "default": -1
+          },
+          "maxMonthlyTransactions": {
+            "type": "number",
+            "default": -1
+          },
+          "maxStorageMb": {
+            "type": "number",
+            "default": -1
+          }
+        }
+      },
+      "PlanFeaturesDto": {
+        "type": "object",
+        "properties": {
+          "inventoryEnabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "multiTerminalEnabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "barcodeEnabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "weightedItemsEnabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "batchTrackingEnabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "serialTrackingEnabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "variantsEnabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "loyaltyEnabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "taxEnabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "advancedReportsEnabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "apiAccessEnabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "prioritySupportEnabled": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "PlanPricingDto": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string",
+            "example": "INR"
+          },
+          "priceMinor": {
+            "type": "number",
+            "example": 999900,
+            "description": "Price in minor units"
+          },
+          "billingCycle": {
+            "type": "string",
+            "enum": [
+              "monthly",
+              "quarterly",
+              "half_yearly",
+              "yearly",
+              "lifetime"
+            ]
+          },
+          "setupFeeMinor": {
+            "type": "number",
+            "default": 0
+          },
+          "annualDiscountPercent": {
+            "type": "number",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "currency",
+          "priceMinor",
+          "billingCycle"
+        ]
+      },
+      "CreateSubscriptionPlanDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "example": "STARTER"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "active",
+              "archived"
+            ]
+          },
+          "displayOrder": {
+            "type": "number",
+            "default": 0
+          },
+          "isDefault": {
+            "type": "boolean",
+            "default": false
+          },
+          "trialEnabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "trialDays": {
+            "type": "number",
+            "default": 0
+          },
+          "limits": {
+            "$ref": "#/components/schemas/PlanLimitsDto"
+          },
+          "features": {
+            "$ref": "#/components/schemas/PlanFeaturesDto"
+          },
+          "pricing": {
+            "$ref": "#/components/schemas/PlanPricingDto"
+          },
+          "availableCountries": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendedForIndustries": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "isPublic": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "name",
+          "code",
+          "pricing"
+        ]
+      },
+      "UpdateSubscriptionPlanDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "example": "STARTER"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "active",
+              "archived"
+            ]
+          },
+          "displayOrder": {
+            "type": "number",
+            "default": 0
+          },
+          "isDefault": {
+            "type": "boolean",
+            "default": false
+          },
+          "trialEnabled": {
+            "type": "boolean",
+            "default": false
+          },
+          "trialDays": {
+            "type": "number",
+            "default": 0
+          },
+          "limits": {
+            "$ref": "#/components/schemas/PlanLimitsDto"
+          },
+          "features": {
+            "$ref": "#/components/schemas/PlanFeaturesDto"
+          },
+          "pricing": {
+            "$ref": "#/components/schemas/PlanPricingDto"
+          },
+          "availableCountries": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recommendedForIndustries": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "isPublic": {
+            "type": "boolean",
+            "default": true
+          }
+        }
       },
       "CreateSubscriptionDto": {
         "type": "object",
