@@ -23,7 +23,11 @@ export class LabelDesignerController {
   })
   @Post('generate')
   generateLabels(@Body() dto: GenerateLabelDto, @Req() req: AuthedRequest) {
-    return this.labelDesignerService.generateLabels(dto, req.user.userId, req);
+    return this.labelDesignerService.generateLabels(
+      { ...dto, companyId: req.user.companyId },
+      req.user.userId,
+      req,
+    );
   }
 
 
