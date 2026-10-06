@@ -15,6 +15,15 @@ import { PermissionGuard } from './common/guards/permission.guard';
 import { ModuleModule } from './module/module.module';
 import { SubscriptionPlanModule } from './subscription-plan/subscription-plan.module';
 import { SubscriptionModule } from './subscription/subscription.module';
+import { CategoryModule } from './category/category.module';
+import { BrandModule } from './brand/brand.module';
+import { ProductModule } from './product/product.module';
+import { SupplierModule } from './supplier/supplier.module';
+import { CustomerModule } from './customer/customer.module';
+import { RegisterModule } from './register/register.module';
+import { SaleModule } from './sale/sale.module';
+import { ExpenseModule } from './expense/expense.module';
+import { PurchaseModule } from './purchase/purchase.module';
 
 @Module({
   imports: [
@@ -29,6 +38,15 @@ import { SubscriptionModule } from './subscription/subscription.module';
     ModuleModule,
     SubscriptionPlanModule,
     SubscriptionModule,
+    CategoryModule,
+    BrandModule,
+    ProductModule,
+    SupplierModule,
+    CustomerModule,
+    RegisterModule,
+    SaleModule,
+    ExpenseModule,
+    PurchaseModule,
   ],
   controllers: [AppController],
   providers: [
