@@ -1912,6 +1912,95 @@
         ]
       }
     },
+    "/api/number-settings": {
+      "post": {
+        "operationId": "NumberSettingsController_upsert",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNumberSettingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create or Update number setting",
+        "tags": [
+          "Number Settings"
+        ]
+      },
+      "get": {
+        "description": "Retrieves all number settings configured for the authenticated user's company.",
+        "operationId": "NumberSettingsController_getAll",
+        "parameters": [],
+        "responses": {
+          "404": {
+            "description": "No number settings found for this company"
+          }
+        },
+        "summary": "Get all number settings for the company",
+        "tags": [
+          "Number Settings"
+        ]
+      }
+    },
+    "/api/number-settings/{id}": {
+      "get": {
+        "description": "Retrieves a specific number setting configuration using its unique ID.",
+        "operationId": "NumberSettingsController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Number setting not found"
+          }
+        },
+        "summary": "Get number setting by ID",
+        "tags": [
+          "Number Settings"
+        ]
+      }
+    },
+    "/api/number-settings/doc-type/{docType}": {
+      "get": {
+        "description": "Retrieves the number setting configuration for a specific document type.",
+        "operationId": "NumberSettingsController_getByDocType",
+        "parameters": [
+          {
+            "name": "docType",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Number setting not found"
+          }
+        },
+        "summary": "Get number setting by document type",
+        "tags": [
+          "Number Settings"
+        ]
+      }
+    },
     "/api/expense": {
       "post": {
         "operationId": "ExpenseController_create",
@@ -3419,6 +3508,30 @@
           "paidAmount",
           "paymentMethod",
           "companyId"
+        ]
+      },
+      "UpdateNumberSettingDto": {
+        "type": "object",
+        "properties": {
+          "docType": {
+            "type": "string",
+            "enum": [
+              "INVOICE",
+              "PURCHASE_ORDER",
+              "BILL"
+            ]
+          },
+          "prefix": {
+            "type": "string",
+            "example": "INV-"
+          },
+          "nextNumber": {
+            "type": "number",
+            "example": 1
+          }
+        },
+        "required": [
+          "docType"
         ]
       },
       "CreateExpenseDto": {
