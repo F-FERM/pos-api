@@ -38,6 +38,10 @@ export class LoyaltySettingController {
     @Body() dto: UpdateLoyaltySettingDto,
     @Req() req: AuthedRequest,
   ) {
-    return this.loyaltyService.upsertSetting(dto, req.user.userId, req);
+    return this.loyaltyService.upsertSetting(
+      { ...dto, companyId: req.user.companyId },
+      req.user.userId,
+      req,
+    );
   }
 }
