@@ -13,6 +13,7 @@ import { LogModule } from '../log/log.module';
 import { CompanyModule } from '../company/company.module';
 import { UserModule } from '../user/user.module';
 import { NumberSettingsModule } from '../number-settings/number-settings.module';
+import { PrinterModule } from '../printer/printer.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { NumberSettingsModule } from '../number-settings/number-settings.module'
     CompanyModule,
     UserModule,
     NumberSettingsModule,
+    PrinterModule,
   ],
   controllers: [SaleController],
   providers: [SaleService],
