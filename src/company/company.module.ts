@@ -7,6 +7,7 @@ import { UserModule } from '../user/user.module';
 import { LogModule } from '../log/log.module';
 import { NumberSettingsModule } from '../number-settings/number-settings.module';
 import { CounterModule } from '../counter/counter.module';
+import { LoyaltySettingModule } from '../loyalty-setting/loyalty-setting.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { CounterModule } from '../counter/counter.module';
     LogModule,
     NumberSettingsModule,
     CounterModule,
+    LoyaltySettingModule,
   ],
   controllers: [CompanyController],
   providers: [CompanyService],
