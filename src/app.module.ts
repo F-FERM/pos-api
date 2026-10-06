@@ -27,6 +27,7 @@ import { PurchaseModule } from './purchase/purchase.module';
 import { NumberSettingsModule } from './number-settings/number-settings.module';
 import { PrinterModule } from './printer/printer.module';
 import { CounterModule } from './counter/counter.module';
+import { LabelDesignerModule } from './label-designer/label-designer.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { CounterModule } from './counter/counter.module';
     NumberSettingsModule,
     PrinterModule,
     CounterModule,
+    LabelDesignerModule,
   ],
   controllers: [AppController],
   providers: [
