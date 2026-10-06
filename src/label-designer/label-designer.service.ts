@@ -49,7 +49,7 @@ export class LabelDesignerService extends GenericDatabase<
   }
 
   async generateLabels(
-    dto: GenerateLabelDto,
+    dto: GenerateLabelDto & { companyId: string },
     userId: string,
     req: AuthedRequest,
   ) {
