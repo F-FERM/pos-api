@@ -224,7 +224,11 @@ export class PrinterService extends GenericDatabase<Model<PrinterDocument>> {
     lines.push(this.divider('-', paperWidth));
 
     lines.push(
-      this.twoColumn('Subtotal', `${currency}${sale.subtotal.toFixed(2)}`, width),
+      this.twoColumn(
+        'Subtotal',
+        `${currency}${sale.subtotal.toFixed(2)}`,
+        width,
+      ),
     );
 
     if (sale.discountTotal > 0) {
@@ -258,7 +262,11 @@ export class PrinterService extends GenericDatabase<Model<PrinterDocument>> {
     lines.push(this.divider('=', paperWidth));
 
     lines.push(
-      this.twoColumn('Paid Amount', `${currency}${sale.paidAmount.toFixed(2)}`, width),
+      this.twoColumn(
+        'Paid Amount',
+        `${currency}${sale.paidAmount.toFixed(2)}`,
+        width,
+      ),
     );
 
     if (sale.changeAmount > 0) {
@@ -302,7 +310,9 @@ export class PrinterService extends GenericDatabase<Model<PrinterDocument>> {
 
     const printer = new ThermalPrinter({
       type: PrinterTypes.EPSON,
-      interface: isIpAddress ? `tcp://${printerIp}:9100` : `printer:${printerIp}`,
+      interface: isIpAddress
+        ? `tcp://${printerIp}:9100`
+        : `printer:${printerIp}`,
       characterSet: CharacterSet.PC437_USA,
       removeSpecialCharacters: false,
       lineCharacter: '-',
@@ -368,9 +378,19 @@ export class PrinterService extends GenericDatabase<Model<PrinterDocument>> {
 
     printer.drawLine();
     printer.println(
-      this.twoColumn('TOTAL', `${currency}${sale.grandTotal.toFixed(2)}`, lineWidth),
+      this.twoColumn(
+        'TOTAL',
+        `${currency}${sale.grandTotal.toFixed(2)}`,
+        lineWidth,
+      ),
     );
-    printer.println(this.twoColumn('PAID', `${currency}${sale.paidAmount.toFixed(2)}`, lineWidth));
+    printer.println(
+      this.twoColumn(
+        'PAID',
+        `${currency}${sale.paidAmount.toFixed(2)}`,
+        lineWidth,
+      ),
+    );
     printer.println(this.twoColumn('METHOD', sale.paymentMethod, lineWidth));
 
     printer.drawLine();
@@ -457,7 +477,6 @@ export class PrinterService extends GenericDatabase<Model<PrinterDocument>> {
       statusCode: HttpStatus.OK,
     };
   }
-
 
   async createPrinter(
     dto: CreatePrinterDto,
@@ -623,18 +642,16 @@ export class PrinterService extends GenericDatabase<Model<PrinterDocument>> {
         filter.companyId = new Types.ObjectId(companyId);
       }
 
-      const printer = await this.printerModel
-        .findOne(filter)
-        .populate([
-          {
-            path: PrinterModelConstants.counterId,
-            select: `${CounterModelConstants.name} ${CounterModelConstants.code}`,
-          },
-          {
-            path: PrinterModelConstants.createdBy,
-            select: `${UserModelConstants.username} ${UserModelConstants.name}`,
-          },
-        ]);
+      const printer = await this.printerModel.findOne(filter).populate([
+        {
+          path: PrinterModelConstants.counterId,
+          select: `${CounterModelConstants.name} ${CounterModelConstants.code}`,
+        },
+        {
+          path: PrinterModelConstants.createdBy,
+          select: `${UserModelConstants.username} ${UserModelConstants.name}`,
+        },
+      ]);
 
       if (!printer) {
         throw new NotFoundException('Printer not found');
