@@ -24,6 +24,9 @@ export enum RefundMethod {
 }
 
 export enum LogActions {
+  // Auth
+  USER_LOGIN = 'USER_LOGIN',
+
   // Company
   CREATE_COMPANY = 'CREATE_COMPANY',
   UPDATE_COMPANY = 'UPDATE_COMPANY',
@@ -129,6 +132,7 @@ export enum LogActions {
 }
 
 export enum LogEntityType {
+  AUTH = 'Auth',
   COMPANY = 'Company',
   USER = 'User',
   PRIVILEGE = 'Privilege',
