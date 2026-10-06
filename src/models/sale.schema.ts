@@ -68,6 +68,12 @@ export class Sale extends BaseSchema {
   @Prop({ type: Number, default: 0, min: 0 })
   taxTotal: number;
 
+  @Prop({ type: Number, default: 0, min: 0 })
+  loyaltyPointsRedeemed?: number;
+
+  @Prop({ type: Number, default: 0, min: 0 })
+  loyaltyDiscountAmount?: number;
+
   @Prop({ type: Number, required: true, min: 0 })
   grandTotal: number;
 
@@ -132,6 +138,8 @@ export const SaleModelConstants: { [K in keyof Sale]-?: K } = {
   subtotal: 'subtotal',
   discountTotal: 'discountTotal',
   taxTotal: 'taxTotal',
+  loyaltyPointsRedeemed: 'loyaltyPointsRedeemed',
+  loyaltyDiscountAmount: 'loyaltyDiscountAmount',
   grandTotal: 'grandTotal',
   paidAmount: 'paidAmount',
   changeAmount: 'changeAmount',
