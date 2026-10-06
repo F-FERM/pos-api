@@ -226,7 +226,7 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
           printResult = await this.printerService.printSaleReceipt(
             populatedSale?.toObject() || saleResult.toObject(),
             dto.companyId,
-            dto.counterName,
+            dto.counterId,
             false,
           );
         } catch (printError) {
@@ -272,7 +272,7 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
 
   async reprintSale(
     id: string,
-    counterName: string | undefined,
+    counterId: string | undefined,
     userId: string,
     companyId: string,
     req: AuthedRequest,
@@ -296,7 +296,7 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
       const printResult = await this.printerService.printSaleReceipt(
         sale.toObject(),
         companyId,
-        counterName,
+        counterId,
         true,
       );
 
