@@ -16,9 +16,21 @@ import {
   SaleSchemaName,
   SaleStatus,
 } from '../models/sale.schema';
-import { ProductDocument, ProductModelConstants, ProductSchemaName } from '../models/product.schema';
-import { CustomerDocument, CustomerModelConstants, CustomerSchemaName } from '../models/customer.schema';
-import { RegisterSessionDocument, RegisterSessionModelConstants, RegisterSessionSchemaName } from '../models/register-session.schema';
+import {
+  ProductDocument,
+  ProductModelConstants,
+  ProductSchemaName,
+} from '../models/product.schema';
+import {
+  CustomerDocument,
+  CustomerModelConstants,
+  CustomerSchemaName,
+} from '../models/customer.schema';
+import {
+  RegisterSessionDocument,
+  RegisterSessionModelConstants,
+  RegisterSessionSchemaName,
+} from '../models/register-session.schema';
 import { UserModelConstants } from '../models/user.schema';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { LogService } from '../log/log.service';
@@ -27,7 +39,12 @@ import { UserService } from '../user/user.service';
 import { NumberSettingsService } from '../number-settings/number-settings.service';
 import { PrinterService } from '../printer/printer.service';
 import { AuthedRequest } from '../utils/common.types';
-import { LogActions, LogEntityType, LogStatus, numberSettingsDocumentType } from '../utils/common.enum';
+import {
+  LogActions,
+  LogEntityType,
+  LogStatus,
+  numberSettingsDocumentType,
+} from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
 
 @Injectable()
@@ -62,160 +79,213 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
 
       const saleStatus = dto.status || SaleStatus.COMPLETED;
 
-      const saleResult = await this.runTransaction(async (session: ClientSession) => {
-        let subtotal = 0;
-        let discountTotal = 0;
-        let taxTotal = 0;
+      const saleResult = await this.runTransaction(
+        async (session: ClientSession) => {
+          let subtotal = 0;
+          let discountTotal = 0;
+          let taxTotal = 0;
 
-        const preparedItems: SaleItem[] = [];
+          const preparedItems: SaleItem[] = [];
 
-        for (const itemDto of dto.items) {
-          const product = await this.productModel
-            .findOne({
-              _id: itemDto.productId,
+          for (const itemDto of dto.items) {
+            const product = await this.productModel
+              .findOne({
+                _id: itemDto.productId,
+                companyId: new Types.ObjectId(dto.companyId),
+                isDeleted: false,
+              })
+              .session(session);
+
+            if (!product) {
+              throw new BadRequestException(
+                `Product with ID ${itemDto.productId} not found`,
+              );
+            }
+
+            if (
+              saleStatus === SaleStatus.COMPLETED &&
+              product.stockQuantity < itemDto.quantity
+            ) {
+              throw new BadRequestException(
+                `Insufficient stock for product '${product.name}'. Available: ${product.stockQuantity}`,
+              );
+            }
+
+            const lineSubtotal = itemDto.unitPrice * itemDto.quantity;
+            const lineDiscount = itemDto.discountAmount || 0;
+            const netLine = Math.max(0, lineSubtotal - lineDiscount);
+            const lineTaxRate = itemDto.taxRate || product.taxRate || 0;
+            const lineTax = (netLine * lineTaxRate) / 100;
+            const lineTotal = netLine + lineTax;
+
+            subtotal += lineSubtotal;
+            discountTotal += lineDiscount;
+            taxTotal += lineTax;
+
+            preparedItems.push({
+              productId: new Types.ObjectId(itemDto.productId),
+              productName: product.name,
+              quantity: itemDto.quantity,
+              unitPrice: itemDto.unitPrice,
+              discountAmount: lineDiscount,
+              taxRate: lineTaxRate,
+              taxAmount: lineTax,
+              totalAmount: lineTotal,
+            });
+          }
+
+          const company = await this.companyService.genericFindOne(
+            { _id: dto.companyId },
+            { session },
+          );
+
+          let loyaltyPointsRedeemed = 0;
+          let loyaltyDiscountAmount = 0;
+
+          if (dto.redeemLoyaltyPoints && dto.redeemLoyaltyPoints > 0) {
+            if (!dto.customerId) {
+              throw new BadRequestException(
+                'Customer ID is required to redeem loyalty points',
+              );
+            }
+
+            const customer = await this.customerModel
+              .findOne({
+                _id: dto.customerId,
+                companyId: new Types.ObjectId(dto.companyId),
+                isDeleted: false,
+              })
+              .session(session);
+
+            if (!customer) {
+              throw new BadRequestException(
+                'Customer not found for loyalty redemption',
+              );
+            }
+
+            const minPoints = company?.regional?.minLoyaltyPointsToRedeem ?? 50;
+            const pointValue =
+              company?.regional?.loyaltyPointMonetaryValue ?? 1;
+
+            if (customer.loyaltyPoints < minPoints) {
+              throw new BadRequestException(
+                `Customer must have at least ${minPoints} loyalty points to redeem. Current balance: ${customer.loyaltyPoints}`,
+              );
+            }
+
+            if (dto.redeemLoyaltyPoints > customer.loyaltyPoints) {
+              throw new BadRequestException(
+                `Cannot redeem ${dto.redeemLoyaltyPoints} points. Available loyalty balance: ${customer.loyaltyPoints}`,
+              );
+            }
+
+            loyaltyPointsRedeemed = dto.redeemLoyaltyPoints;
+            loyaltyDiscountAmount = loyaltyPointsRedeemed * pointValue;
+            discountTotal += loyaltyDiscountAmount;
+          }
+
+          const grandTotal = Math.max(0, subtotal - discountTotal + taxTotal);
+          const changeAmount =
+            dto.paidAmount > grandTotal ? dto.paidAmount - grandTotal : 0;
+
+          const invoiceNumber = await this.numberSettingsService.generateNumber(
+            dto.companyId,
+            userId,
+            numberSettingsDocumentType.INVOICE,
+            session,
+          );
+
+          const created = await this.genericCreateOne(
+            {
+              ...dto,
+              invoiceNumber,
+              items: preparedItems,
+              subtotal,
+              discountTotal,
+              taxTotal,
+              loyaltyPointsRedeemed,
+              loyaltyDiscountAmount,
+              grandTotal,
+              paidAmount: dto.paidAmount,
+              changeAmount,
+              paymentMethod: dto.paymentMethod,
+              customerId: dto.customerId
+                ? new Types.ObjectId(dto.customerId)
+                : null,
+              registerSessionId: dto.registerSessionId
+                ? new Types.ObjectId(dto.registerSessionId)
+                : null,
+              status: saleStatus,
               companyId: new Types.ObjectId(dto.companyId),
-              isDeleted: false,
-            })
-            .session(session);
+              notes: dto.notes?.trim(),
+              createdBy: new Types.ObjectId(userId),
+            },
+            { session },
+          );
 
-          if (!product) {
-            throw new BadRequestException(
-              `Product with ID ${itemDto.productId} not found`,
-            );
+          if (saleStatus === SaleStatus.COMPLETED) {
+            for (const item of preparedItems) {
+              await this.productModel.updateOne(
+                { _id: item.productId },
+                { $inc: { stockQuantity: -item.quantity } },
+                { session },
+              );
+            }
+
+            if (dto.customerId) {
+              const loyaltyRate =
+                company?.regional?.loyaltyAmountPerPoint || 100;
+              const earnedLoyaltyPoints = grandTotal / loyaltyRate;
+              const loyaltyPointsDelta =
+                earnedLoyaltyPoints - loyaltyPointsRedeemed;
+
+              const customerInc: Record<string, number> = {
+                loyaltyPoints: loyaltyPointsDelta,
+              };
+
+              if (dto.paymentMethod === PaymentMethod.CREDIT) {
+                customerInc.balanceDue = grandTotal;
+              }
+
+              await this.customerModel.updateOne(
+                { _id: dto.customerId },
+                { $inc: customerInc },
+                { session },
+              );
+            }
+
+            if (dto.registerSessionId) {
+              const registerInc: Record<string, number> = {};
+              if (dto.paymentMethod === PaymentMethod.CASH) {
+                registerInc.totalSalesCash = grandTotal;
+              } else if (dto.paymentMethod === PaymentMethod.CARD) {
+                registerInc.totalSalesCard = grandTotal;
+              } else {
+                registerInc.totalSalesOther = grandTotal;
+              }
+              await this.registerModel.updateOne(
+                { _id: dto.registerSessionId },
+                { $inc: registerInc },
+                { session },
+              );
+            }
           }
 
-          if (
-            saleStatus === SaleStatus.COMPLETED &&
-            product.stockQuantity < itemDto.quantity
-          ) {
-            throw new BadRequestException(
-              `Insufficient stock for product '${product.name}'. Available: ${product.stockQuantity}`,
-            );
-          }
-
-          const lineSubtotal = itemDto.unitPrice * itemDto.quantity;
-          const lineDiscount = itemDto.discountAmount || 0;
-          const netLine = Math.max(0, lineSubtotal - lineDiscount);
-          const lineTaxRate = itemDto.taxRate || product.taxRate || 0;
-          const lineTax = (netLine * lineTaxRate) / 100;
-          const lineTotal = netLine + lineTax;
-
-          subtotal += lineSubtotal;
-          discountTotal += lineDiscount;
-          taxTotal += lineTax;
-
-          preparedItems.push({
-            productId: new Types.ObjectId(itemDto.productId),
-            productName: product.name,
-            quantity: itemDto.quantity,
-            unitPrice: itemDto.unitPrice,
-            discountAmount: lineDiscount,
-            taxRate: lineTaxRate,
-            taxAmount: lineTax,
-            totalAmount: lineTotal,
-          });
-        }
-
-        const grandTotal = Math.max(0, subtotal - discountTotal + taxTotal);
-        const changeAmount =
-          dto.paidAmount > grandTotal ? dto.paidAmount - grandTotal : 0;
-
-        const invoiceNumber = await this.numberSettingsService.generateNumber(
-          dto.companyId,
-          userId,
-          numberSettingsDocumentType.INVOICE,
-          session,
-        );
-
-        const created = await this.genericCreateOne(
-          {
-            ...dto,
-            invoiceNumber,
-            items: preparedItems,
-            subtotal,
-            discountTotal,
-            taxTotal,
-            grandTotal,
-            paidAmount: dto.paidAmount,
-            changeAmount,
-            paymentMethod: dto.paymentMethod,
-            customerId: dto.customerId
-              ? new Types.ObjectId(dto.customerId)
-              : null,
-            registerSessionId: dto.registerSessionId
-              ? new Types.ObjectId(dto.registerSessionId)
-              : null,
-            status: saleStatus,
+          await this.logService.createLog({
             companyId: new Types.ObjectId(dto.companyId),
-            notes: dto.notes?.trim(),
             createdBy: new Types.ObjectId(userId),
-          },
-          { session },
-        );
+            action: LogActions.CREATE_SALE,
+            entityType: LogEntityType.SALE,
+            entityId: new Types.ObjectId(created._id),
+            description: `Sale ${created.invoiceNumber} processed (${saleStatus})`,
+            ipAddress,
+            path: req.url,
+            status: LogStatus.SUCCESS,
+          });
 
-        if (saleStatus === SaleStatus.COMPLETED) {
-          for (const item of preparedItems) {
-            await this.productModel.updateOne(
-              { _id: item.productId },
-              { $inc: { stockQuantity: -item.quantity } },
-              { session },
-            );
-          }
-
-          if (dto.customerId) {
-            const company = await this.companyService.genericFindOne(
-              { _id: dto.companyId },
-              { session },
-            );
-            const loyaltyRate = company?.regional?.loyaltyAmountPerPoint || 100;
-            const earnedLoyaltyPoints = grandTotal / loyaltyRate;
-
-            const customerInc: Record<string, number> = {
-              loyaltyPoints: earnedLoyaltyPoints,
-            };
-
-            if (dto.paymentMethod === PaymentMethod.CREDIT) {
-              customerInc.balanceDue = grandTotal;
-            }
-
-            await this.customerModel.updateOne(
-              { _id: dto.customerId },
-              { $inc: customerInc },
-              { session },
-            );
-          }
-
-          if (dto.registerSessionId) {
-            const registerInc: Record<string, number> = {};
-            if (dto.paymentMethod === PaymentMethod.CASH) {
-              registerInc.totalSalesCash = grandTotal;
-            } else if (dto.paymentMethod === PaymentMethod.CARD) {
-              registerInc.totalSalesCard = grandTotal;
-            } else {
-              registerInc.totalSalesOther = grandTotal;
-            }
-            await this.registerModel.updateOne(
-              { _id: dto.registerSessionId },
-              { $inc: registerInc },
-              { session },
-            );
-          }
-        }
-
-        await this.logService.createLog({
-          companyId: new Types.ObjectId(dto.companyId),
-          createdBy: new Types.ObjectId(userId),
-          action: LogActions.CREATE_SALE,
-          entityType: LogEntityType.SALE,
-          entityId: new Types.ObjectId(created._id),
-          description: `Sale ${created.invoiceNumber} processed (${saleStatus})`,
-          ipAddress,
-          path: req.url,
-          status: LogStatus.SUCCESS,
-        });
-
-        return created;
-      });
+          return created;
+        },
+      );
 
       let printResult: any = null;
       if (saleStatus === SaleStatus.COMPLETED) {
@@ -457,26 +527,24 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
         filter.companyId = new Types.ObjectId(companyId);
       }
 
-      const sale = await this.saleModel
-        .findOne(filter)
-        .populate([
-          {
-            path: SaleModelConstants.customerId,
-            select: `${CustomerModelConstants.name} ${CustomerModelConstants.phone} ${CustomerModelConstants.email} ${CustomerModelConstants.address} ${CustomerModelConstants.loyaltyPoints} ${CustomerModelConstants.balanceDue}`,
-          },
-          {
-            path: SaleModelConstants.registerSessionId,
-            select: `${RegisterSessionModelConstants.openingCash} ${RegisterSessionModelConstants.status} ${RegisterSessionModelConstants.openedAt}`,
-          },
-          {
-            path: SaleModelConstants.createdBy,
-            select: `${UserModelConstants.username} ${UserModelConstants.name}`,
-          },
-          {
-            path: 'items.productId',
-            select: `${ProductModelConstants.name} ${ProductModelConstants.sku} ${ProductModelConstants.barcode} ${ProductModelConstants.unitOfMeasure}`,
-          },
-        ]);
+      const sale = await this.saleModel.findOne(filter).populate([
+        {
+          path: SaleModelConstants.customerId,
+          select: `${CustomerModelConstants.name} ${CustomerModelConstants.phone} ${CustomerModelConstants.email} ${CustomerModelConstants.address} ${CustomerModelConstants.loyaltyPoints} ${CustomerModelConstants.balanceDue}`,
+        },
+        {
+          path: SaleModelConstants.registerSessionId,
+          select: `${RegisterSessionModelConstants.openingCash} ${RegisterSessionModelConstants.status} ${RegisterSessionModelConstants.openedAt}`,
+        },
+        {
+          path: SaleModelConstants.createdBy,
+          select: `${UserModelConstants.username} ${UserModelConstants.name}`,
+        },
+        {
+          path: 'items.productId',
+          select: `${ProductModelConstants.name} ${ProductModelConstants.sku} ${ProductModelConstants.barcode} ${ProductModelConstants.unitOfMeasure}`,
+        },
+      ]);
 
       if (!sale) {
         throw new NotFoundException('Sale not found');
@@ -533,8 +601,11 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
           const loyaltyRate = company?.regional?.loyaltyAmountPerPoint || 100;
           const pointsToDeduct = sale.grandTotal / loyaltyRate;
 
+          const pointsRestored = sale.loyaltyPointsRedeemed || 0;
+          const netPointsChange = -pointsToDeduct + pointsRestored;
+
           const customerInc: Record<string, number> = {
-            loyaltyPoints: -pointsToDeduct,
+            loyaltyPoints: netPointsChange,
           };
 
           if (sale.paymentMethod === PaymentMethod.CREDIT) {
@@ -568,7 +639,8 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
 
         return {
           success: true,
-          message: 'Sale cancelled and inventory/loyalty points restored successfully',
+          message:
+            'Sale cancelled and inventory/loyalty points restored successfully',
           data: updated,
           statusCode: HttpStatus.OK,
         };
