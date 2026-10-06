@@ -4,6 +4,11 @@ export enum LogStatus {
   PARTIAL_SUCCESS = 'PARTIAL_SUCCESS',
 }
 
+export enum PaperWidth {
+  MM_58 = '58mm',
+  MM_80 = '80mm',
+}
+
 export enum numberSettingsDocumentType {
   INVOICE = 'INVOICE',
   PURCHASE_ORDER = 'PURCHASE_ORDER',
@@ -79,6 +84,7 @@ export enum LogActions {
   CREATE_SALE = 'CREATE_SALE',
   HOLD_SALE = 'HOLD_SALE',
   CANCEL_SALE = 'CANCEL_SALE',
+  PRINT_SALE = 'PRINT_SALE',
 
   // Expense
   CREATE_EXPENSE = 'CREATE_EXPENSE',
@@ -86,6 +92,11 @@ export enum LogActions {
 
   // Number Settings
   UPDATE_NUMBER_SETTING = 'UPDATE_NUMBER_SETTING',
+
+  // Printer
+  CREATE_PRINTER = 'CREATE_PRINTER',
+  UPDATE_PRINTER = 'UPDATE_PRINTER',
+  DELETE_PRINTER = 'DELETE_PRINTER',
 }
 
 export enum LogEntityType {
@@ -105,4 +116,5 @@ export enum LogEntityType {
   SALE = 'Sale',
   EXPENSE = 'Expense',
   NUMBER_SETTING = 'NumberSetting',
+  PRINTER = 'Printer',
 }
