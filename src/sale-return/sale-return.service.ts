@@ -36,6 +36,7 @@ import {
 } from '../models/register-session.schema';
 import { UserModelConstants } from '../models/user.schema';
 import { CreateSaleReturnDto } from './dto/create-sale-return.dto';
+import { UpdateSaleReturnDto } from './dto/update-sale-return.dto';
 import { LogService } from '../log/log.service';
 import { CompanyService } from '../company/company.service';
 import { UserService } from '../user/user.service';
@@ -164,12 +165,12 @@ export class SaleReturnService extends GenericDatabase<
 
         const totalRefundAmount = subtotalRefund + taxRefund;
 
-        let returnNumber = `CN-${Date.now().toString().slice(-6)}`;
+        let returnNumber = `SR-${Date.now().toString().slice(-6)}`;
         try {
           returnNumber = await this.numberSettingsService.generateNumber(
             dto.companyId,
             userId,
-            numberSettingsDocumentType.CREDIT_NOTE,
+            numberSettingsDocumentType.SALE_RETURN,
             session,
           );
         } catch {
@@ -244,7 +245,7 @@ export class SaleReturnService extends GenericDatabase<
           action: LogActions.CREATE_SALE_RETURN,
           entityType: LogEntityType.SALE_RETURN,
           entityId: new Types.ObjectId(createdReturn._id),
-          description: `Sale return / credit note ${createdReturn.returnNumber} processed for invoice ${sale.invoiceNumber} (Refund: ${totalRefundAmount})`,
+          description: `Sale return ${createdReturn.returnNumber} processed for invoice ${sale.invoiceNumber} (Refund: ${totalRefundAmount})`,
           ipAddress,
           path: req.url,
           status: LogStatus.SUCCESS,
@@ -278,6 +279,237 @@ export class SaleReturnService extends GenericDatabase<
         throw new BadRequestException(error.message);
       }
       throw new BadRequestException('Error processing sale return');
+    }
+  }
+
+  async updateSaleReturn(
+    id: string,
+    dto: UpdateSaleReturnDto,
+    userId: string,
+    companyId: string,
+    req: AuthedRequest,
+  ) {
+    try {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.userService.validateAuthenticatedUser(userId);
+
+      const existingReturn = await this.genericFindOne({
+        _id: id,
+        companyId: new Types.ObjectId(companyId),
+        isDeleted: false,
+      });
+
+      if (!existingReturn) {
+        throw new NotFoundException('Sale return record not found');
+      }
+
+      return await this.runTransaction(async (session: ClientSession) => {
+        let newItems = existingReturn.items;
+        let newSubtotalRefund = existingReturn.subtotalRefund;
+        let newTaxRefund = existingReturn.taxRefund;
+        let newTotalRefundAmount = existingReturn.totalRefundAmount;
+
+        if (dto.items && dto.items.length > 0) {
+          const sale = await this.saleModel.findOne({
+            _id: existingReturn.saleId,
+            companyId: new Types.ObjectId(companyId),
+          });
+
+          if (!sale) {
+            throw new NotFoundException('Original sale invoice not found');
+          }
+
+          const otherReturns = await this.saleReturnModel.find({
+            saleId: existingReturn.saleId,
+            _id: { $ne: new Types.ObjectId(id) },
+            companyId: new Types.ObjectId(companyId),
+            isDeleted: false,
+          });
+
+          const otherReturnedQtyMap = new Map<string, number>();
+          for (const ret of otherReturns) {
+            for (const it of ret.items) {
+              const pId = it.productId.toString();
+              otherReturnedQtyMap.set(
+                pId,
+                (otherReturnedQtyMap.get(pId) || 0) + it.quantity,
+              );
+            }
+          }
+
+          let calcSubtotal = 0;
+          let calcTax = 0;
+          const updatedReturnItems: SaleReturnItem[] = [];
+
+          for (const itemDto of dto.items) {
+            const originalItem = sale.items.find(
+              (si) => si.productId.toString() === itemDto.productId,
+            );
+
+            if (!originalItem) {
+              throw new BadRequestException(
+                `Product ID ${itemDto.productId} was not part of original sale invoice`,
+              );
+            }
+
+            const otherReturned =
+              otherReturnedQtyMap.get(itemDto.productId) || 0;
+            const maxReturnable = originalItem.quantity - otherReturned;
+
+            if (itemDto.quantity > maxReturnable) {
+              throw new BadRequestException(
+                `Cannot return ${itemDto.quantity} units of '${originalItem.productName}'. Remaining returnable quantity: ${maxReturnable}`,
+              );
+            }
+
+            const lineUnitPrice = originalItem.unitPrice;
+            const lineSubtotalRefund = lineUnitPrice * itemDto.quantity;
+            const lineTaxRefund =
+              (lineSubtotalRefund * (originalItem.taxRate || 0)) / 100;
+            const lineTotalRefund = lineSubtotalRefund + lineTaxRefund;
+
+            calcSubtotal += lineSubtotalRefund;
+            calcTax += lineTaxRefund;
+
+            updatedReturnItems.push({
+              productId: new Types.ObjectId(itemDto.productId),
+              productName: originalItem.productName,
+              quantity: itemDto.quantity,
+              unitPrice: lineUnitPrice,
+              refundAmount: lineTotalRefund,
+              reason: itemDto.reason?.trim(),
+            });
+          }
+
+          // Adjust stock quantity differences
+          const oldQtyMap = new Map<string, number>();
+          for (const oldIt of existingReturn.items) {
+            oldQtyMap.set(oldIt.productId.toString(), oldIt.quantity);
+          }
+
+          for (const newIt of updatedReturnItems) {
+            const oldQty = oldQtyMap.get(newIt.productId.toString()) || 0;
+            const diffQty = newIt.quantity - oldQty;
+            if (diffQty !== 0) {
+              await this.productModel.updateOne(
+                { _id: newIt.productId },
+                { $inc: { stockQuantity: diffQty } },
+                { session },
+              );
+            }
+            oldQtyMap.delete(newIt.productId.toString());
+          }
+
+          // Revert stock for items no longer in return
+          for (const [pId, oldQty] of oldQtyMap.entries()) {
+            await this.productModel.updateOne(
+              { _id: new Types.ObjectId(pId) },
+              { $inc: { stockQuantity: -oldQty } },
+              { session },
+            );
+          }
+
+          newItems = updatedReturnItems;
+          newSubtotalRefund = calcSubtotal;
+          newTaxRefund = calcTax;
+          newTotalRefundAmount = calcSubtotal + calcTax;
+        }
+
+        const refundDiff =
+          newTotalRefundAmount - existingReturn.totalRefundAmount;
+
+        // Adjust loyalty points / store credit if customer exists
+        if (existingReturn.customerId && refundDiff !== 0) {
+          const company = await this.companyService.genericFindOne(
+            { _id: companyId },
+            { session },
+          );
+          const loyaltyRate = company?.regional?.loyaltyAmountPerPoint || 100;
+          const pointsDelta = refundDiff / loyaltyRate;
+
+          const customerInc: Record<string, number> = {
+            loyaltyPoints: -pointsDelta,
+          };
+
+          const refundMethod = dto.refundMethod || existingReturn.refundMethod;
+          if (refundMethod === RefundMethod.STORE_CREDIT) {
+            customerInc.balanceDue = -refundDiff;
+          }
+
+          await this.customerModel.updateOne(
+            { _id: existingReturn.customerId },
+            { $inc: customerInc },
+            { session },
+          );
+        }
+
+        // Adjust register cash
+        const activeRefundMethod =
+          dto.refundMethod || existingReturn.refundMethod;
+        const regSessionId =
+          dto.registerSessionId || existingReturn.registerSessionId;
+
+        if (regSessionId && activeRefundMethod === RefundMethod.CASH && refundDiff !== 0) {
+          await this.registerModel.updateOne(
+            { _id: regSessionId },
+            { $inc: { totalSalesCash: -refundDiff } },
+            { session },
+          );
+        }
+
+        const updated = await this.genericUpdateOne(
+          id,
+          {
+            items: newItems,
+            subtotalRefund: newSubtotalRefund,
+            taxRefund: newTaxRefund,
+            totalRefundAmount: newTotalRefundAmount,
+            ...(dto.refundMethod && { refundMethod: dto.refundMethod }),
+            ...(dto.notes !== undefined && { notes: dto.notes?.trim() }),
+          },
+          { session },
+        );
+
+        await this.logService.createLog({
+          companyId: new Types.ObjectId(companyId),
+          createdBy: new Types.ObjectId(userId),
+          action: LogActions.UPDATE_SALE_RETURN,
+          entityType: LogEntityType.SALE_RETURN,
+          entityId: new Types.ObjectId(id),
+          description: `Sale return ${existingReturn.returnNumber} updated`,
+          ipAddress,
+          path: req.url,
+          status: LogStatus.SUCCESS,
+        });
+
+        return {
+          success: true,
+          message: 'Sale return updated successfully',
+          data: updated,
+          statusCode: HttpStatus.OK,
+        };
+      });
+    } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: new Types.ObjectId(companyId),
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.UPDATE_SALE_RETURN,
+        entityType: LogEntityType.SALE_RETURN,
+        entityId: new Types.ObjectId(id),
+        description: 'Failed to update sale return',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Error updating sale return');
     }
   }
 
@@ -470,7 +702,6 @@ export class SaleReturnService extends GenericDatabase<
           );
         }
 
-        // Restore cash register session
         if (
           saleReturn.registerSessionId &&
           saleReturn.refundMethod === RefundMethod.CASH
