@@ -3148,6 +3148,11 @@
             "type": "string",
             "example": "My Supermarket Store"
           },
+          "username": {
+            "type": "string",
+            "example": "anees_owner",
+            "description": "Unique login username for owner user account"
+          },
           "ownerName": {
             "type": "string",
             "example": "Store Owner Name"
@@ -3158,7 +3163,8 @@
           },
           "ownerPhone": {
             "type": "string",
-            "example": "+919876543210"
+            "example": "+919876543210",
+            "description": "Store owner contact phone number"
           },
           "password": {
             "type": "string",
@@ -3166,15 +3172,15 @@
           },
           "city": {
             "type": "string",
-            "example": "Mumbai"
+            "example": "Calicut"
           },
           "state": {
             "type": "string",
-            "example": "Maharashtra"
+            "example": "Kerala"
           },
           "postalCode": {
             "type": "string",
-            "example": "400001"
+            "example": "673001"
           },
           "country": {
             "type": "string",
@@ -3184,6 +3190,7 @@
         },
         "required": [
           "companyName",
+          "username",
           "ownerName",
           "ownerEmail",
           "ownerPhone",
