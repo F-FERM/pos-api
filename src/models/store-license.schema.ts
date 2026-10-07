@@ -7,6 +7,7 @@ export type StoreLicenseDocument = StoreLicense & Document;
 export enum LicenseStatus {
   UNASSIGNED = 'UNASSIGNED',
   ASSIGNED = 'ASSIGNED',
+  TRIAL = 'TRIAL',
   REDEEMED = 'REDEEMED',
   SUSPENDED = 'SUSPENDED',
   EXPIRED = 'EXPIRED',
@@ -14,7 +15,13 @@ export enum LicenseStatus {
 
 @Schema({ timestamps: true, collection: 'store_licenses' })
 export class StoreLicense extends BaseSchema {
-  @Prop({ required: true, unique: true, uppercase: true, trim: true, index: true })
+  @Prop({
+    required: true,
+    unique: true,
+    uppercase: true,
+    trim: true,
+    index: true,
+  })
   licenseKey: string;
 
   @Prop({ trim: true, lowercase: true, index: true })
@@ -35,6 +42,9 @@ export class StoreLicense extends BaseSchema {
     index: true,
   })
   status: LicenseStatus;
+
+  @Prop({ type: Boolean, default: false })
+  isTrial: boolean;
 
   @Prop({ type: Number, default: 5, min: 1 })
   maxCounters: number;
@@ -65,6 +75,7 @@ export const StoreLicenseModelConstants: {
   assignedEmail: 'assignedEmail',
   companyId: 'companyId',
   status: 'status',
+  isTrial: 'isTrial',
   maxCounters: 'maxCounters',
   maxUsers: 'maxUsers',
   validityMonths: 'validityMonths',
