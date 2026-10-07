@@ -135,6 +135,11 @@ export enum LogActions {
   VERIFY_DEVICE = 'VERIFY_DEVICE',
   REVOKE_DEVICE = 'REVOKE_DEVICE',
   BYPASS_DEVICE = 'BYPASS_DEVICE',
+
+  // Store License (Superadmin)
+  CREATE_STORE_LICENSE = 'CREATE_STORE_LICENSE',
+  UPDATE_STORE_LICENSE = 'UPDATE_STORE_LICENSE',
+  DELETE_STORE_LICENSE = 'DELETE_STORE_LICENSE',
 }
 
 export enum LogEntityType {
@@ -162,4 +167,5 @@ export enum LogEntityType {
   STAFF = 'Staff',
   LOYALTY_SETTING = 'LoyaltySetting',
   DEVICE_REGISTRATION = 'DeviceRegistration',
+  STORE_LICENSE = 'StoreLicense',
 }
