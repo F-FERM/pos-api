@@ -31,6 +31,7 @@ import { LabelDesignerModule } from './label-designer/label-designer.module';
 import { StaffModule } from './staff/staff.module';
 import { SaleReturnModule } from './sale-return/sale-return.module';
 import { LoyaltySettingModule } from './loyalty-setting/loyalty-setting.module';
+import { DeviceRegistrationModule } from './device-registration/device-registration.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { LoyaltySettingModule } from './loyalty-setting/loyalty-setting.module';
     StaffModule,
     SaleReturnModule,
     LoyaltySettingModule,
+    DeviceRegistrationModule,
   ],
   controllers: [AppController],
   providers: [
