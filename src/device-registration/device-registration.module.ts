@@ -8,6 +8,10 @@ import {
   DeviceRegistrationSchemaName,
 } from '../models/device-registration.schema';
 import { CompanySchema, CompanySchemaName } from '../models/company.schema';
+import {
+  StoreLicenseSchema,
+  StoreLicenseSchemaName,
+} from '../models/store-license.schema';
 import { JWT_CONSTANTS } from '../auth/jwt.constants';
 import { LogModule } from '../log/log.module';
 import { CompanyModule } from '../company/company.module';
@@ -18,6 +22,7 @@ import { UserModule } from '../user/user.module';
     MongooseModule.forFeature([
       { name: DeviceRegistrationSchemaName, schema: DeviceRegistrationSchema },
       { name: CompanySchemaName, schema: CompanySchema },
+      { name: StoreLicenseSchemaName, schema: StoreLicenseSchema },
     ]),
     JwtModule.register({
       secret: JWT_CONSTANTS.secret,
