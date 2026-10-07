@@ -201,9 +201,6 @@ export class Subscription extends BaseSchema {
   @Prop({ type: Date, default: null })
   resumedAt: Date | null;
 
-  @Prop({ type: Date, default: null })
-  expiredAt: Date | null;
-
   /* ------------------------------ History ------------------------------- */
 
   /**
@@ -259,7 +256,6 @@ export const SubscriptionModelConstants: { [K in keyof Subscription]: K } = {
   cancelledAt: 'cancelledAt',
   suspendedAt: 'suspendedAt',
   resumedAt: 'resumedAt',
-  expiredAt: 'expiredAt',
   events: 'events',
   externalProviderId: 'externalProviderId',
   externalProviderName: 'externalProviderName',
