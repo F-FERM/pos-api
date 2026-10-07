@@ -90,13 +90,17 @@ export class AuthService {
       const email = dto.ownerEmail.trim().toLowerCase();
 
       const existingUser = await this.userModel.findOne({
-        $or: [{ username: dto.ownerPhone.trim() }, { email }],
+        $or: [
+          { username: dto.username.trim() },
+          { phone: dto.ownerPhone.trim() },
+          { email },
+        ],
         isDeleted: false,
       });
 
       if (existingUser) {
         throw new BadRequestException(
-          'A user or store with this phone number or email already exists',
+          'A user or store with this username, phone number, or email already exists',
         );
       }
 
@@ -210,7 +214,8 @@ export class AuthService {
 
       const [createdOwner] = await this.userModel.create([
         {
-          username: storeDto.ownerPhone.trim(),
+          username: (storeDto.username || storeDto.ownerPhone).trim(),
+          phone: storeDto.ownerPhone.trim(),
           name: storeDto.ownerName.trim(),
           email,
           password: hashedPassword,
