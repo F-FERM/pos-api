@@ -161,6 +161,19 @@ export class DeviceRegistrationService extends GenericDatabase<
 
       if (storeLicense) {
         if (
+          storeLicense.expiresAt &&
+          new Date(storeLicense.expiresAt) < new Date()
+        ) {
+          await this.storeLicenseModel.updateOne(
+            { _id: storeLicense._id },
+            { $set: { status: LicenseStatus.EXPIRED } },
+          );
+          throw new UnauthorizedException(
+            'Your Store Trial License Key has expired. Please contact Sales/Support to upgrade your license.',
+          );
+        }
+
+        if (
           storeLicense.status === LicenseStatus.SUSPENDED ||
           storeLicense.status === LicenseStatus.EXPIRED
         ) {
