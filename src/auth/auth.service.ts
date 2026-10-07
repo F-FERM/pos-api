@@ -38,6 +38,7 @@ import {
 } from '../models/store-license.schema';
 import { RegisterStoreRequestDto } from './dto/register-store-request.dto';
 import { VerifyOtpRequestDto } from './dto/verify-otp-request.dto';
+import { ResendLicenseKeyRequestDto } from './dto/resend-license-key-request.dto';
 import { NumberSettingsService } from '../number-settings/number-settings.service';
 import { CounterService } from '../counter/counter.service';
 import { LoyaltySettingService } from '../loyalty-setting/loyalty-setting.service';
@@ -218,7 +219,7 @@ export class AuthService {
         },
       ]);
 
-      const maxTerminals = existingLicense ? existingLicense.maxTerminals : 5;
+      const maxCounters = existingLicense ? existingLicense.maxCounters : 5;
       const maxUsers = existingLicense ? existingLicense.maxUsers : 10;
 
       const createdCompany = await this.companyModel.create({
@@ -250,10 +251,12 @@ export class AuthService {
           timeFormat: TimeFormat.TWELVE_HOUR,
           fiscalYearStartMonth: 4,
         },
+        maxCounters,
+        maxUsers,
         subscription: {
           status: CompanySubscriptionStatus.ACTIVE,
           maxUsers,
-          maxTerminals,
+          maxCounters,
         },
       });
 
@@ -275,7 +278,7 @@ export class AuthService {
           assignedEmail: email,
           companyId: createdCompany._id,
           status: LicenseStatus.REDEEMED,
-          maxTerminals: 5,
+          maxCounters: 5,
           maxUsers: 10,
           validityMonths: 12,
           redeemedAt: new Date(),
@@ -320,7 +323,7 @@ export class AuthService {
         storeDto.ownerName.trim(),
         createdCompany.name,
         licenseKey,
-        maxTerminals,
+        maxCounters,
       );
 
       return {
@@ -350,6 +353,67 @@ export class AuthService {
       throw new BadRequestException(
         'Error verifying OTP and registering store',
       );
+    }
+  }
+
+  async resendLicenseKey(dto: ResendLicenseKeyRequestDto) {
+    try {
+      const email = dto.email.trim().toLowerCase();
+
+      const company = await this.companyModel.findOne({
+        $or: [
+          { 'contact.primaryEmail': email },
+          { 'contact.secondaryEmail': email },
+        ],
+        isDeleted: false,
+      });
+
+      if (!company) {
+        throw new NotFoundException(
+          'No store found registered with this email address',
+        );
+      }
+
+      let licenseKey = company.licenseKey;
+
+      if (!licenseKey) {
+        licenseKey = `LIC-${company.code}-${Math.floor(10000 + Math.random() * 90000)}`;
+        await this.companyModel.updateOne(
+          { _id: company._id },
+          { $set: { licenseKey } },
+        );
+      }
+
+      const owner = await this.userModel.findOne({
+        _id: company.ownerId,
+        isDeleted: false,
+      });
+
+      const maxCounters =
+        company.maxCounters || company.subscription?.maxCounters || 5;
+
+      await this.emailService.sendLicenseIssuedEmail(
+        email,
+        owner?.name || company.name,
+        company.name,
+        licenseKey,
+        maxCounters,
+      );
+
+      return {
+        success: true,
+        message: `Store License Key sent successfully to ${email}`,
+        data: {
+          email,
+          companyName: company.name,
+        },
+      };
+    } catch (error: unknown) {
+      if (error instanceof NotFoundException) throw error;
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Error sending store license key');
     }
   }
 
