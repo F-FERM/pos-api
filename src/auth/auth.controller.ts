@@ -15,6 +15,7 @@ import { type AuthedRequest } from '../utils/common.types';
 import { LoginDto } from './dto/login.DTO';
 import { RegisterStoreRequestDto } from './dto/register-store-request.dto';
 import { VerifyOtpRequestDto } from './dto/verify-otp-request.dto';
+import { ResendLicenseKeyRequestDto } from './dto/resend-license-key-request.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -50,5 +51,15 @@ export class AuthController {
   })
   verifyStoreOtp(@Body() dto: VerifyOtpRequestDto) {
     return this.authService.verifyStoreOtp(dto);
+  }
+
+  @Public()
+  @Post('resend-license-key')
+  @ApiOperation({
+    summary:
+      'Resend / Recover Store License Key to owner email address',
+  })
+  resendLicenseKey(@Body() dto: ResendLicenseKeyRequestDto) {
+    return this.authService.resendLicenseKey(dto);
   }
 }
