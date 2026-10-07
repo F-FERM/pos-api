@@ -30,7 +30,7 @@ export class User extends BaseSchema {
     ref: 'Company',
     default: null,
   })
-  companyId: Types.ObjectId;
+  companyId?: Types.ObjectId | null;
 
   @Prop({ default: true })
   isActive: boolean;
