@@ -982,6 +982,88 @@
         ]
       }
     },
+    "/api/subscription/company/{companyId}/manage": {
+      "patch": {
+        "operationId": "SubscriptionController_manageSubscription",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubscriptionStatusAndDateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Superadmin: Single unified API to update store subscription status, end date, and counter limits",
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
+    "/api/subscription/company/{companyId}/extend": {
+      "patch": {
+        "operationId": "SubscriptionController_extendSubscription",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Superadmin: Extend company store subscription / trial period by days",
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
+    "/api/subscription/company/{companyId}/status": {
+      "patch": {
+        "operationId": "SubscriptionController_updateSubscriptionStatus",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Superadmin: Change company store subscription status",
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
     "/api/subscription/{id}": {
       "patch": {
         "operationId": "SubscriptionController_updateSubscription",
@@ -3009,6 +3091,7 @@
               "enum": [
                 "UNASSIGNED",
                 "ASSIGNED",
+                "TRIAL",
                 "REDEEMED",
                 "SUSPENDED",
                 "EXPIRED"
@@ -3753,6 +3836,42 @@
           "planId",
           "status"
         ]
+      },
+      "UpdateSubscriptionStatusAndDateDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "trial",
+              "active",
+              "expired",
+              "suspended",
+              "cancelled"
+            ],
+            "example": "active",
+            "description": "Updated store subscription status (ACTIVE, SUSPENDED, CANCELLED, EXPIRED, TRIAL)"
+          },
+          "endDate": {
+            "type": "string",
+            "example": "2027-12-31T23:59:59.000Z",
+            "description": "Explicit new end/expiry date for store subscription"
+          },
+          "maxCounters": {
+            "type": "number",
+            "example": 10,
+            "description": "Updated maximum allowed checkout counters"
+          },
+          "maxUsers": {
+            "type": "number",
+            "example": 25,
+            "description": "Updated maximum allowed staff users"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Internal admin notes or reason for subscription change"
+          }
+        }
       },
       "UpdateSubscriptionDto": {
         "type": "object",
@@ -4855,6 +4974,7 @@
             "enum": [
               "UNASSIGNED",
               "ASSIGNED",
+              "TRIAL",
               "REDEEMED",
               "SUSPENDED",
               "EXPIRED"
@@ -4903,6 +5023,7 @@
             "enum": [
               "UNASSIGNED",
               "ASSIGNED",
+              "TRIAL",
               "REDEEMED",
               "SUSPENDED",
               "EXPIRED"
