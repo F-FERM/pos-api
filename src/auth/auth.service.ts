@@ -198,8 +198,18 @@ export class AuthService {
 
       const hashedPassword = await bcrypt.hash(storeDto.password, 10);
 
-      const maxCounters = existingLicense ? existingLicense.maxCounters : 5;
-      const maxUsers = existingLicense ? existingLicense.maxUsers : 10;
+      const isTrial = !existingLicense;
+      const trialDays = 14;
+      const trialExpiresAt = new Date(
+        Date.now() + trialDays * 24 * 60 * 60 * 1000,
+      );
+
+      const maxCounters = existingLicense ? existingLicense.maxCounters : 2;
+      const maxUsers = existingLicense ? existingLicense.maxUsers : 5;
+      const expiresAt = existingLicense
+        ? existingLicense.expiresAt
+        : trialExpiresAt;
+
       const tempOwnerId = new Types.ObjectId();
 
       // 1. Create Company Store
@@ -235,9 +245,12 @@ export class AuthService {
         maxCounters,
         maxUsers,
         subscription: {
-          status: CompanySubscriptionStatus.ACTIVE,
+          status: isTrial
+            ? CompanySubscriptionStatus.TRIAL
+            : CompanySubscriptionStatus.ACTIVE,
           maxUsers,
           maxCounters,
+          endDate: expiresAt,
         },
       });
 
@@ -288,10 +301,12 @@ export class AuthService {
           licenseKey,
           assignedEmail: email,
           companyId: createdCompany._id,
-          status: LicenseStatus.REDEEMED,
-          maxCounters: 5,
-          maxUsers: 10,
-          validityMonths: 12,
+          status: LicenseStatus.TRIAL,
+          isTrial: true,
+          maxCounters: 2,
+          maxUsers: 5,
+          validityMonths: 1,
+          expiresAt: trialExpiresAt,
           redeemedAt: new Date(),
           createdBy: createdOwner._id,
         });
@@ -335,6 +350,8 @@ export class AuthService {
         createdCompany.name,
         licenseKey,
         maxCounters,
+        isTrial,
+        expiresAt,
       );
 
       return {
