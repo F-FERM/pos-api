@@ -6,14 +6,17 @@ import { PrivilegesSchemaName } from './privilege.schema';
 export type UserDocument = User & Document;
 @Schema({ timestamps: true })
 export class User extends BaseSchema {
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true, unique: true, trim: true })
   username: string;
 
-  @Prop()
+  @Prop({ trim: true })
   name: string;
 
-  @Prop({ unique: true, sparse: true, trim: true })
+  @Prop({ unique: true, sparse: true, trim: true, lowercase: true })
   email: string;
+
+  @Prop({ trim: true, sparse: true })
+  phone?: string;
 
   @Prop({ required: true })
   password: string;
@@ -45,7 +48,7 @@ export class User extends BaseSchema {
 export const UserSchema = SchemaFactory.createForClass(User);
 export const UserSchemaName = User.name;
 
-export const UserModelConstants: { [K in keyof User]: K } = {
+export const UserModelConstants: { [K in keyof Required<User>]: K } = {
   username: 'username',
   password: 'password',
   privilegeId: 'privilegeId',
@@ -53,6 +56,7 @@ export const UserModelConstants: { [K in keyof User]: K } = {
   createdBy: 'createdBy',
   name: 'name',
   email: 'email',
+  phone: 'phone',
   companyId: 'companyId',
   isActive: 'isActive',
   lastLoginAt: 'lastLoginAt',
