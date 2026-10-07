@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class RegisterDeviceDto {
   @ApiProperty({
@@ -9,6 +9,14 @@ export class RegisterDeviceDto {
   @IsString()
   @IsNotEmpty()
   licenseKey: string;
+
+  @ApiPropertyOptional({
+    example: 'owner@supermarket.com',
+    description: 'Owner email address associated with the store license',
+  })
+  @IsOptional()
+  @IsEmail()
+  email?: string;
 
   @ApiProperty({
     example: 'WIN-DESK-GUID-998877',
