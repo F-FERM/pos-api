@@ -136,7 +136,7 @@ class CompanyFeatureFlags {
   inventoryEnabled: boolean;
 
   @Prop({ type: Boolean, default: false })
-  multiTerminalEnabled: boolean;
+  multiCounterEnabled: boolean;
 
   @Prop({ type: Boolean, default: false })
   barcodeEnabled: boolean;
@@ -163,16 +163,6 @@ class CompanyFeatureFlags {
 @Schema({ _id: false })
 class CompanySubscriptionSnapshot {
   @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'SubscriptionPlan',
-    default: null,
-  })
-  planId: Types.ObjectId | null;
-
-  @Prop({ type: String, default: null })
-  planCode: string | null;
-
-  @Prop({
     type: String,
     enum: CompanySubscriptionStatus,
     default: CompanySubscriptionStatus.NONE,
@@ -194,8 +184,8 @@ class CompanySubscriptionSnapshot {
   @Prop({ type: Number, default: 5, min: 1 })
   maxUsers: number;
 
-  @Prop({ type: Number, default: 1, min: 1 })
-  maxTerminals: number;
+  @Prop({ type: Number, default: 5, min: 1 })
+  maxCounters: number;
 }
 
 export type CompanyDocument = Company & Document;
@@ -215,6 +205,9 @@ export class Company extends BaseSchema {
 
   @Prop({ required: true, unique: true, lowercase: true, trim: true })
   slug: string;
+
+  @Prop({ required: true, unique: true, uppercase: true, trim: true, index: true })
+  licenseKey: string;
 
   /* --------------------------- Classification --------------------------- */
 
@@ -290,13 +283,22 @@ export class Company extends BaseSchema {
   })
   subscription: CompanySubscriptionSnapshot;
 
-  /* -------------------------- Operational Counters ---------------------- */
+  /* -------------------------- Operational Counters & Limits ---------------------- */
+
+  @Prop({ type: Number, default: 5, min: 1 })
+  maxCounters: number;
+
+  @Prop({ type: Number, default: 10, min: 1 })
+  maxUsers: number;
+
+  @Prop({ type: Boolean, default: true })
+  isMultiCounterAllowed: boolean;
 
   @Prop({ type: Number, default: 0, min: 0 })
   currentUserCount: number;
 
   @Prop({ type: Number, default: 0, min: 0 })
-  currentTerminalCount: number;
+  currentCounterCount: number;
 
   /* ------------------------------ Owner --------------------------------- */
 
@@ -312,10 +314,10 @@ export class Company extends BaseSchema {
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Terminal',
+    ref: 'Counter',
     default: null,
   })
-  defaultTerminalId: Types.ObjectId | null;
+  defaultCounterId: Types.ObjectId | null;
 
   /* ------------------------------ Metadata ------------------------------ */
 
@@ -365,6 +367,7 @@ export const CompanyModelConstants: { [K in keyof Company]: K } = {
   legalName: 'legalName',
   code: 'code',
   slug: 'slug',
+  licenseKey: 'licenseKey',
 
   // classification
   industry: 'industry',
@@ -387,13 +390,16 @@ export const CompanyModelConstants: { [K in keyof Company]: K } = {
   // subscription
   subscription: 'subscription',
 
-  // counters
+  // counters & limits
+  maxCounters: 'maxCounters',
+  maxUsers: 'maxUsers',
+  isMultiCounterAllowed: 'isMultiCounterAllowed',
   currentUserCount: 'currentUserCount',
-  currentTerminalCount: 'currentTerminalCount',
+  currentCounterCount: 'currentCounterCount',
 
   // owner & defaults
   ownerId: 'ownerId',
-  defaultTerminalId: 'defaultTerminalId',
+  defaultCounterId: 'defaultCounterId',
 
   // metadata
   notes: 'notes',
