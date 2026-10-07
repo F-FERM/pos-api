@@ -109,20 +109,9 @@ export class Subscription extends BaseSchema {
   })
   companyId: Types.ObjectId;
 
-  /* ----------------------------- Plan Ref ------------------------------- */
+  /* ----------------------------- Plan Info ------------------------------- */
 
-  @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'SubscriptionPlan',
-    required: true,
-  })
-  planId: Types.ObjectId;
-
-  /** Denormalized snapshot of the plan at subscription time. */
-  @Prop({ type: String, required: true, trim: true, uppercase: true })
-  planCode: string;
-
-  @Prop({ type: String, required: true, trim: true })
+  @Prop({ type: String, default: 'Professional Plan', trim: true })
   planName: string;
 
   /* ------------------------- Lifecycle Status --------------------------- */
@@ -255,8 +244,6 @@ SubscriptionSchema.index({ deletedAt: 1 });
 
 export const SubscriptionModelConstants: { [K in keyof Subscription]: K } = {
   companyId: 'companyId',
-  planId: 'planId',
-  planCode: 'planCode',
   planName: 'planName',
   status: 'status',
   isTrial: 'isTrial',
