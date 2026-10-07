@@ -82,8 +82,8 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
 
       const exists: CompanyDocument | null = await this.genericFindOne({
         $or: [
-          { [CompanyModelConstants.code]: dto.code.toUpperCase() },
-          { [CompanyModelConstants.slug]: dto.slug.toLowerCase() },
+          { code: dto.code.toUpperCase() },
+          { slug: dto.slug.toLowerCase() },
         ],
       });
       if (exists) {
@@ -97,10 +97,10 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
       const created: CompanyDocument = await this.genericCreateOne({
         ...dto,
         licenseKey,
-        [CompanyModelConstants.code]: dto.code.toUpperCase(),
-        [CompanyModelConstants.slug]: dto.slug.toLowerCase(),
-        [CompanyModelConstants.ownerId]: new Types.ObjectId(userId),
-        [CompanyModelConstants.createdBy]: new Types.ObjectId(userId),
+        code: dto.code.toUpperCase(),
+        slug: dto.slug.toLowerCase(),
+        ownerId: new Types.ObjectId(userId),
+        createdBy: new Types.ObjectId(userId),
       });
 
       // Auto-create default number settings, counter, and loyalty program settings
@@ -127,7 +127,7 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
         action: LogActions.CREATE_COMPANY,
         entityType: LogEntityType.COMPANY,
         entityId: new Types.ObjectId(created._id),
-        description: `Company ${created[CompanyModelConstants.name]} created`,
+        description: `Company ${created.name} created`,
         ipAddress,
         path: req.url,
         status: LogStatus.SUCCESS,
@@ -174,12 +174,12 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
       const isSuperAdmin: boolean = roles.includes(Role.superadmin);
 
       const filter: Record<string, unknown> = {
-        [CompanyModelConstants.isDeleted]: false,
+        isDeleted: false,
       };
 
       if (!isSuperAdmin) {
         const user = await this.userService.genericFindOne({ _id: userId });
-        const userCompanyId = user?.[UserModelConstants.companyId];
+        const userCompanyId = user?.companyId;
         if (!userCompanyId) {
           throw new BadRequestException('No company scope for this user');
         }
@@ -187,7 +187,7 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
       }
 
       if (search) {
-        filter[CompanyModelConstants.name] = {
+        filter.name = {
           $regex: search,
           $options: 'i',
         };
@@ -238,7 +238,7 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
 
       if (!isSuperAdmin) {
         const user = await this.userService.genericFindOne({ _id: userId });
-        const userCompanyId = user?.[UserModelConstants.companyId];
+        const userCompanyId = user?.companyId;
         if (!userCompanyId || userCompanyId.toString() !== id) {
           throw new BadRequestException('Access denied');
         }
@@ -284,7 +284,7 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
       const isSuperAdmin: boolean = roles.includes(Role.superadmin);
 
       if (!isSuperAdmin) {
-        const userCompanyId = user?.[UserModelConstants.companyId];
+        const userCompanyId = user?.companyId;
         if (!userCompanyId || userCompanyId.toString() !== id) {
           throw new BadRequestException('Access denied');
         }
@@ -307,7 +307,7 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
         action: LogActions.UPDATE_COMPANY,
         entityType: LogEntityType.COMPANY,
         entityId: new Types.ObjectId(id),
-        description: `Company ${updated?.[CompanyModelConstants.name]} updated`,
+        description: `Company ${updated?.name} updated`,
         ipAddress,
         path: req.url,
         status: LogStatus.SUCCESS,
