@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { LoyaltySettingController } from './loyalty-setting.controller';
 import { LoyaltySettingService } from './loyalty-setting.service';
@@ -16,8 +16,8 @@ import { UserModule } from '../user/user.module';
       { name: LoyaltySettingSchemaName, schema: LoyaltySettingSchema },
     ]),
     LogModule,
-    CompanyModule,
-    UserModule,
+    forwardRef(() => CompanyModule),
+    forwardRef(() => UserModule),
   ],
   controllers: [LoyaltySettingController],
   providers: [LoyaltySettingService],
