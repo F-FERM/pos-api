@@ -124,7 +124,6 @@ export class SubscriptionController {
 
   @ApiOperation({ summary: 'Get all subscriptions (Superadmin)' })
   @ApiQuery({ name: 'status', required: false })
-  @ApiQuery({ name: 'planCode', required: false })
   @CheckPermission({
     subModule: SUB_MODULES.SUBSCRIPTION,
     action: ACTIONS.READ,
@@ -133,12 +132,11 @@ export class SubscriptionController {
   getAllSubscriptions(
     @Req() req: AuthedRequest,
     @Query('status') status?: string,
-    @Query('planCode') planCode?: string,
   ) {
     return this.subscriptionService.getAllSubscriptions(
       req.user.userId,
       req.user.roles,
-      { status, planCode },
+      { status },
     );
   }
 }
