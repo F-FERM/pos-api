@@ -3,7 +3,6 @@ import {
   HttpStatus,
   Injectable,
   NotFoundException,
-  OnModuleInit,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -30,10 +29,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { seedSuperAdminUser } from '../common/seeds/superadmin.seed';
 
 @Injectable()
-export class UserService
-  extends GenericDatabase<Model<UserDocument>>
-  implements OnModuleInit
-{
+export class UserService extends GenericDatabase<Model<UserDocument>> {
   constructor(
     @InjectModel(UserSchemaName)
     private readonly userModel: Model<UserDocument>,
