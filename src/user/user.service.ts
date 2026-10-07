@@ -3,6 +3,7 @@ import {
   HttpStatus,
   Injectable,
   NotFoundException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -26,9 +27,13 @@ import {
   PrivilegesSchemaName,
 } from '../models/privilege.schema';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { seedSuperAdminUser } from '../common/seeds/superadmin.seed';
 
 @Injectable()
-export class UserService extends GenericDatabase<Model<UserDocument>> {
+export class UserService
+  extends GenericDatabase<Model<UserDocument>>
+  implements OnModuleInit
+{
   constructor(
     @InjectModel(UserSchemaName)
     private readonly userModel: Model<UserDocument>,
@@ -38,6 +43,10 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
     private readonly privilegeModel: Model<PrivilegesDocument>,
   ) {
     super(userModel);
+  }
+
+  async onModuleInit() {
+    await seedSuperAdminUser(this.userModel, this.privilegeModel);
   }
 
   /**
@@ -51,10 +60,7 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
       const user = await this.genericFindByUsername(username, [
         `${UserModelConstants.privilegeId}`,
       ]);
-      if (
-        user &&
-        (await bcrypt.compare(pass, user[UserModelConstants.password]))
-      ) {
+      if (user && (await bcrypt.compare(pass, user.password))) {
         return user;
       }
       return null;
@@ -74,7 +80,7 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
     }
     const user: UserDocument | null = await this.genericFindOneOrNotFound({
       _id: id,
-      [UserModelConstants.isActive]: true,
+      isActive: true,
     });
     if (!user) {
       throw new NotFoundException('User not found');
@@ -91,16 +97,15 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
       const privilege = await this.privilegeModel.findById(dto.privilegeId);
       if (
         !privilege ||
-        privilege[PrivilegesModelConstants.companyId]?.toString() !==
-          dto.companyId
+        privilege.companyId?.toString() !== dto.companyId
       ) {
         throw new NotFoundException('Privilege not found in this company');
       }
 
       const dup: UserDocument | null = await this.genericFindOne({
         $or: [
-          { [UserModelConstants.username]: dto.username.toLowerCase() },
-          { [UserModelConstants.email]: dto.email.toLowerCase() },
+          { username: dto.username.toLowerCase() },
+          { email: dto.email.toLowerCase() },
         ],
       });
       if (dup) {
@@ -110,14 +115,14 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
       const hashed: string = await bcrypt.hash(dto.password, 10);
 
       const created: UserDocument = await this.genericCreateOne({
-        [UserModelConstants.username]: dto.username.toLowerCase(),
-        [UserModelConstants.name]: dto.name,
-        [UserModelConstants.email]: dto.email.toLowerCase(),
-        [UserModelConstants.password]: hashed,
-        [UserModelConstants.privilegeId]: new Types.ObjectId(dto.privilegeId),
-        [UserModelConstants.companyId]: new Types.ObjectId(dto.companyId),
-        [UserModelConstants.isActive]: true,
-        [UserModelConstants.createdBy]: new Types.ObjectId(userId),
+        username: dto.username.toLowerCase(),
+        name: dto.name,
+        email: dto.email.toLowerCase(),
+        password: hashed,
+        privilegeId: new Types.ObjectId(dto.privilegeId),
+        companyId: new Types.ObjectId(dto.companyId),
+        isActive: true,
+        createdBy: new Types.ObjectId(userId),
       });
 
       await this.logService.createLog({
@@ -126,14 +131,14 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
         action: LogActions.CREATE_USER,
         entityType: LogEntityType.USER,
         entityId: new Types.ObjectId(created._id),
-        description: `User ${created[UserModelConstants.username]} created`,
+        description: `User ${created.username} created`,
         ipAddress,
         path: req.url,
         status: LogStatus.SUCCESS,
       });
 
       const safe = created.toObject();
-      delete (safe as Record<string, unknown>)[UserModelConstants.password];
+      delete (safe as Record<string, unknown>).password;
 
       return {
         success: true,
@@ -177,16 +182,16 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
       const isSuperAdmin: boolean = roles.includes(Role.superadmin);
 
       const filter: Record<string, unknown> = {
-        [UserModelConstants.isDeleted]: false,
+        isDeleted: false,
       };
 
       if (!isSuperAdmin) {
         await this.companyService.validateCompany(companyId, userId);
-        filter[UserModelConstants.companyId] = new Types.ObjectId(companyId);
+        filter.companyId = new Types.ObjectId(companyId);
       }
 
       if (search) {
-        filter[UserModelConstants.username] = {
+        filter.username = {
           $regex: search,
           $options: 'i',
         };
@@ -241,12 +246,12 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
 
       const filter: Record<string, unknown> = {
         _id: id,
-        [UserModelConstants.isDeleted]: false,
+        isDeleted: false,
       };
 
       if (!isSuperAdmin) {
         await this.companyService.validateCompany(companyId, userId);
-        filter[UserModelConstants.companyId] = new Types.ObjectId(companyId);
+        filter.companyId = new Types.ObjectId(companyId);
       }
 
       const user = await this.userModel
@@ -290,7 +295,7 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
 
       const user: UserDocument | null = await this.genericFindOne({
         _id: id,
-        [UserModelConstants.companyId]: new Types.ObjectId(companyId),
+        companyId: new Types.ObjectId(companyId),
       });
       if (!user) {
         throw new NotFoundException('User not found');
@@ -298,34 +303,29 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
 
       const update: Record<string, unknown> = {};
       if (dto.username) {
-        update[UserModelConstants.username] = dto.username.toLowerCase();
+        update.username = dto.username.toLowerCase();
       }
       if (dto.name) {
-        update[UserModelConstants.name] = dto.name;
+        update.name = dto.name;
       }
       if (dto.email) {
-        update[UserModelConstants.email] = dto.email.toLowerCase();
+        update.email = dto.email.toLowerCase();
       }
       if (dto.password) {
-        update[UserModelConstants.password] = await bcrypt.hash(
-          dto.password,
-          10,
-        );
+        update.password = await bcrypt.hash(dto.password, 10);
       }
       if (dto.privilegeId) {
         const priv = await this.privilegeModel.findById(dto.privilegeId);
         if (
           !priv ||
-          priv[PrivilegesModelConstants.companyId]?.toString() !== companyId
+          priv.companyId?.toString() !== companyId
         ) {
           throw new NotFoundException('Privilege not found in this company');
         }
-        update[UserModelConstants.privilegeId] = new Types.ObjectId(
-          dto.privilegeId,
-        );
+        update.privilegeId = new Types.ObjectId(dto.privilegeId);
       }
       if (typeof dto.isActive === 'boolean') {
-        update[UserModelConstants.isActive] = dto.isActive;
+        update.isActive = dto.isActive;
       }
 
       const updated: UserDocument | null = await this.genericUpdateOne(
@@ -339,7 +339,7 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
         action: LogActions.UPDATE_USER,
         entityType: LogEntityType.USER,
         entityId: new Types.ObjectId(id),
-        description: `User ${updated?.[UserModelConstants.username]} updated`,
+        description: `User ${updated?.username} updated`,
         ipAddress,
         path: req.url,
         status: LogStatus.SUCCESS,
@@ -347,7 +347,7 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
 
       const safe = updated?.toObject();
       if (safe) {
-        delete (safe as Record<string, unknown>)[UserModelConstants.password];
+        delete (safe as Record<string, unknown>).password;
       }
 
       return {
@@ -392,7 +392,7 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
 
       const user: UserDocument | null = await this.genericFindOne({
         _id: id,
-        [UserModelConstants.companyId]: new Types.ObjectId(companyId),
+        companyId: new Types.ObjectId(companyId),
       });
       if (!user) {
         throw new NotFoundException('User not found');
@@ -402,8 +402,8 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
       }
 
       await this.genericUpdateOne(id, {
-        [UserModelConstants.isActive]: false,
-        [UserModelConstants.isDeleted]: true,
+        isActive: false,
+        isDeleted: true,
       });
 
       await this.logService.createLog({
@@ -412,7 +412,7 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
         action: LogActions.DELETE_USER,
         entityType: LogEntityType.USER,
         entityId: new Types.ObjectId(id),
-        description: `User ${user[UserModelConstants.username]} deleted`,
+        description: `User ${user.username} deleted`,
         ipAddress,
         path: req.url,
         status: LogStatus.SUCCESS,
