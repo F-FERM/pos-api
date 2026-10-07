@@ -1,13 +1,16 @@
 import {
   CanActivate,
   ExecutionContext,
-  Injectable,
   ForbiddenException,
+  Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { SubscriptionStatus } from '../../utils/enums/subscription.enums';
-import { Role } from '../../utils/role.enum';
+import { Types } from 'mongoose';
 import { SubscriptionService } from '../../subscription/subscription.service';
+import { SKIP_SUBSCRIPTION_KEY } from '../decorators/skip-subscription.decorator';
+import { IS_PUBLIC_KEY } from '../../auth/public.decorator';
+import { Role } from '../../utils/role.enum';
+import { SubscriptionStatus } from '../../utils/enums/subscription.enums';
 
 @Injectable()
 export class SubscriptionGuard implements CanActivate {
@@ -17,13 +20,19 @@ export class SubscriptionGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // Check if subscription check is skipped
-    const skip = this.reflector.getAllAndOverride<boolean>('skipSubscription', [
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    if (skip) return true;
+    const skipSubscription = this.reflector.getAllAndOverride<boolean>(
+      SKIP_SUBSCRIPTION_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    if (isPublic || skipSubscription) {
+      return true;
+    }
 
     const request = context.switchToHttp().getRequest();
     const user = request?.user;
@@ -40,52 +49,58 @@ export class SubscriptionGuard implements CanActivate {
 
     const companyId: string = user.companyId.toString();
 
-    //  Use subscription service to find subscription
+    // Use subscription service to find company subscription
     const subscription = await this.subscriptionService.genericFindOne({
-      companyId: companyId,
+      companyId: new Types.ObjectId(companyId),
+      isDeleted: false,
     });
 
-    // Check if subscription exists
     if (!subscription) {
       throw new ForbiddenException(
-        'No subscription found. Please contact your administrator.',
-      );
-    }
-
-    // Check if subscription is active
-    if (!subscription.isActive) {
-      throw new ForbiddenException(
-        'Your subscription is inactive. Please renew to continue.',
+        'No subscription found for this company. Please contact support.',
       );
     }
 
     const now = new Date();
 
-    // Check trial expiration using trialEndDate
+    // Check if subscription is cancelled
+    if (subscription.status === SubscriptionStatus.CANCELLED) {
+      throw new ForbiddenException(
+        'Your store subscription has been cancelled. Please contact support to reactivate.',
+      );
+    }
+
+    // Check if subscription is suspended
+    if (subscription.status === SubscriptionStatus.SUSPENDED) {
+      throw new ForbiddenException(
+        'Your store subscription is suspended. Please contact store administration.',
+      );
+    }
+
+    // Check if trial has expired
     if (subscription.isTrial && subscription.trialEndDate) {
       const trialEnd = new Date(subscription.trialEndDate);
       if (trialEnd < now) {
-        // Auto-deactivate expired trial
         await this.subscriptionService.genericUpdateOne(
           subscription._id.toString(),
           {
-            isActive: false,
             status: SubscriptionStatus.EXPIRED,
           },
         );
         throw new ForbiddenException(
-          'Your trial has expired. Please upgrade to a paid plan to continue.',
+          'Your 14-day store free trial has expired. Please contact support to upgrade to a paid license.',
         );
       }
     }
 
     // Check subscription end date
-    if (subscription.endDate && new Date(subscription.endDate) < now) {
-      // Auto-deactivate expired subscription
+    const endDate =
+      subscription.currentPeriod?.endDate || subscription.trialEndDate;
+
+    if (endDate && new Date(endDate) < now) {
       await this.subscriptionService.genericUpdateOne(
         subscription._id.toString(),
         {
-          isActive: false,
           status: SubscriptionStatus.EXPIRED,
         },
       );
@@ -108,29 +123,25 @@ export class SubscriptionGuard implements CanActivate {
       );
     }
 
-    // Calculate days remaining using endDate
+    // Calculate days remaining
     let daysRemaining: number | null = null;
-    if (subscription.endDate) {
+    if (endDate) {
       daysRemaining = Math.ceil(
-        (new Date(subscription.endDate).getTime() - now.getTime()) /
-          (1000 * 60 * 60 * 24),
+        (new Date(endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
       );
     }
 
-    // Attach subscription info to request for later use
+    // Attach subscription details to request object
     request.subscription = {
       id: subscription._id,
-      plan: subscription.plan,
+      planName: subscription.planName,
       isTrial: subscription.isTrial,
       daysRemaining,
-      endDate: subscription.endDate,
-      trialEndDate: subscription.trialEndDate,
+      endDate,
       status: subscription.status,
-      features: subscription.features,
       limits: subscription.limits,
     };
 
-    // If expiring soon (less than 7 days), attach warning flag
     if (daysRemaining !== null && daysRemaining <= 7 && daysRemaining > 0) {
       request.subscription.expiringSoon = true;
     }
