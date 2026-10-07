@@ -15,11 +15,6 @@ import {
   SubscriptionModelConstants,
   SubscriptionSchemaName,
 } from '../models/subscription.schema';
-import {
-  SubscriptionPlanDocument,
-  SubscriptionPlanModelConstants,
-  SubscriptionPlanSchemaName,
-} from '../models/subscription-plan.schema';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 import { RenewSubscriptionDto } from './dto/renew-subscription.dto';
@@ -41,8 +36,6 @@ export class SubscriptionService extends GenericDatabase<
   constructor(
     @InjectModel(SubscriptionSchemaName)
     private readonly subscriptionModel: Model<SubscriptionDocument>,
-    @InjectModel(SubscriptionPlanSchemaName)
-    private readonly planModel: Model<SubscriptionPlanDocument>,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     @Inject(forwardRef(() => CompanyService))
@@ -62,11 +55,6 @@ export class SubscriptionService extends GenericDatabase<
       await this.userService.validateAuthenticatedUser(userId);
       await this.companyService.validateCompany(dto.companyId, userId);
 
-      const plan = await this.planModel.findById(dto.planId);
-      if (!plan) {
-        throw new NotFoundException('Subscription plan not found');
-      }
-
       const existing: SubscriptionDocument | null = await this.genericFindOne({
         [SubscriptionModelConstants.companyId]: new Types.ObjectId(
           dto.companyId,
@@ -75,6 +63,7 @@ export class SubscriptionService extends GenericDatabase<
           $in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL],
         },
       });
+
       if (existing) {
         throw new BadRequestException(
           'Company already has an active or trial subscription',
@@ -84,17 +73,14 @@ export class SubscriptionService extends GenericDatabase<
       const startDate = dto.startDate ? new Date(dto.startDate) : new Date();
       const endDate = dto.endDate
         ? new Date(dto.endDate)
-        : new Date(startDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+        : new Date(startDate.getTime() + 365 * 24 * 60 * 60 * 1000);
 
       const created: SubscriptionDocument = await this.genericCreateOne({
         [SubscriptionModelConstants.companyId]: new Types.ObjectId(
           dto.companyId,
         ),
-        [SubscriptionModelConstants.planId]: new Types.ObjectId(dto.planId),
-        [SubscriptionModelConstants.planCode]:
-          plan[SubscriptionPlanModelConstants.code],
-        [SubscriptionModelConstants.planName]:
-          plan[SubscriptionPlanModelConstants.name],
+        [SubscriptionModelConstants.planCode]: 'PRO-STORE',
+        [SubscriptionModelConstants.planName]: 'Professional Supermarket Plan',
         [SubscriptionModelConstants.status]: dto.status,
         [SubscriptionModelConstants.isTrial]:
           dto.status === SubscriptionStatus.TRIAL,
@@ -105,61 +91,44 @@ export class SubscriptionService extends GenericDatabase<
           ? new Date(dto.trialEndDate)
           : null,
         [SubscriptionModelConstants.currentPeriod]: { startDate, endDate },
-        [SubscriptionModelConstants.currency]:
-          dto.currency ?? plan[SubscriptionPlanModelConstants.pricing].currency,
+        [SubscriptionModelConstants.currency]: dto.currency ?? 'INR',
         [SubscriptionModelConstants.billingCycle]:
-          dto.billingCycle ??
-          plan[SubscriptionPlanModelConstants.pricing].billingCycle,
-        [SubscriptionModelConstants.priceMinor]:
-          dto.priceMinor ??
-          plan[SubscriptionPlanModelConstants.pricing].priceMinor,
-        [SubscriptionModelConstants.limits]:
-          plan[SubscriptionPlanModelConstants.limits],
+          dto.billingCycle ?? 'YEARLY',
+        [SubscriptionModelConstants.priceMinor]: dto.priceMinor ?? 0,
+        [SubscriptionModelConstants.limits]: {
+          maxUsers: 10,
+          maxTerminals: 5,
+        },
         [SubscriptionModelConstants.events]: [
           {
             type: SubscriptionEventType.CREATED,
-            occurredAt: new Date(),
-            actorId: new Types.ObjectId(userId),
-            previousState: {},
-            newState: { status: dto.status, planCode: plan.code },
+            timestamp: new Date(),
+            triggeredBy: new Types.ObjectId(userId),
           },
         ],
         [SubscriptionModelConstants.createdBy]: new Types.ObjectId(userId),
       });
 
       await this.companyService.genericUpdateOne(dto.companyId, {
-        'subscription.planId': new Types.ObjectId(dto.planId),
-        'subscription.planCode': plan[SubscriptionPlanModelConstants.code],
-        'subscription.status': dto.status,
-        'subscription.startDate': startDate,
-        'subscription.endDate': endDate,
-        'subscription.trialStartDate': dto.trialStartDate
-          ? new Date(dto.trialStartDate)
-          : null,
-        'subscription.trialEndDate': dto.trialEndDate
-          ? new Date(dto.trialEndDate)
-          : null,
-        'subscription.maxUsers':
-          plan[SubscriptionPlanModelConstants.limits].maxUsers,
-        'subscription.maxTerminals':
-          plan[SubscriptionPlanModelConstants.limits].maxTerminals,
+        $set: {
+          'subscription.planCode': 'PRO-STORE',
+          'subscription.status': dto.status,
+          'subscription.startDate': startDate,
+          'subscription.endDate': endDate,
+          'subscription.maxUsers': 10,
+          'subscription.maxTerminals': 5,
+        },
       });
 
       await this.logService.createLog({
         companyId: new Types.ObjectId(dto.companyId),
+        createdBy: new Types.ObjectId(userId),
         action: LogActions.CREATE_SUBSCRIPTION,
         entityType: LogEntityType.SUBSCRIPTION,
         entityId: new Types.ObjectId(created._id),
-        description: `Subscription created for plan ${
-          plan[SubscriptionPlanModelConstants.code]
-        }`,
-        path: req.url,
-        additionalData: {
-          newData: created.toJSON(),
-          oldData: null,
-        },
-        createdBy: new Types.ObjectId(userId),
+        description: 'Subscription created for company',
         ipAddress,
+        path: req.url,
         status: LogStatus.SUCCESS,
       });
 
@@ -170,24 +139,10 @@ export class SubscriptionService extends GenericDatabase<
         statusCode: HttpStatus.CREATED,
       };
     } catch (error: unknown) {
-      const ipAddress: string = await this.getClientIpAddress(req);
-      await this.logService.createLog({
-        companyId: new Types.ObjectId(dto.companyId),
-        action: LogActions.CREATE_SUBSCRIPTION,
-        entityType: LogEntityType.SUBSCRIPTION,
-        entityId: new Types.ObjectId(),
-        description: `Failed to create subscription`,
-        path: req.url,
-        additionalData: {
-          error: error instanceof Error ? error.message : error,
-          dto,
-        },
-        createdBy: new Types.ObjectId(userId),
-        ipAddress,
-        status: LogStatus.FAILED,
-      });
-      if (error instanceof Error) throw new BadRequestException(error.message);
-      throw new BadRequestException('Failed to create subscription');
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Error creating subscription');
     }
   }
 
@@ -198,85 +153,25 @@ export class SubscriptionService extends GenericDatabase<
     req: AuthedRequest,
   ) {
     try {
-      const ipAddress: string = await this.getClientIpAddress(req);
+      const ipAddress = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);
 
-      const subscription: SubscriptionDocument | null =
-        await this.genericFindOne({ _id: id });
+      const subscription = await this.genericFindOne({ _id: id });
       if (!subscription) {
         throw new NotFoundException('Subscription not found');
       }
 
-      const update: Record<string, unknown> = {};
-      if (dto.status) update[SubscriptionModelConstants.status] = dto.status;
-      if (dto.billingCycle) {
-        update[SubscriptionModelConstants.billingCycle] = dto.billingCycle;
-      }
-      if (dto.priceMinor !== undefined) {
-        update[SubscriptionModelConstants.priceMinor] = dto.priceMinor;
-      }
-      if (dto.currency) {
-        update[SubscriptionModelConstants.currency] = dto.currency;
-      }
-      if (dto.autoRenew !== undefined) {
-        update[SubscriptionModelConstants.autoRenew] = dto.autoRenew;
-      }
-      if (dto.cancellationReason !== undefined) {
-        update.cancellationReason =
-          dto.cancellationReason;
-      }
-      if (dto.startDate || dto.endDate) {
-        update[SubscriptionModelConstants.currentPeriod] = {
-          startDate: dto.startDate
-            ? new Date(dto.startDate)
-            : subscription[SubscriptionModelConstants.currentPeriod].startDate,
-          endDate: dto.endDate
-            ? new Date(dto.endDate)
-            : subscription[SubscriptionModelConstants.currentPeriod].endDate,
-        };
-      }
-      if (dto.trialStartDate) {
-        update[SubscriptionModelConstants.trialStartDate] = new Date(
-          dto.trialStartDate,
-        );
-      }
-      if (dto.trialEndDate) {
-        update[SubscriptionModelConstants.trialEndDate] = new Date(
-          dto.trialEndDate,
-        );
-      }
-
-      update[SubscriptionModelConstants.events] = [
-        ...subscription[SubscriptionModelConstants.events],
-        {
-          type: SubscriptionEventType.RENEWED,
-          occurredAt: new Date(),
-          actorId: new Types.ObjectId(userId),
-          previousState: subscription.toJSON(),
-          newState: update,
-        },
-      ];
-
-      const updated: SubscriptionDocument | null = await this.genericUpdateOne(
-        id,
-        update,
-      );
+      const updated = await this.genericUpdateOne(id, { ...dto });
 
       await this.logService.createLog({
-        companyId: subscription[
-          SubscriptionModelConstants.companyId
-        ] as Types.ObjectId,
+        companyId: subscription.companyId,
+        createdBy: new Types.ObjectId(userId),
         action: LogActions.UPDATE_SUBSCRIPTION,
         entityType: LogEntityType.SUBSCRIPTION,
         entityId: new Types.ObjectId(id),
-        description: `Subscription updated`,
-        path: req.url,
-        additionalData: {
-          oldData: subscription.toJSON(),
-          newData: updated?.toJSON() ?? null,
-        },
-        createdBy: new Types.ObjectId(userId),
+        description: 'Subscription updated',
         ipAddress,
+        path: req.url,
         status: LogStatus.SUCCESS,
       });
 
@@ -287,24 +182,11 @@ export class SubscriptionService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
-      const ipAddress: string = await this.getClientIpAddress(req);
-      await this.logService.createLog({
-        companyId: new Types.ObjectId(),
-        action: LogActions.UPDATE_SUBSCRIPTION,
-        entityType: LogEntityType.SUBSCRIPTION,
-        entityId: new Types.ObjectId(id),
-        description: `Failed to update subscription`,
-        path: req.url,
-        additionalData: {
-          error: error instanceof Error ? error.message : error,
-          dto,
-        },
-        createdBy: new Types.ObjectId(userId),
-        ipAddress,
-        status: LogStatus.FAILED,
-      });
-      if (error instanceof Error) throw new BadRequestException(error.message);
-      throw new BadRequestException('Failed to update subscription');
+      if (error instanceof NotFoundException) throw error;
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Error updating subscription');
     }
   }
 
@@ -315,77 +197,46 @@ export class SubscriptionService extends GenericDatabase<
     req: AuthedRequest,
   ) {
     try {
-      const ipAddress: string = await this.getClientIpAddress(req);
+      const ipAddress = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);
 
-      const subscription: SubscriptionDocument | null =
-        await this.genericFindOne({
-          [SubscriptionModelConstants.companyId]: new Types.ObjectId(companyId),
-          [SubscriptionModelConstants.status]: {
-            $in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL],
-          },
-        });
+      const subscription = await this.genericFindOne({
+        companyId: new Types.ObjectId(companyId),
+        isDeleted: false,
+      });
 
       if (!subscription) {
-        throw new NotFoundException('Active subscription not found');
+        throw new NotFoundException('Active subscription not found for company');
       }
 
-      const startDate = new Date(dto.startDate);
-      const endDate = new Date(dto.endDate);
+      const newStartDate = dto.startDate ? new Date(dto.startDate) : new Date();
+      const newEndDate = dto.endDate
+        ? new Date(dto.endDate)
+        : new Date(newStartDate.getTime() + 365 * 24 * 60 * 60 * 1000);
 
-      const update: Record<string, unknown> = {
-        [SubscriptionModelConstants.status]: SubscriptionStatus.ACTIVE,
-        [SubscriptionModelConstants.isTrial]: false,
-        [SubscriptionModelConstants.currentPeriod]: { startDate, endDate },
-        [SubscriptionModelConstants.events]: [
-          ...subscription[SubscriptionModelConstants.events],
-          {
-            type: SubscriptionEventType.RENEWED,
-            occurredAt: new Date(),
-            actorId: new Types.ObjectId(userId),
-            previousState: {
-              startDate:
-                subscription[SubscriptionModelConstants.currentPeriod]
-                  .startDate,
-              endDate:
-                subscription[SubscriptionModelConstants.currentPeriod].endDate,
-            },
-            newState: { startDate, endDate },
-          },
-        ],
-      };
-
-      if (dto.billingCycle) {
-        update[SubscriptionModelConstants.billingCycle] = dto.billingCycle;
-      }
-      if (dto.priceMinor !== undefined) {
-        update[SubscriptionModelConstants.priceMinor] = dto.priceMinor;
-      }
-
-      const updated: SubscriptionDocument | null = await this.genericUpdateOne(
-        subscription._id.toString(),
-        update,
-      );
+      const updated = await this.genericUpdateOne(subscription._id.toString(), {
+        status: SubscriptionStatus.ACTIVE,
+        'currentPeriod.startDate': newStartDate,
+        'currentPeriod.endDate': newEndDate,
+      });
 
       await this.companyService.genericUpdateOne(companyId, {
-        'subscription.status': SubscriptionStatus.ACTIVE,
-        'subscription.startDate': startDate,
-        'subscription.endDate': endDate,
+        $set: {
+          'subscription.status': SubscriptionStatus.ACTIVE,
+          'subscription.startDate': newStartDate,
+          'subscription.endDate': newEndDate,
+        },
       });
 
       await this.logService.createLog({
         companyId: new Types.ObjectId(companyId),
+        createdBy: new Types.ObjectId(userId),
         action: LogActions.UPDATE_SUBSCRIPTION,
         entityType: LogEntityType.SUBSCRIPTION,
         entityId: new Types.ObjectId(subscription._id),
-        description: `Subscription renewed`,
-        path: req.url,
-        additionalData: {
-          oldData: subscription.toJSON(),
-          newData: updated?.toJSON() ?? null,
-        },
-        createdBy: new Types.ObjectId(userId),
+        description: 'Subscription renewed successfully',
         ipAddress,
+        path: req.url,
         status: LogStatus.SUCCESS,
       });
 
@@ -396,79 +247,47 @@ export class SubscriptionService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
-      const ipAddress: string = await this.getClientIpAddress(req);
-      await this.logService.createLog({
-        companyId: new Types.ObjectId(companyId),
-        action: LogActions.UPDATE_SUBSCRIPTION,
-        entityType: LogEntityType.SUBSCRIPTION,
-        entityId: new Types.ObjectId(),
-        description: `Failed to renew subscription`,
-        path: req.url,
-        additionalData: {
-          error: error instanceof Error ? error.message : error,
-          dto,
-        },
-        createdBy: new Types.ObjectId(userId),
-        ipAddress,
-        status: LogStatus.FAILED,
-      });
-      if (error instanceof Error) throw new BadRequestException(error.message);
-      throw new BadRequestException('Failed to renew subscription');
+      if (error instanceof NotFoundException) throw error;
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Error renewing subscription');
     }
   }
 
   async cancelSubscription(id: string, userId: string, req: AuthedRequest) {
     try {
-      const ipAddress: string = await this.getClientIpAddress(req);
+      const ipAddress = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);
 
-      const subscription: SubscriptionDocument | null =
-        await this.genericFindOne({ _id: id });
+      const subscription = await this.genericFindOne({ _id: id });
       if (!subscription) {
         throw new NotFoundException('Subscription not found');
       }
 
-      const now = new Date();
-      const updated: SubscriptionDocument | null = await this.genericUpdateOne(
-        id,
-        {
-          [SubscriptionModelConstants.status]: SubscriptionStatus.CANCELLED,
-          [SubscriptionModelConstants.cancelledAt]: now,
-          [SubscriptionModelConstants.events]: [
-            ...subscription[SubscriptionModelConstants.events],
-            {
-              type: SubscriptionEventType.CANCELLED,
-              occurredAt: now,
-              actorId: new Types.ObjectId(userId),
-              previousState: {
-                status: subscription[SubscriptionModelConstants.status],
-              },
-              newState: { status: SubscriptionStatus.CANCELLED },
-            },
-          ],
-        },
-      );
+      const updated = await this.genericUpdateOne(id, {
+        status: SubscriptionStatus.CANCELLED,
+        cancelledAt: new Date(),
+      });
 
       await this.companyService.genericUpdateOne(
-        subscription[SubscriptionModelConstants.companyId].toString(),
-        { 'subscription.status': SubscriptionStatus.CANCELLED },
+        subscription.companyId.toString(),
+        {
+          $set: {
+            'subscription.status': SubscriptionStatus.CANCELLED,
+          },
+        },
       );
 
       await this.logService.createLog({
-        companyId: subscription[
-          SubscriptionModelConstants.companyId
-        ] as Types.ObjectId,
+        companyId: subscription.companyId,
+        createdBy: new Types.ObjectId(userId),
         action: LogActions.DELETE_SUBSCRIPTION,
         entityType: LogEntityType.SUBSCRIPTION,
         entityId: new Types.ObjectId(id),
-        description: `Subscription cancelled`,
-        path: req.url,
-        additionalData: {
-          oldData: subscription.toJSON(),
-          newData: updated?.toJSON() ?? null,
-        },
-        createdBy: new Types.ObjectId(userId),
+        description: 'Subscription cancelled',
         ipAddress,
+        path: req.url,
         status: LogStatus.SUCCESS,
       });
 
@@ -479,141 +298,97 @@ export class SubscriptionService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
-      const ipAddress: string = await this.getClientIpAddress(req);
-      await this.logService.createLog({
-        companyId: new Types.ObjectId(),
-        action: LogActions.DELETE_SUBSCRIPTION,
-        entityType: LogEntityType.SUBSCRIPTION,
-        entityId: new Types.ObjectId(id),
-        description: `Failed to cancel subscription`,
-        path: req.url,
-        additionalData: {
-          error: error instanceof Error ? error.message : error,
-        },
-        createdBy: new Types.ObjectId(userId),
-        ipAddress,
-        status: LogStatus.FAILED,
-      });
-      if (error instanceof Error) throw new BadRequestException(error.message);
-      throw new BadRequestException('Failed to cancel subscription');
+      if (error instanceof NotFoundException) throw error;
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Error cancelling subscription');
     }
   }
 
   async getSubscriptionByCompany(companyId: string) {
-    const subscription: SubscriptionDocument | null = await this.genericFindOne(
-      {
-        [SubscriptionModelConstants.companyId]: new Types.ObjectId(companyId),
-      },
-    );
+    try {
+      const subscription = await this.subscriptionModel.findOne({
+        companyId: new Types.ObjectId(companyId),
+        isDeleted: false,
+      });
 
-    if (!subscription) {
       return {
         success: true,
-        message: 'No subscription found for this company',
-        data: null,
+        message: 'Company subscription details fetched successfully',
+        data: subscription,
         statusCode: HttpStatus.OK,
       };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Error fetching company subscription');
     }
-
-    const plan: SubscriptionPlanDocument | null = await this.planModel.findById(
-      subscription[SubscriptionModelConstants.planId],
-    );
-
-    return {
-      success: true,
-      message: 'Subscription fetched successfully',
-      data: { subscription, plan },
-      statusCode: HttpStatus.OK,
-    };
   }
 
   async getSubscriptionStatus(companyId: string) {
-    const subscription: SubscriptionDocument | null = await this.genericFindOne(
-      {
-        [SubscriptionModelConstants.companyId]: new Types.ObjectId(companyId),
-      },
-    );
+    try {
+      const subscription = await this.subscriptionModel.findOne({
+        companyId: new Types.ObjectId(companyId),
+        isDeleted: false,
+      });
 
-    if (!subscription) {
+      const now = new Date();
+      const isActive =
+        subscription &&
+        subscription.status === SubscriptionStatus.ACTIVE &&
+        subscription.currentPeriod?.endDate &&
+        new Date(subscription.currentPeriod.endDate) > now;
+
       return {
-        hasSubscription: false,
-        status: SubscriptionStatus.CANCELLED,
-        message: 'No subscription found',
+        success: true,
+        message: 'Company subscription status checked successfully',
+        data: {
+          status: subscription?.status || SubscriptionStatus.EXPIRED,
+          isActive: !!isActive,
+          expiresAt: subscription?.currentPeriod?.endDate || null,
+        },
+        statusCode: HttpStatus.OK,
       };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Error checking subscription status');
     }
-
-    const now = new Date();
-    const endDate =
-      subscription[SubscriptionModelConstants.currentPeriod].endDate;
-    const isExpired = endDate < now;
-    const isTrial = subscription[SubscriptionModelConstants.isTrial];
-    const trialEnd = subscription[SubscriptionModelConstants.trialEndDate];
-    const isTrialExpired = isTrial && trialEnd !== null && trialEnd < now;
-
-    const isActive =
-      subscription[SubscriptionModelConstants.status] ===
-        SubscriptionStatus.ACTIVE &&
-      !isExpired &&
-      !isTrialExpired;
-
-    const daysRemaining = Math.ceil(
-      (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
-    );
-
-    return {
-      hasSubscription: true,
-      isActive,
-      status: subscription[SubscriptionModelConstants.status],
-      planCode: subscription[SubscriptionModelConstants.planCode],
-      isTrial,
-      startDate:
-        subscription[SubscriptionModelConstants.currentPeriod].startDate,
-      endDate,
-      trialEndDate: trialEnd,
-      daysRemaining,
-      limits: subscription[SubscriptionModelConstants.limits],
-      isExpired: isExpired || isTrialExpired,
-    };
   }
 
   async getAllSubscriptions(
     userId: string,
     roles: string[],
-    filters?: {
-      status?: string;
-      planCode?: string;
-    },
+    query?: { status?: string; planCode?: string },
   ) {
-    await this.userService.validateAuthenticatedUser(userId);
+    try {
+      await this.userService.validateAuthenticatedUser(userId);
 
-    const query: Record<string, unknown> = {
-      [SubscriptionModelConstants.isDeleted]: false,
-    };
+      const filter: Record<string, unknown> = {
+        isDeleted: false,
+      };
 
-    const isSuperAdmin = roles.includes(Role.superadmin);
-    if (!isSuperAdmin) {
-      // Non-superadmins see nothing here — but keep the guard to be explicit
-      throw new BadRequestException(
-        'Only super admins can list all subscriptions',
-      );
+      if (query?.status) filter.status = query.status;
+      if (query?.planCode) filter.planCode = query.planCode;
+
+      const subscriptions = await this.subscriptionModel
+        .find(filter)
+        .sort({ createdAt: -1 });
+
+      return {
+        success: true,
+        message: 'All subscriptions fetched successfully',
+        data: subscriptions,
+        statusCode: HttpStatus.OK,
+      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Error fetching subscriptions');
     }
-
-    if (filters?.status) {
-      query[SubscriptionModelConstants.status] = filters.status;
-    }
-    if (filters?.planCode) {
-      query[SubscriptionModelConstants.planCode] = filters.planCode;
-    }
-
-    const subscriptions: SubscriptionDocument[] =
-      await this.genericFindAll(query);
-
-    return {
-      success: true,
-      message: 'Subscriptions fetched successfully',
-      data: subscriptions,
-      count: subscriptions.length,
-      statusCode: HttpStatus.OK,
-    };
   }
 }
