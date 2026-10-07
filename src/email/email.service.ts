@@ -173,14 +173,14 @@ export class EmailService {
     ownerName: string,
     companyName: string,
     licenseKey: string,
-    maxTerminals = 5,
+    maxCounters = 5,
   ): Promise<{ success: boolean; messageId?: string; message: string }> {
     try {
       const html = licenseIssuedEmailTemplate(
         ownerName,
         companyName,
         licenseKey,
-        maxTerminals,
+        maxCounters,
       );
       return await this.sendEmail(
         to,
