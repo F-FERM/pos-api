@@ -40,6 +40,81 @@
         ]
       }
     },
+    "/api/auth/request-store-otp": {
+      "post": {
+        "operationId": "AuthController_requestStoreOtp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterStoreRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Step 1: Request store registration & email 6-digit verification OTP",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/verify-store-otp": {
+      "post": {
+        "operationId": "AuthController_verifyStoreOtp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyOtpRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Step 2: Verify email OTP code, register store & user, and issue Store License Key",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/resend-license-key": {
+      "post": {
+        "operationId": "AuthController_resendLicenseKey",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendLicenseKeyRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Resend / Recover Store License Key to owner email address",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/api/user": {
       "post": {
         "operationId": "UserController_create",
@@ -294,7 +369,7 @@
             "description": ""
           }
         },
-        "summary": "Update company",
+        "summary": "Update company details",
         "tags": [
           "Company"
         ]
@@ -317,6 +392,40 @@
           }
         },
         "summary": "Delete company",
+        "tags": [
+          "Company"
+        ]
+      }
+    },
+    "/api/company/{id}/counter-limits": {
+      "patch": {
+        "operationId": "CompanyController_updateCounterLimits",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCounterLimitsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Superadmin: Update store counter limits, user limits, and status",
         "tags": [
           "Company"
         ]
@@ -552,6 +661,53 @@
         ]
       }
     },
+    "/api/loyalty-settings": {
+      "get": {
+        "operationId": "LoyaltySettingController_getSetting",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get company loyalty program settings",
+        "tags": [
+          "Loyalty Settings"
+        ]
+      },
+      "patch": {
+        "operationId": "LoyaltySettingController_updateSetting",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLoyaltySettingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update company loyalty program configuration",
+        "tags": [
+          "Loyalty Settings"
+        ]
+      }
+    },
     "/api/privilege": {
       "post": {
         "operationId": "PrivilegeController_create",
@@ -779,185 +935,6 @@
         ]
       }
     },
-    "/api/subscription-plans": {
-      "get": {
-        "operationId": "SubscriptionPlanController_getAllActivePlans",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Get all active subscription plans",
-        "tags": [
-          "Subscription Plans"
-        ]
-      },
-      "post": {
-        "operationId": "SubscriptionPlanController_createCustomPlan",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSubscriptionPlanDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "summary": "Create subscription plan (Superadmin)",
-        "tags": [
-          "Subscription Plans"
-        ]
-      }
-    },
-    "/api/subscription-plans/all": {
-      "get": {
-        "operationId": "SubscriptionPlanController_getAllPlans",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Get all subscription plans (Superadmin)",
-        "tags": [
-          "Subscription Plans"
-        ]
-      }
-    },
-    "/api/subscription-plans/{id}": {
-      "get": {
-        "operationId": "SubscriptionPlanController_getPlanById",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Get subscription plan by id",
-        "tags": [
-          "Subscription Plans"
-        ]
-      },
-      "patch": {
-        "operationId": "SubscriptionPlanController_updatePlan",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateSubscriptionPlanDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Update subscription plan (Superadmin)",
-        "tags": [
-          "Subscription Plans"
-        ]
-      },
-      "delete": {
-        "operationId": "SubscriptionPlanController_deletePlan",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Delete subscription plan (Superadmin)",
-        "tags": [
-          "Subscription Plans"
-        ]
-      }
-    },
-    "/api/subscription-plans/code/{code}": {
-      "get": {
-        "operationId": "SubscriptionPlanController_getPlanByCode",
-        "parameters": [
-          {
-            "name": "code",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Get subscription plan by code",
-        "tags": [
-          "Subscription Plans"
-        ]
-      }
-    },
-    "/api/subscription-plans/{id}/toggle-status": {
-      "patch": {
-        "operationId": "SubscriptionPlanController_togglePlanStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Toggle plan status (Superadmin)",
-        "tags": [
-          "Subscription Plans"
-        ]
-      }
-    },
     "/api/subscription": {
       "post": {
         "operationId": "SubscriptionController_createSubscription",
@@ -987,14 +964,6 @@
         "parameters": [
           {
             "name": "status",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "planCode",
             "required": false,
             "in": "query",
             "schema": {
@@ -2842,6 +2811,300 @@
           "Sale Return"
         ]
       }
+    },
+    "/api/device/verify": {
+      "post": {
+        "operationId": "DeviceRegistrationController_verifyDevice",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyDeviceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Public startup verification for Windows desktop app (bypasses setup for registered store terminals)",
+        "tags": [
+          "Device Registration & License"
+        ]
+      }
+    },
+    "/api/device/register": {
+      "post": {
+        "operationId": "DeviceRegistrationController_registerDevice",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDeviceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Public terminal PC registration/activation using Store License Key",
+        "tags": [
+          "Device Registration & License"
+        ]
+      }
+    },
+    "/api/device": {
+      "get": {
+        "operationId": "DeviceRegistrationController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all registered terminal PCs for store",
+        "tags": [
+          "Device Registration & License"
+        ]
+      }
+    },
+    "/api/device/{id}/bypass": {
+      "patch": {
+        "operationId": "DeviceRegistrationController_toggleBypass",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Toggle inhouse LAN auto-bypass mode for a terminal PC",
+        "tags": [
+          "Device Registration & License"
+        ]
+      }
+    },
+    "/api/device/{id}/revoke": {
+      "delete": {
+        "operationId": "DeviceRegistrationController_revoke",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Revoke terminal PC registration license",
+        "tags": [
+          "Device Registration & License"
+        ]
+      }
+    },
+    "/api/store-license": {
+      "post": {
+        "operationId": "StoreLicenseController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStoreLicenseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Superadmin: Generate / Create new store license key",
+        "tags": [
+          "Store License (Superadmin)"
+        ]
+      },
+      "get": {
+        "operationId": "StoreLicenseController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "UNASSIGNED",
+                "ASSIGNED",
+                "REDEEMED",
+                "SUSPENDED",
+                "EXPIRED"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Superadmin: Get all generated store licenses",
+        "tags": [
+          "Store License (Superadmin)"
+        ]
+      }
+    },
+    "/api/store-license/{id}": {
+      "get": {
+        "operationId": "StoreLicenseController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Superadmin: Get store license details by ID",
+        "tags": [
+          "Store License (Superadmin)"
+        ]
+      },
+      "patch": {
+        "operationId": "StoreLicenseController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStoreLicenseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Superadmin: Update store license configuration",
+        "tags": [
+          "Store License (Superadmin)"
+        ]
+      },
+      "delete": {
+        "operationId": "StoreLicenseController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Superadmin: Revoke / Delete store license key",
+        "tags": [
+          "Store License (Superadmin)"
+        ]
+      }
     }
   },
   "info": {
@@ -2876,6 +3139,88 @@
         "required": [
           "username",
           "password"
+        ]
+      },
+      "RegisterStoreRequestDto": {
+        "type": "object",
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "example": "My Supermarket Store"
+          },
+          "ownerName": {
+            "type": "string",
+            "example": "Store Owner Name"
+          },
+          "ownerEmail": {
+            "type": "string",
+            "example": "owner@supermarket.com"
+          },
+          "ownerPhone": {
+            "type": "string",
+            "example": "+919876543210"
+          },
+          "password": {
+            "type": "string",
+            "example": "OwnerSecret123!"
+          },
+          "city": {
+            "type": "string",
+            "example": "Mumbai"
+          },
+          "state": {
+            "type": "string",
+            "example": "Maharashtra"
+          },
+          "postalCode": {
+            "type": "string",
+            "example": "400001"
+          },
+          "country": {
+            "type": "string",
+            "example": "IN",
+            "default": "IN"
+          }
+        },
+        "required": [
+          "companyName",
+          "ownerName",
+          "ownerEmail",
+          "ownerPhone",
+          "password",
+          "city",
+          "state"
+        ]
+      },
+      "VerifyOtpRequestDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "owner@supermarket.com"
+          },
+          "otp": {
+            "type": "string",
+            "example": "123456",
+            "description": "6-digit email OTP code"
+          }
+        },
+        "required": [
+          "email",
+          "otp"
+        ]
+      },
+      "ResendLicenseKeyRequestDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "owner@supermarket.com",
+            "description": "Registered store owner email address"
+          }
+        },
+        "required": [
+          "email"
         ]
       },
       "CreateUserDto": {
@@ -3003,24 +3348,6 @@
             "type": "string",
             "example": "₹",
             "default": "₹"
-          },
-          "loyaltyAmountPerPoint": {
-            "type": "number",
-            "example": 100,
-            "default": 100,
-            "description": "Amount spent in rupees/currency to earn 1 loyalty point"
-          },
-          "minLoyaltyPointsToRedeem": {
-            "type": "number",
-            "example": 50,
-            "default": 50,
-            "description": "Minimum loyalty points required in customer balance before redemption is allowed"
-          },
-          "loyaltyPointMonetaryValue": {
-            "type": "number",
-            "example": 1,
-            "default": 1,
-            "description": "Monetary discount value in rupees per 1 redeemed loyalty point (e.g. 1 point = ₹1)"
           }
         }
       },
@@ -3144,6 +3471,36 @@
           }
         }
       },
+      "UpdateCounterLimitsDto": {
+        "type": "object",
+        "properties": {
+          "maxCounters": {
+            "type": "number",
+            "example": 10,
+            "description": "Maximum allowed checkout counters"
+          },
+          "maxUsers": {
+            "type": "number",
+            "example": 20,
+            "description": "Maximum allowed staff user accounts"
+          },
+          "isMultiCounterAllowed": {
+            "type": "boolean",
+            "example": true,
+            "description": "Enable multi-counter POS features"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending_verification",
+              "active",
+              "suspended",
+              "inactive"
+            ],
+            "example": "active"
+          }
+        }
+      },
       "UpdateNumberSettingDto": {
         "type": "object",
         "properties": {
@@ -3188,9 +3545,6 @@
             "description": "Set as default counter for the store/company",
             "example": false
           },
-          "companyId": {
-            "type": "string"
-          },
           "isActive": {
             "type": "boolean",
             "default": true
@@ -3198,8 +3552,7 @@
         },
         "required": [
           "name",
-          "code",
-          "companyId"
+          "code"
         ]
       },
       "UpdateCounterDto": {
@@ -3221,12 +3574,37 @@
             "description": "Set as default counter for the store/company",
             "example": false
           },
-          "companyId": {
-            "type": "string"
-          },
           "isActive": {
             "type": "boolean",
             "default": true
+          }
+        }
+      },
+      "UpdateLoyaltySettingDto": {
+        "type": "object",
+        "properties": {
+          "loyaltyAmountPerPoint": {
+            "type": "number",
+            "example": 100,
+            "default": 100,
+            "description": "Amount spent in rupees/currency to earn 1 loyalty point"
+          },
+          "minLoyaltyPointsToRedeem": {
+            "type": "number",
+            "example": 50,
+            "default": 50,
+            "description": "Minimum loyalty points required in customer balance before redemption is allowed"
+          },
+          "loyaltyPointMonetaryValue": {
+            "type": "number",
+            "example": 1,
+            "default": 1,
+            "description": "Monetary discount value in rupees per 1 redeemed loyalty point (e.g. 1 point = ₹1)"
+          },
+          "isEnabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enable or disable the store customer loyalty program"
           }
         }
       },
@@ -3314,264 +3692,6 @@
           "modules",
           "permissions"
         ]
-      },
-      "PlanLimitsDto": {
-        "type": "object",
-        "properties": {
-          "maxUsers": {
-            "type": "number",
-            "default": 5
-          },
-          "maxTerminals": {
-            "type": "number",
-            "default": 1
-          },
-          "maxProducts": {
-            "type": "number",
-            "default": -1
-          },
-          "maxCustomers": {
-            "type": "number",
-            "default": -1
-          },
-          "maxMonthlyTransactions": {
-            "type": "number",
-            "default": -1
-          },
-          "maxStorageMb": {
-            "type": "number",
-            "default": -1
-          }
-        }
-      },
-      "PlanFeaturesDto": {
-        "type": "object",
-        "properties": {
-          "inventoryEnabled": {
-            "type": "boolean",
-            "default": true
-          },
-          "multiTerminalEnabled": {
-            "type": "boolean",
-            "default": false
-          },
-          "barcodeEnabled": {
-            "type": "boolean",
-            "default": false
-          },
-          "weightedItemsEnabled": {
-            "type": "boolean",
-            "default": false
-          },
-          "batchTrackingEnabled": {
-            "type": "boolean",
-            "default": false
-          },
-          "serialTrackingEnabled": {
-            "type": "boolean",
-            "default": false
-          },
-          "variantsEnabled": {
-            "type": "boolean",
-            "default": false
-          },
-          "loyaltyEnabled": {
-            "type": "boolean",
-            "default": false
-          },
-          "taxEnabled": {
-            "type": "boolean",
-            "default": true
-          },
-          "advancedReportsEnabled": {
-            "type": "boolean",
-            "default": false
-          },
-          "apiAccessEnabled": {
-            "type": "boolean",
-            "default": false
-          },
-          "prioritySupportEnabled": {
-            "type": "boolean",
-            "default": false
-          }
-        }
-      },
-      "PlanPricingDto": {
-        "type": "object",
-        "properties": {
-          "currency": {
-            "type": "string",
-            "example": "INR"
-          },
-          "priceMinor": {
-            "type": "number",
-            "example": 999900,
-            "description": "Price in minor units"
-          },
-          "billingCycle": {
-            "type": "string",
-            "enum": [
-              "monthly",
-              "quarterly",
-              "half_yearly",
-              "yearly",
-              "lifetime"
-            ]
-          },
-          "setupFeeMinor": {
-            "type": "number",
-            "default": 0
-          },
-          "annualDiscountPercent": {
-            "type": "number",
-            "default": 0,
-            "minimum": 0,
-            "maximum": 100
-          }
-        },
-        "required": [
-          "currency",
-          "priceMinor",
-          "billingCycle"
-        ]
-      },
-      "CreateSubscriptionPlanDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "code": {
-            "type": "string",
-            "example": "STARTER"
-          },
-          "description": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "draft",
-              "active",
-              "archived"
-            ]
-          },
-          "displayOrder": {
-            "type": "number",
-            "default": 0
-          },
-          "isDefault": {
-            "type": "boolean",
-            "default": false
-          },
-          "trialEnabled": {
-            "type": "boolean",
-            "default": false
-          },
-          "trialDays": {
-            "type": "number",
-            "default": 0
-          },
-          "limits": {
-            "$ref": "#/components/schemas/PlanLimitsDto"
-          },
-          "features": {
-            "$ref": "#/components/schemas/PlanFeaturesDto"
-          },
-          "pricing": {
-            "$ref": "#/components/schemas/PlanPricingDto"
-          },
-          "availableCountries": {
-            "default": [],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "recommendedForIndustries": {
-            "default": [],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "isPublic": {
-            "type": "boolean",
-            "default": true
-          }
-        },
-        "required": [
-          "name",
-          "code",
-          "pricing"
-        ]
-      },
-      "UpdateSubscriptionPlanDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "code": {
-            "type": "string",
-            "example": "STARTER"
-          },
-          "description": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "draft",
-              "active",
-              "archived"
-            ]
-          },
-          "displayOrder": {
-            "type": "number",
-            "default": 0
-          },
-          "isDefault": {
-            "type": "boolean",
-            "default": false
-          },
-          "trialEnabled": {
-            "type": "boolean",
-            "default": false
-          },
-          "trialDays": {
-            "type": "number",
-            "default": 0
-          },
-          "limits": {
-            "$ref": "#/components/schemas/PlanLimitsDto"
-          },
-          "features": {
-            "$ref": "#/components/schemas/PlanFeaturesDto"
-          },
-          "pricing": {
-            "$ref": "#/components/schemas/PlanPricingDto"
-          },
-          "availableCountries": {
-            "default": [],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "recommendedForIndustries": {
-            "default": [],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "isPublic": {
-            "type": "boolean",
-            "default": true
-          }
-        }
       },
       "CreateSubscriptionDto": {
         "type": "object",
@@ -3727,16 +3847,12 @@
           "parentId": {
             "type": "string"
           },
-          "companyId": {
-            "type": "string"
-          },
           "isActive": {
             "type": "boolean"
           }
         },
         "required": [
-          "name",
-          "companyId"
+          "name"
         ]
       },
       "UpdateCategoryDto": {
@@ -3754,9 +3870,6 @@
           "parentId": {
             "type": "string"
           },
-          "companyId": {
-            "type": "string"
-          },
           "isActive": {
             "type": "boolean"
           }
@@ -3771,16 +3884,12 @@
           "description": {
             "type": "string"
           },
-          "companyId": {
-            "type": "string"
-          },
           "isActive": {
             "type": "boolean"
           }
         },
         "required": [
-          "name",
-          "companyId"
+          "name"
         ]
       },
       "UpdateBrandDto": {
@@ -3790,9 +3899,6 @@
             "type": "string"
           },
           "description": {
-            "type": "string"
-          },
-          "companyId": {
             "type": "string"
           },
           "isActive": {
@@ -3807,11 +3913,6 @@
             "type": "string",
             "description": "Product name (Required for all business types - Supermarket, Dress Shop, Spare Parts)",
             "example": "Basmati Rice 5kg / Men Casual Shirt Blue L / Brake Pad Swift"
-          },
-          "companyId": {
-            "type": "string",
-            "description": "Company / Tenant ID (Required)",
-            "example": "65f123456789abcdef123456"
           },
           "sellingPrice": {
             "type": "number",
@@ -3919,7 +4020,6 @@
         },
         "required": [
           "name",
-          "companyId",
           "sellingPrice"
         ]
       },
@@ -3930,11 +4030,6 @@
             "type": "string",
             "description": "Product name (Required for all business types - Supermarket, Dress Shop, Spare Parts)",
             "example": "Basmati Rice 5kg / Men Casual Shirt Blue L / Brake Pad Swift"
-          },
-          "companyId": {
-            "type": "string",
-            "description": "Company / Tenant ID (Required)",
-            "example": "65f123456789abcdef123456"
           },
           "sellingPrice": {
             "type": "number",
@@ -4066,9 +4161,6 @@
             "type": "number",
             "default": 0
           },
-          "companyId": {
-            "type": "string"
-          },
           "isActive": {
             "type": "boolean",
             "default": true
@@ -4076,8 +4168,7 @@
         },
         "required": [
           "name",
-          "phone",
-          "companyId"
+          "phone"
         ]
       },
       "UpdateSupplierDto": {
@@ -4104,9 +4195,6 @@
           "balanceDue": {
             "type": "number",
             "default": 0
-          },
-          "companyId": {
-            "type": "string"
           },
           "isActive": {
             "type": "boolean",
@@ -4141,9 +4229,6 @@
             "type": "number",
             "default": 0
           },
-          "companyId": {
-            "type": "string"
-          },
           "isActive": {
             "type": "boolean",
             "default": true
@@ -4151,8 +4236,7 @@
         },
         "required": [
           "name",
-          "phone",
-          "companyId"
+          "phone"
         ]
       },
       "UpdateCustomerDto": {
@@ -4182,9 +4266,6 @@
             "type": "number",
             "default": 0
           },
-          "companyId": {
-            "type": "string"
-          },
           "isActive": {
             "type": "boolean",
             "default": true
@@ -4198,16 +4279,12 @@
             "type": "number",
             "default": 0
           },
-          "companyId": {
-            "type": "string"
-          },
           "notes": {
             "type": "string"
           }
         },
         "required": [
-          "openingCash",
-          "companyId"
+          "openingCash"
         ]
       },
       "CloseRegisterDto": {
@@ -4298,9 +4375,6 @@
             ],
             "default": "COMPLETED"
           },
-          "companyId": {
-            "type": "string"
-          },
           "notes": {
             "type": "string"
           }
@@ -4308,8 +4382,7 @@
         "required": [
           "items",
           "paidAmount",
-          "paymentMethod",
-          "companyId"
+          "paymentMethod"
         ]
       },
       "CreatePrinterDto": {
@@ -4345,15 +4418,11 @@
             "default": false,
             "description": "Set as default printer for the store/company",
             "example": false
-          },
-          "companyId": {
-            "type": "string"
           }
         },
         "required": [
           "printerName",
-          "printerIp",
-          "companyId"
+          "printerIp"
         ]
       },
       "UpdatePrinterDto": {
@@ -4389,9 +4458,6 @@
             "default": false,
             "description": "Set as default printer for the store/company",
             "example": false
-          },
-          "companyId": {
-            "type": "string"
           }
         }
       },
@@ -4416,15 +4482,11 @@
           },
           "expenseDate": {
             "type": "string"
-          },
-          "companyId": {
-            "type": "string"
           }
         },
         "required": [
           "category",
-          "amount",
-          "companyId"
+          "amount"
         ]
       },
       "CreatePurchaseItemDto": {
@@ -4467,9 +4529,6 @@
           "purchaseDate": {
             "type": "string"
           },
-          "companyId": {
-            "type": "string"
-          },
           "notes": {
             "type": "string"
           }
@@ -4478,8 +4537,7 @@
           "billNumber",
           "supplierId",
           "items",
-          "paidAmount",
-          "companyId"
+          "paidAmount"
         ]
       },
       "LabelItemDto": {
@@ -4520,14 +4578,10 @@
             "example": 2,
             "description": "Number of sticker columns per row (e.g. 1 for single roll, 2 for 2-up, 3 for 3-up)",
             "default": 1
-          },
-          "companyId": {
-            "type": "string"
           }
         },
         "required": [
-          "items",
-          "companyId"
+          "items"
         ]
       },
       "CreateStaffDto": {
@@ -4560,9 +4614,6 @@
             "type": "string",
             "description": "Privilege ID assigning staff permissions"
           },
-          "companyId": {
-            "type": "string"
-          },
           "isActive": {
             "type": "boolean",
             "default": true
@@ -4573,8 +4624,7 @@
           "phone",
           "designation",
           "pin",
-          "privilegeId",
-          "companyId"
+          "privilegeId"
         ]
       },
       "UpdateStaffDto": {
@@ -4606,9 +4656,6 @@
           "privilegeId": {
             "type": "string",
             "description": "Privilege ID assigning staff permissions"
-          },
-          "companyId": {
-            "type": "string"
           },
           "isActive": {
             "type": "boolean",
@@ -4666,9 +4713,6 @@
             "type": "string",
             "description": "Active POS cash register session ID"
           },
-          "companyId": {
-            "type": "string"
-          },
           "notes": {
             "type": "string"
           }
@@ -4676,8 +4720,7 @@
         "required": [
           "saleId",
           "items",
-          "refundMethod",
-          "companyId"
+          "refundMethod"
         ]
       },
       "UpdateSaleReturnDto": {
@@ -4707,11 +4750,161 @@
             "type": "string",
             "description": "Active POS cash register session ID"
           },
-          "companyId": {
-            "type": "string"
-          },
           "notes": {
             "type": "string"
+          }
+        }
+      },
+      "VerifyDeviceDto": {
+        "type": "object",
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "example": "WIN-DESK-GUID-998877",
+            "description": "Hardware MAC/UUID or GUID fingerprint of physical counter PC"
+          },
+          "licenseKey": {
+            "type": "string",
+            "example": "LIC-SUP-98765-XYZ",
+            "description": "Store License Key"
+          },
+          "deviceToken": {
+            "type": "string",
+            "description": "Saved Device Token from local storage"
+          }
+        },
+        "required": [
+          "deviceId"
+        ]
+      },
+      "RegisterDeviceDto": {
+        "type": "object",
+        "properties": {
+          "licenseKey": {
+            "type": "string",
+            "example": "LIC-SUP-98765-XYZ",
+            "description": "Store License Key assigned to supermarket company"
+          },
+          "email": {
+            "type": "string",
+            "example": "owner@supermarket.com",
+            "description": "Owner email address associated with the store license"
+          },
+          "deviceId": {
+            "type": "string",
+            "example": "WIN-DESK-GUID-998877",
+            "description": "Hardware MAC/UUID or GUID fingerprint of physical counter PC"
+          },
+          "deviceName": {
+            "type": "string",
+            "example": "Counter 1 Windows POS Terminal",
+            "description": "Friendly terminal machine display name"
+          },
+          "counterId": {
+            "type": "string",
+            "example": "65f123456789abcdef123456",
+            "description": "Counter ID to bind this physical machine to"
+          }
+        },
+        "required": [
+          "licenseKey",
+          "deviceId",
+          "deviceName"
+        ]
+      },
+      "CreateStoreLicenseDto": {
+        "type": "object",
+        "properties": {
+          "licenseKey": {
+            "type": "string",
+            "example": "LIC-SUP-998877-XYZ",
+            "description": "Custom license key string (auto-generated if omitted)"
+          },
+          "assignedEmail": {
+            "type": "string",
+            "example": "owner@supermarket.com",
+            "description": "Target email address pre-assigned to this license key"
+          },
+          "maxCounters": {
+            "type": "number",
+            "example": 5,
+            "default": 5,
+            "description": "Maximum checkout counters allowed under this license key"
+          },
+          "maxUsers": {
+            "type": "number",
+            "example": 10,
+            "default": 10,
+            "description": "Maximum staff user accounts allowed under this license key"
+          },
+          "validityMonths": {
+            "type": "number",
+            "example": 12,
+            "default": 12,
+            "description": "Validity duration in months"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "UNASSIGNED",
+              "ASSIGNED",
+              "REDEEMED",
+              "SUSPENDED",
+              "EXPIRED"
+            ],
+            "default": "UNASSIGNED"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Internal notes or customer order ref"
+          }
+        }
+      },
+      "UpdateStoreLicenseDto": {
+        "type": "object",
+        "properties": {
+          "licenseKey": {
+            "type": "string",
+            "example": "LIC-SUP-998877-XYZ",
+            "description": "Custom license key string (auto-generated if omitted)"
+          },
+          "assignedEmail": {
+            "type": "string",
+            "example": "owner@supermarket.com",
+            "description": "Target email address pre-assigned to this license key"
+          },
+          "maxCounters": {
+            "type": "number",
+            "example": 5,
+            "default": 5,
+            "description": "Maximum checkout counters allowed under this license key"
+          },
+          "maxUsers": {
+            "type": "number",
+            "example": 10,
+            "default": 10,
+            "description": "Maximum staff user accounts allowed under this license key"
+          },
+          "validityMonths": {
+            "type": "number",
+            "example": 12,
+            "default": 12,
+            "description": "Validity duration in months"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "UNASSIGNED",
+              "ASSIGNED",
+              "REDEEMED",
+              "SUSPENDED",
+              "EXPIRED"
+            ],
+            "default": "UNASSIGNED"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Internal notes or customer order ref"
           }
         }
       }
