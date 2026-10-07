@@ -11,16 +11,20 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ParseObjectIdPipe } from '@nestjs/mongoose';
 import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
+import { UpdateTerminalLimitsDto } from './dto/update-terminal-limits.dto';
 import { type AuthedRequest } from '../utils/common.types';
 import { CheckPermission } from '../common/decorators/check-permission.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../utils/role.enum';
 import { SUB_MODULES } from '../common/constants/submodules.constants';
 import { ACTIONS } from '../common/constants/actions.constants';
 
+@ApiTags('Company')
 @Controller('company')
 export class CompanyController {
   constructor(private readonly companyService: CompanyService) {}
@@ -64,7 +68,7 @@ export class CompanyController {
     );
   }
 
-  @ApiOperation({ summary: 'Update company' })
+  @ApiOperation({ summary: 'Update company details' })
   @CheckPermission({ subModule: SUB_MODULES.COMPANY, action: ACTIONS.UPDATE })
   @Patch(':id')
   update(
@@ -77,6 +81,25 @@ export class CompanyController {
       dto,
       req.user.userId,
       req.user.roles,
+      req,
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      'Superadmin: Update store terminal PC limits, counter limits, and status',
+  })
+  @Roles(Role.superadmin)
+  @Patch(':id/terminal-limits')
+  updateTerminalLimits(
+    @Param('id', ParseObjectIdPipe) id: string,
+    @Body() dto: UpdateTerminalLimitsDto,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.companyService.updateTerminalLimits(
+      id,
+      dto,
+      req.user.userId,
       req,
     );
   }
