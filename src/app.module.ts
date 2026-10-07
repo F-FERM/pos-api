@@ -12,6 +12,7 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { CompanyModule } from './company/company.module';
 import { PrivilegeModule } from './privilege/privilege.module';
 import { PermissionGuard } from './common/guards/permission.guard';
+import { SubscriptionGuard } from './common/guards/subscription.guard';
 import { ModuleModule } from './module/module.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { CategoryModule } from './category/category.module';
@@ -80,6 +81,10 @@ import { EmailModule } from './email/email.module';
     {
       provide: APP_GUARD,
       useClass: PermissionGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: SubscriptionGuard,
     },
   ],
 })
