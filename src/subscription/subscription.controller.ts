@@ -16,6 +16,10 @@ import { SubscriptionService } from './subscription.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 import { RenewSubscriptionDto } from './dto/renew-subscription.dto';
+import { UpdateSubscriptionStatusAndDateDto } from './dto/update-subscription-status-and-date.dto';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../utils/role.enum';
+import { SubscriptionStatus } from '../utils/enums/subscription.enums';
 import { type AuthedRequest } from '../utils/common.types';
 import { CheckPermission } from '../common/decorators/check-permission.decorator';
 import { SUB_MODULES } from '../common/constants/submodules.constants';
@@ -38,6 +42,62 @@ export class SubscriptionController {
   ) {
     return this.subscriptionService.createSubscription(
       dto,
+      req.user.userId,
+      req,
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      'Superadmin: Single unified API to update store subscription status, end date, and counter limits',
+  })
+  @Roles(Role.superadmin)
+  @Patch('company/:companyId/manage')
+  manageSubscription(
+    @Param('companyId', ParseObjectIdPipe) companyId: string,
+    @Body() dto: UpdateSubscriptionStatusAndDateDto,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.subscriptionService.manageSubscription(
+      companyId,
+      dto,
+      req.user.userId,
+      req,
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      'Superadmin: Extend company store subscription / trial period by days',
+  })
+  @Roles(Role.superadmin)
+  @Patch('company/:companyId/extend')
+  extendSubscription(
+    @Param('companyId', ParseObjectIdPipe) companyId: string,
+    @Body('days') days: number,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.subscriptionService.extendSubscription(
+      companyId,
+      days || 30,
+      req.user.userId,
+      req,
+    );
+  }
+
+  @ApiOperation({
+    summary: 'Superadmin: Change company store subscription status',
+  })
+  @Roles(Role.superadmin)
+  @Patch('company/:companyId/status')
+  updateSubscriptionStatus(
+    @Param('companyId', ParseObjectIdPipe) companyId: string,
+    @Body('status') status: SubscriptionStatus,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.subscriptionService.updateSubscriptionStatus(
+      companyId,
+      status,
       req.user.userId,
       req,
     );
