@@ -15,6 +15,15 @@ export class RegisterStoreRequestDto {
   @Length(2, 200)
   companyName: string;
 
+  @ApiProperty({
+    example: 'anees_owner',
+    description: 'Unique login username for owner user account',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @Length(3, 50)
+  username: string;
+
   @ApiProperty({ example: 'Store Owner Name' })
   @IsString()
   @IsNotEmpty()
@@ -26,7 +35,10 @@ export class RegisterStoreRequestDto {
   @IsNotEmpty()
   ownerEmail: string;
 
-  @ApiProperty({ example: '+919876543210' })
+  @ApiProperty({
+    example: '+919876543210',
+    description: 'Store owner contact phone number',
+  })
   @IsString()
   @IsNotEmpty()
   @Length(5, 20)
@@ -38,17 +50,17 @@ export class RegisterStoreRequestDto {
   @Length(6, 100)
   password: string;
 
-  @ApiProperty({ example: 'Mumbai' })
+  @ApiProperty({ example: 'Calicut' })
   @IsString()
   @IsNotEmpty()
   city: string;
 
-  @ApiProperty({ example: 'Maharashtra' })
+  @ApiProperty({ example: 'Kerala' })
   @IsString()
   @IsNotEmpty()
   state: string;
 
-  @ApiPropertyOptional({ example: '400001' })
+  @ApiPropertyOptional({ example: '673001' })
   @IsOptional()
   @IsString()
   postalCode?: string;
