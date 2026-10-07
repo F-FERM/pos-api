@@ -79,7 +79,6 @@ export class SubscriptionService extends GenericDatabase<
         [SubscriptionModelConstants.companyId]: new Types.ObjectId(
           dto.companyId,
         ),
-        [SubscriptionModelConstants.planCode]: 'PRO-STORE',
         [SubscriptionModelConstants.planName]: 'Professional Supermarket Plan',
         [SubscriptionModelConstants.status]: dto.status,
         [SubscriptionModelConstants.isTrial]:
@@ -111,7 +110,6 @@ export class SubscriptionService extends GenericDatabase<
 
       await this.companyService.genericUpdateOne(dto.companyId, {
         $set: {
-          'subscription.planCode': 'PRO-STORE',
           'subscription.status': dto.status,
           'subscription.startDate': startDate,
           'subscription.endDate': endDate,
@@ -362,7 +360,7 @@ export class SubscriptionService extends GenericDatabase<
   async getAllSubscriptions(
     userId: string,
     roles: string[],
-    query?: { status?: string; planCode?: string },
+    query?: { status?: string },
   ) {
     try {
       await this.userService.validateAuthenticatedUser(userId);
@@ -372,7 +370,6 @@ export class SubscriptionService extends GenericDatabase<
       };
 
       if (query?.status) filter.status = query.status;
-      if (query?.planCode) filter.planCode = query.planCode;
 
       const subscriptions = await this.subscriptionModel
         .find(filter)
