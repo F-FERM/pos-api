@@ -198,35 +198,11 @@ export class AuthService {
 
       const hashedPassword = await bcrypt.hash(storeDto.password, 10);
 
-      let ownerPrivilege = await this.privilegeModel.findOne({
-        name: 'Store Admin',
-        isDeleted: false,
-      });
-
-      if (!ownerPrivilege) {
-        ownerPrivilege = await this.privilegeModel.create({
-          name: 'Store Admin',
-          description: 'Default Store Owner Privilege',
-          roles: [Role.admin],
-          isSystemGenerated: true,
-        });
-      }
-
-      const [createdOwner] = await this.userModel.create([
-        {
-          username: (storeDto.username || storeDto.ownerPhone).trim(),
-          phone: storeDto.ownerPhone.trim(),
-          name: storeDto.ownerName.trim(),
-          email,
-          password: hashedPassword,
-          privilegeId: ownerPrivilege._id,
-          isActive: true,
-        },
-      ]);
-
       const maxCounters = existingLicense ? existingLicense.maxCounters : 5;
       const maxUsers = existingLicense ? existingLicense.maxUsers : 10;
+      const tempOwnerId = new Types.ObjectId();
 
+      // 1. Create Company Store
       const createdCompany = await this.companyModel.create({
         name: storeDto.companyName.trim(),
         code: cleanCode,
@@ -234,8 +210,8 @@ export class AuthService {
         licenseKey,
         industry: CompanyIndustry.GENERAL_RETAIL,
         businessType: CompanyBusinessType.RETAIL,
-        ownerId: createdOwner._id,
-        createdBy: createdOwner._id,
+        ownerId: tempOwnerId,
+        createdBy: tempOwnerId,
         contact: {
           primaryEmail: email,
           primaryPhone: storeDto.ownerPhone.trim(),
@@ -264,6 +240,36 @@ export class AuthService {
           maxCounters,
         },
       });
+
+      // 2. Create default Store Admin privilege using actual createdCompany._id
+      const ownerPrivilege = await this.privilegeModel.create({
+        name: 'Store Admin',
+        description: `Default Owner Privilege for ${createdCompany.name}`,
+        roles: [Role.admin],
+        companyId: createdCompany._id,
+        isSystemGenerated: false,
+      });
+
+      // 3. Create Store Owner User with exact companyId & privilegeId
+      const [createdOwner] = await this.userModel.create([
+        {
+          _id: tempOwnerId,
+          username: (storeDto.username || storeDto.ownerPhone).trim(),
+          phone: storeDto.ownerPhone.trim(),
+          name: storeDto.ownerName.trim(),
+          email,
+          password: hashedPassword,
+          companyId: createdCompany._id,
+          privilegeId: ownerPrivilege._id,
+          isActive: true,
+        },
+      ]);
+
+      // 4. Set createdBy on privilege
+      await this.privilegeModel.updateOne(
+        { _id: ownerPrivilege._id },
+        { $set: { createdBy: createdOwner._id } },
+      );
 
       if (existingLicense) {
         await this.storeLicenseModel.updateOne(
