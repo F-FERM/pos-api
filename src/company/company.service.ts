@@ -17,6 +17,7 @@ import {
 } from '../models/company.schema';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
+import { UpdateCounterLimitsDto } from './dto/update-counter-limits.dto';
 import { UserService } from '../user/user.service';
 import { LogService } from '../log/log.service';
 import { NumberSettingsService } from '../number-settings/number-settings.service';
@@ -89,8 +90,13 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
         throw new BadRequestException('Company code or slug already exists');
       }
 
+      const licenseKey =
+        (dto as any).licenseKey ||
+        `LIC-${dto.code.toUpperCase()}-${Math.floor(10000 + Math.random() * 90000)}`;
+
       const created: CompanyDocument = await this.genericCreateOne({
         ...dto,
+        licenseKey,
         [CompanyModelConstants.code]: dto.code.toUpperCase(),
         [CompanyModelConstants.slug]: dto.slug.toLowerCase(),
         [CompanyModelConstants.ownerId]: new Types.ObjectId(userId),
@@ -390,6 +396,60 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
         throw new BadRequestException(error.message);
       }
       throw new BadRequestException('Error deleting company');
+    }
+  }
+
+  async updateCounterLimits(
+    id: string,
+    dto: UpdateCounterLimitsDto,
+    superAdminId: string,
+    req: AuthedRequest,
+  ) {
+    try {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.userService.validateAuthenticatedUser(superAdminId);
+
+      const company = await this.genericFindOne({ _id: id });
+      if (!company) {
+        throw new NotFoundException('Company not found');
+      }
+
+      const updated = await this.genericUpdateOne(id, {
+        ...dto,
+        ...(dto.maxCounters && {
+          'subscription.maxCounters': dto.maxCounters,
+          maxCounters: dto.maxCounters,
+        }),
+        ...(dto.maxUsers && {
+          'subscription.maxUsers': dto.maxUsers,
+          maxUsers: dto.maxUsers,
+        }),
+      });
+
+      await this.logService.createLog({
+        companyId: new Types.ObjectId(id),
+        createdBy: new Types.ObjectId(superAdminId),
+        action: LogActions.UPDATE_COMPANY,
+        entityType: LogEntityType.COMPANY,
+        entityId: new Types.ObjectId(id),
+        description: `Superadmin updated counter limits for store '${company[CompanyModelConstants.name]}'`,
+        ipAddress,
+        path: req.url,
+        status: LogStatus.SUCCESS,
+      });
+
+      return {
+        success: true,
+        message: 'Company store counter limits updated successfully',
+        data: updated,
+        statusCode: HttpStatus.OK,
+      };
+    } catch (error: unknown) {
+      if (error instanceof NotFoundException) throw error;
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Error updating store counter limits');
     }
   }
 }
