@@ -16,7 +16,7 @@ import { ParseObjectIdPipe } from '@nestjs/mongoose';
 import { CompanyService } from './company.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
-import { UpdateTerminalLimitsDto } from './dto/update-terminal-limits.dto';
+import { UpdateCounterLimitsDto } from './dto/update-counter-limits.dto';
 import { type AuthedRequest } from '../utils/common.types';
 import { CheckPermission } from '../common/decorators/check-permission.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -87,16 +87,16 @@ export class CompanyController {
 
   @ApiOperation({
     summary:
-      'Superadmin: Update store terminal PC limits, counter limits, and status',
+      'Superadmin: Update store counter limits, user limits, and status',
   })
   @Roles(Role.superadmin)
-  @Patch(':id/terminal-limits')
-  updateTerminalLimits(
+  @Patch(':id/counter-limits')
+  updateCounterLimits(
     @Param('id', ParseObjectIdPipe) id: string,
-    @Body() dto: UpdateTerminalLimitsDto,
+    @Body() dto: UpdateCounterLimitsDto,
     @Req() req: AuthedRequest,
   ) {
-    return this.companyService.updateTerminalLimits(
+    return this.companyService.updateCounterLimits(
       id,
       dto,
       req.user.userId,
