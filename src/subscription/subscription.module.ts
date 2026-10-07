@@ -6,10 +6,6 @@ import {
   SubscriptionSchema,
   SubscriptionSchemaName,
 } from '../models/subscription.schema';
-import {
-  SubscriptionPlanSchema,
-  SubscriptionPlanSchemaName,
-} from '../models/subscription-plan.schema';
 import { UserModule } from '../user/user.module';
 import { CompanyModule } from '../company/company.module';
 import { LogModule } from '../log/log.module';
@@ -18,7 +14,6 @@ import { LogModule } from '../log/log.module';
   imports: [
     MongooseModule.forFeature([
       { name: SubscriptionSchemaName, schema: SubscriptionSchema },
-      { name: SubscriptionPlanSchemaName, schema: SubscriptionPlanSchema },
     ]),
     forwardRef(() => UserModule),
     forwardRef(() => CompanyModule),
