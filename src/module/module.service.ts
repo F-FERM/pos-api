@@ -60,14 +60,14 @@ export class ModuleService
     try {
       for (const module of SYSTEM_MODULES) {
         const exists: ModuleDocument | null = await this.genericFindOne({
-          [ModuleModelConstants.identity]: module.identity,
+          identity: module.identity,
         });
 
         if (!exists) {
           await this.genericCreateOne({
-            [ModuleModelConstants.identity]: module.identity,
-            [ModuleModelConstants.label]: module.label,
-            [ModuleModelConstants.isSystemGenerated]: module.isSystemGenerated,
+            identity: module.identity,
+            label: module.label,
+            isSystemGenerated: module.isSystemGenerated,
           });
 
           console.log('System modules generated successfully');
@@ -91,7 +91,7 @@ export class ModuleService
     try {
       for (const module of SYSTEM_MODULES) {
         const dbModule: ModuleDocument | null = await this.genericFindOne({
-          [ModuleModelConstants.identity]: module.identity,
+          identity: module.identity,
         });
 
         if (!dbModule) continue;
@@ -113,16 +113,16 @@ export class ModuleService
         for (const sub of subModuleGroup.subModules) {
           const exists: SubModuleDocument | null =
             await this.subModuleDB.genericFindOne({
-              [SubModuleModelConstants.identity]: sub.identity,
-              [SubModuleModelConstants.moduleId]: dbModule._id,
+              identity: sub.identity,
+              moduleId: dbModule._id,
             });
 
           if (!exists) {
             await this.subModuleDB.genericCreateOne({
-              [SubModuleModelConstants.identity]: sub.identity,
-              [SubModuleModelConstants.label]: sub.label,
-              [SubModuleModelConstants.moduleId]: dbModule._id,
-              [SubModuleModelConstants.isSystemGenerated]: true,
+              identity: sub.identity,
+              label: sub.label,
+              moduleId: dbModule._id,
+              isSystemGenerated: true,
             });
 
             console.log('System submodules generated successfully');
@@ -159,7 +159,7 @@ export class ModuleService
       );
 
       const modules: ModuleDocument[] = await this.genericFindAll({
-        [ModuleModelConstants.isActive]: true,
+        isActive: true,
       });
 
       return {
@@ -219,7 +219,7 @@ export class ModuleService
     try {
       const data = await this.subModuleDB.genericFindAllWithPopulate(
         {
-          [SubModuleModelConstants.isActive]: true,
+          isActive: true,
         },
         [
           {
@@ -289,8 +289,8 @@ export class ModuleService
     try {
       const data = await this.subModuleDB.genericFindAllWithPopulate(
         {
-          [SubModuleModelConstants.moduleId]: moduleId,
-          [SubModuleModelConstants.isActive]: true,
+          moduleId,
+          isActive: true,
         },
         [
           {
@@ -327,7 +327,7 @@ export class ModuleService
   async getModuleIdByIdentity(identity: string): Promise<Types.ObjectId> {
     try {
       const module = await this.moduleModel.findOne({
-        [ModuleModelConstants.identity]: identity,
+        identity,
       });
 
       if (!module) {
@@ -353,7 +353,7 @@ export class ModuleService
   async getSubModuleIdByIdentity(identity: string): Promise<Types.ObjectId> {
     try {
       const subModule = await this.subModuleModel.findOne({
-        [SubModuleModelConstants.identity]: identity,
+        identity,
       });
 
       if (!subModule) {
