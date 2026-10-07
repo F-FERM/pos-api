@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  forwardRef,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -26,7 +28,9 @@ export class LoyaltySettingService extends GenericDatabase<
   constructor(
     @InjectModel(LoyaltySettingSchemaName)
     private readonly loyaltyModel: Model<LoyaltySettingDocument>,
+    @Inject(forwardRef(() => CompanyService))
     private readonly companyService: CompanyService,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly logService: LogService,
   ) {
