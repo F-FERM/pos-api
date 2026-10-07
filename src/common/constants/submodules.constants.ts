@@ -19,4 +19,5 @@ export const SUB_MODULES = {
   STAFF: 'staff',
   SALE_RETURN: 'sale-return',
   LOYALTY_SETTING: 'loyalty-setting',
+  DEVICE_REGISTRATION: 'device-registration',
 } as const;
