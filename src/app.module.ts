@@ -13,7 +13,6 @@ import { CompanyModule } from './company/company.module';
 import { PrivilegeModule } from './privilege/privilege.module';
 import { PermissionGuard } from './common/guards/permission.guard';
 import { ModuleModule } from './module/module.module';
-import { SubscriptionPlanModule } from './subscription-plan/subscription-plan.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { CategoryModule } from './category/category.module';
 import { BrandModule } from './brand/brand.module';
@@ -32,6 +31,8 @@ import { StaffModule } from './staff/staff.module';
 import { SaleReturnModule } from './sale-return/sale-return.module';
 import { LoyaltySettingModule } from './loyalty-setting/loyalty-setting.module';
 import { DeviceRegistrationModule } from './device-registration/device-registration.module';
+import { StoreLicenseModule } from './store-license/store-license.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -44,7 +45,6 @@ import { DeviceRegistrationModule } from './device-registration/device-registrat
     CompanyModule,
     PrivilegeModule,
     ModuleModule,
-    SubscriptionPlanModule,
     SubscriptionModule,
     CategoryModule,
     BrandModule,
@@ -63,6 +63,8 @@ import { DeviceRegistrationModule } from './device-registration/device-registrat
     SaleReturnModule,
     LoyaltySettingModule,
     DeviceRegistrationModule,
+    StoreLicenseModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [
