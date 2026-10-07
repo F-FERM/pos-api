@@ -2,7 +2,7 @@ export function licenseIssuedEmailTemplate(
   ownerName: string,
   companyName: string,
   licenseKey: string,
-  maxTerminals: number,
+  maxCounters: number,
 ): string {
   return `
 <!DOCTYPE html>
@@ -26,7 +26,7 @@ export function licenseIssuedEmailTemplate(
       <td style="padding: 40px 35px;">
         <h2 style="color: #1e293b; margin-top: 0; font-size: 20px;">Congratulations ${ownerName}!</h2>
         <p style="color: #475569; line-height: 1.6; font-size: 15px;">
-          Your store <strong>${companyName}</strong> has been successfully registered. Below is your official Store License Key to activate your Windows Desktop POS counter terminals:
+          Your store <strong>${companyName}</strong> has been successfully registered. Below is your official Store License Key to activate your Windows Desktop POS checkout counters:
         </p>
         <!-- License Box -->
         <div style="text-align: center; margin: 30px 0;">
@@ -37,13 +37,13 @@ export function licenseIssuedEmailTemplate(
         </div>
         <!-- Specs -->
         <div style="background-color: #f8fafc; border-left: 4px solid #10b981; padding: 15px 20px; border-radius: 0 8px 8px 0; margin-bottom: 25px;">
-          <p style="margin: 0 0 6px 0; font-size: 14px; color: #334155;"><strong>Allowed Counter Terminals:</strong> ${maxTerminals} Counter PCs</p>
+          <p style="margin: 0 0 6px 0; font-size: 14px; color: #334155;"><strong>Allowed Checkout Counters:</strong> ${maxCounters} Counters / PCs</p>
           <p style="margin: 0; font-size: 14px; color: #334155;"><strong>Subscription Plan:</strong> Professional Supermarket Retail Plan</p>
         </div>
-        <h3 style="color: #1e293b; font-size: 16px; margin-bottom: 10px;">How to activate your POS Counter Terminals:</h3>
+        <h3 style="color: #1e293b; font-size: 16px; margin-bottom: 10px;">How to activate your POS Checkout Counters:</h3>
         <ol style="color: #475569; line-height: 1.8; font-size: 14px; padding-left: 20px;">
           <li>Install the POS Windows Desktop App on your physical counter PCs.</li>
-          <li>Enter your Store License Key (<strong>${licenseKey}</strong>) and Terminal Name.</li>
+          <li>Enter your Store License Key (<strong>${licenseKey}</strong>) and Counter Name.</li>
           <li>Once activated, the app will auto-bypass setup forms and jump directly to Staff PIN Login!</li>
         </ol>
       </td>
