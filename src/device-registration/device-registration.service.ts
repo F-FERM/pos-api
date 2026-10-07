@@ -17,6 +17,11 @@ import {
   DeviceStatus,
 } from '../models/device-registration.schema';
 import { CompanyDocument, CompanySchemaName } from '../models/company.schema';
+import {
+  LicenseStatus,
+  StoreLicenseDocument,
+  StoreLicenseSchemaName,
+} from '../models/store-license.schema';
 import { CounterModelConstants } from '../models/counter.schema';
 import { UserModelConstants } from '../models/user.schema';
 import { RegisterDeviceDto } from './dto/register-device.dto';
@@ -37,6 +42,8 @@ export class DeviceRegistrationService extends GenericDatabase<
     private readonly deviceModel: Model<DeviceRegistrationDocument>,
     @InjectModel(CompanySchemaName)
     private readonly companyModel: Model<CompanyDocument>,
+    @InjectModel(StoreLicenseSchemaName)
+    private readonly storeLicenseModel: Model<StoreLicenseDocument>,
     private readonly jwtService: JwtService,
     private readonly logService: LogService,
     private readonly companyService: CompanyService,
@@ -58,14 +65,12 @@ export class DeviceRegistrationService extends GenericDatabase<
         filter.licenseKey = dto.licenseKey.trim().toUpperCase();
       }
 
-      const device = await this.deviceModel
-        .findOne(filter)
-        .populate([
-          {
-            path: DeviceRegistrationModelConstants.counterId,
-            select: `${CounterModelConstants.name} ${CounterModelConstants.code}`,
-          },
-        ]);
+      const device = await this.deviceModel.findOne(filter).populate([
+        {
+          path: DeviceRegistrationModelConstants.counterId,
+          select: `${CounterModelConstants.name} ${CounterModelConstants.code}`,
+        },
+      ]);
 
       if (!device || device.status !== DeviceStatus.ACTIVE) {
         return {
@@ -147,18 +152,69 @@ export class DeviceRegistrationService extends GenericDatabase<
       const ipAddress = await this.getClientIpAddress(req);
       const cleanLicenseKey = dto.licenseKey.trim().toUpperCase();
 
-      const company = await this.companyModel.findOne({
-        $or: [
-          { code: cleanLicenseKey },
-          { 'subscription.planCode': cleanLicenseKey },
-          { slug: cleanLicenseKey.toLowerCase() },
-        ],
+      const storeLicense = await this.storeLicenseModel.findOne({
+        licenseKey: cleanLicenseKey,
         isDeleted: false,
       });
 
+      let company: CompanyDocument | null = null;
+
+      if (storeLicense) {
+        if (
+          storeLicense.status === LicenseStatus.SUSPENDED ||
+          storeLicense.status === LicenseStatus.EXPIRED
+        ) {
+          throw new UnauthorizedException(
+            `Store license key is currently ${storeLicense.status}. Contact system administrator.`,
+          );
+        }
+
+        if (storeLicense.companyId) {
+          company = await this.companyModel.findOne({
+            _id: storeLicense.companyId,
+            isDeleted: false,
+          });
+        }
+      }
+
+      if (!company) {
+        company = await this.companyModel.findOne({
+          $or: [
+            { licenseKey: cleanLicenseKey },
+            { code: cleanLicenseKey },
+            { slug: cleanLicenseKey.toLowerCase() },
+          ],
+          isDeleted: false,
+        });
+      }
+
       if (!company) {
         throw new NotFoundException(
-          'Invalid store license key or company code',
+          'Invalid or unredeemed store license key. Ensure store registration is completed.',
+        );
+      }
+
+      if (
+        dto.email &&
+        company.contact?.primaryEmail?.toLowerCase() !==
+          dto.email.trim().toLowerCase()
+      ) {
+        throw new BadRequestException(
+          'Store license key does not match the provided owner email address',
+        );
+      }
+
+      // Sync companyId in storeLicense if not already linked
+      if (storeLicense && !storeLicense.companyId) {
+        await this.storeLicenseModel.updateOne(
+          { _id: storeLicense._id },
+          {
+            $set: {
+              companyId: company._id,
+              status: LicenseStatus.REDEEMED,
+              redeemedAt: new Date(),
+            },
+          },
         );
       }
 
@@ -168,11 +224,12 @@ export class DeviceRegistrationService extends GenericDatabase<
         isDeleted: false,
       });
 
-      const maxAllowedTerminals = company.subscription?.maxTerminals || 5;
+      const maxAllowedCounters =
+        storeLicense?.maxCounters || company.maxCounters || company.subscription?.maxCounters || 5;
 
-      if (activeDevicesCount >= maxAllowedTerminals) {
+      if (activeDevicesCount >= maxAllowedCounters) {
         throw new BadRequestException(
-          `Terminal registration limit reached for this store license (${activeDevicesCount}/${maxAllowedTerminals} active terminals). Upgrade subscription to add more counter PCs.`,
+          `Counter registration limit reached for this store license (${activeDevicesCount}/${maxAllowedCounters} active counters). Upgrade subscription to add more counter PCs.`,
         );
       }
 
