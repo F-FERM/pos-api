@@ -129,6 +129,12 @@ export enum LogActions {
 
   // Loyalty Settings
   UPDATE_LOYALTY_SETTING = 'UPDATE_LOYALTY_SETTING',
+
+  // Device Registration & License
+  REGISTER_DEVICE = 'REGISTER_DEVICE',
+  VERIFY_DEVICE = 'VERIFY_DEVICE',
+  REVOKE_DEVICE = 'REVOKE_DEVICE',
+  BYPASS_DEVICE = 'BYPASS_DEVICE',
 }
 
 export enum LogEntityType {
@@ -155,4 +161,5 @@ export enum LogEntityType {
   LABEL_DESIGNER = 'LabelDesigner',
   STAFF = 'Staff',
   LOYALTY_SETTING = 'LoyaltySetting',
+  DEVICE_REGISTRATION = 'DeviceRegistration',
 }
