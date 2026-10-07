@@ -174,6 +174,8 @@ export class EmailService {
     companyName: string,
     licenseKey: string,
     maxCounters = 5,
+    isTrial = false,
+    expiresAtDate?: Date | null,
   ): Promise<{ success: boolean; messageId?: string; message: string }> {
     try {
       const html = licenseIssuedEmailTemplate(
@@ -181,12 +183,13 @@ export class EmailService {
         companyName,
         licenseKey,
         maxCounters,
+        isTrial,
+        expiresAtDate,
       );
-      return await this.sendEmail(
-        to,
-        `Your Store License Key for ${companyName} - POS Supermarket`,
-        html,
-      );
+      const subject = isTrial
+        ? `14-Day Free Trial License Key for ${companyName} - POS Supermarket`
+        : `Your Store License Key for ${companyName} - POS Supermarket`;
+      return await this.sendEmail(to, subject, html);
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
