@@ -1,33 +1,79 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { LogService } from '../log/log.service';
+import { EmailService } from '../email/email.service';
 import { AuthedRequest, IPermission } from '../utils/common.types';
-import { UserDocument, UserModelConstants } from '../models/user.schema';
+import {
+  UserDocument,
+  UserModelConstants,
+  UserSchemaName,
+} from '../models/user.schema';
+import { CompanyDocument, CompanySchemaName } from '../models/company.schema';
 import { ModuleDocument, ModuleSchemaName } from '../models/module.schema';
 import {
   SubModuleDocument,
   SubModuleSchemaName,
 } from '../models/sub-module.schema';
+import {
+  EmailOtpDocument,
+  EmailOtpSchemaName,
+} from '../models/email-otp.schema';
+import {
+  PrivilegesDocument,
+  PrivilegesSchemaName,
+} from '../models/privilege.schema';
+import {
+  LicenseStatus,
+  StoreLicenseDocument,
+  StoreLicenseSchemaName,
+} from '../models/store-license.schema';
+import { RegisterStoreRequestDto } from './dto/register-store-request.dto';
+import { VerifyOtpRequestDto } from './dto/verify-otp-request.dto';
+import { NumberSettingsService } from '../number-settings/number-settings.service';
+import { CounterService } from '../counter/counter.service';
+import { LoyaltySettingService } from '../loyalty-setting/loyalty-setting.service';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
+import {
+  CompanyBusinessType,
+  CompanyIndustry,
+  CompanySubscriptionStatus,
+  TimeFormat,
+} from '../utils/enums/company.enums';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
+    @InjectModel(UserSchemaName)
+    private readonly userModel: Model<UserDocument>,
+    @InjectModel(CompanySchemaName)
+    private readonly companyModel: Model<CompanyDocument>,
     @InjectModel(ModuleSchemaName)
     private readonly moduleModel: Model<ModuleDocument>,
     @InjectModel(SubModuleSchemaName)
     private readonly subModuleModel: Model<SubModuleDocument>,
+    @InjectModel(EmailOtpSchemaName)
+    private readonly emailOtpModel: Model<EmailOtpDocument>,
+    @InjectModel(PrivilegesSchemaName)
+    private readonly privilegeModel: Model<PrivilegesDocument>,
+    @InjectModel(StoreLicenseSchemaName)
+    private readonly storeLicenseModel: Model<StoreLicenseDocument>,
     private readonly logService: LogService,
+    private readonly emailService: EmailService,
     private readonly jwtService: JwtService,
+    private readonly numberSettingsService: NumberSettingsService,
+    private readonly counterService: CounterService,
+    private readonly loyaltySettingService: LoyaltySettingService,
   ) {}
 
   async validateUser(username: string, pass: string) {
@@ -36,6 +82,275 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     return user;
+  }
+
+  async requestStoreRegistration(dto: RegisterStoreRequestDto) {
+    try {
+      const email = dto.ownerEmail.trim().toLowerCase();
+
+      const existingUser = await this.userModel.findOne({
+        $or: [{ username: dto.ownerPhone.trim() }, { email }],
+        isDeleted: false,
+      });
+
+      if (existingUser) {
+        throw new BadRequestException(
+          'A user or store with this phone number or email already exists',
+        );
+      }
+
+      // Generate 6-digit OTP code
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+      await this.emailOtpModel.deleteMany({ email });
+
+      await this.emailOtpModel.create({
+        email,
+        otp,
+        expiresAt,
+        isVerified: false,
+        registrationPayload: dto,
+      });
+
+      // Send verification OTP via Brevo SMTP
+      await this.emailService.sendVerificationOtp(
+        email,
+        dto.ownerName.trim(),
+        otp,
+      );
+
+      return {
+        success: true,
+        message: `Verification OTP code sent to ${email}`,
+        data: {
+          email,
+          expiresInMinutes: 10,
+          devOtpCode: otp, // Included for easy dev testing
+        },
+      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Failed to send registration OTP');
+    }
+  }
+
+  async verifyStoreOtp(dto: VerifyOtpRequestDto) {
+    try {
+      const email = dto.email.trim().toLowerCase();
+      const otpRecord = await this.emailOtpModel.findOne({
+        email,
+        otp: dto.otp.trim(),
+        isVerified: false,
+      });
+
+      if (!otpRecord) {
+        throw new BadRequestException('Invalid or expired OTP code');
+      }
+
+      if (new Date() > otpRecord.expiresAt) {
+        throw new BadRequestException(
+          'OTP code has expired. Please request a new OTP.',
+        );
+      }
+
+      const storeDto: RegisterStoreRequestDto =
+        otpRecord.registrationPayload as RegisterStoreRequestDto;
+
+      if (!storeDto || !storeDto.companyName) {
+        throw new BadRequestException('Invalid registration payload');
+      }
+
+      const cleanCode =
+        storeDto.companyName
+          .replace(/[^a-zA-Z0-9]/g, '')
+          .slice(0, 6)
+          .toUpperCase() + Math.floor(100 + Math.random() * 900);
+
+      const cleanSlug = storeDto.companyName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+      let existingLicense = await this.storeLicenseModel.findOne({
+        assignedEmail: email,
+        status: { $in: [LicenseStatus.ASSIGNED, LicenseStatus.UNASSIGNED] },
+        isDeleted: false,
+      });
+
+      if (!existingLicense) {
+        existingLicense = await this.storeLicenseModel.findOne({
+          status: LicenseStatus.UNASSIGNED,
+          isDeleted: false,
+        });
+      }
+
+      const licenseKey = existingLicense
+        ? existingLicense.licenseKey
+        : `LIC-${cleanCode}-${Math.floor(10000 + Math.random() * 90000)}`;
+
+      const hashedPassword = await bcrypt.hash(storeDto.password, 10);
+
+      let ownerPrivilege = await this.privilegeModel.findOne({
+        name: 'Store Admin',
+        isDeleted: false,
+      });
+
+      if (!ownerPrivilege) {
+        ownerPrivilege = await this.privilegeModel.create({
+          name: 'Store Admin',
+          description: 'Default Store Owner Privilege',
+          roles: [Role.admin],
+          isSystemGenerated: true,
+        });
+      }
+
+      const [createdOwner] = await this.userModel.create([
+        {
+          username: storeDto.ownerPhone.trim(),
+          name: storeDto.ownerName.trim(),
+          email,
+          password: hashedPassword,
+          privilegeId: ownerPrivilege._id,
+          isActive: true,
+        },
+      ]);
+
+      const maxTerminals = existingLicense ? existingLicense.maxTerminals : 5;
+      const maxUsers = existingLicense ? existingLicense.maxUsers : 10;
+
+      const createdCompany = await this.companyModel.create({
+        name: storeDto.companyName.trim(),
+        code: cleanCode,
+        slug: `${cleanSlug}-${Date.now().toString().slice(-4)}`,
+        licenseKey,
+        industry: CompanyIndustry.GENERAL_RETAIL,
+        businessType: CompanyBusinessType.RETAIL,
+        ownerId: createdOwner._id,
+        createdBy: createdOwner._id,
+        contact: {
+          primaryEmail: email,
+          primaryPhone: storeDto.ownerPhone.trim(),
+        },
+        address: {
+          line1: 'Store Address Line 1',
+          city: storeDto.city.trim(),
+          state: storeDto.state.trim(),
+          postalCode: storeDto.postalCode?.trim() || '000000',
+          country: storeDto.country || 'IN',
+        },
+        regional: {
+          currency: 'INR',
+          currencySymbol: '₹',
+          timezone: 'Asia/Kolkata',
+          locale: 'en-IN',
+          dateFormat: 'DD/MM/YYYY',
+          timeFormat: TimeFormat.TWELVE_HOUR,
+          fiscalYearStartMonth: 4,
+        },
+        subscription: {
+          status: CompanySubscriptionStatus.ACTIVE,
+          maxUsers,
+          maxTerminals,
+        },
+      });
+
+      if (existingLicense) {
+        await this.storeLicenseModel.updateOne(
+          { _id: existingLicense._id },
+          {
+            $set: {
+              companyId: createdCompany._id,
+              assignedEmail: email,
+              status: LicenseStatus.REDEEMED,
+              redeemedAt: new Date(),
+            },
+          },
+        );
+      } else {
+        await this.storeLicenseModel.create({
+          licenseKey,
+          assignedEmail: email,
+          companyId: createdCompany._id,
+          status: LicenseStatus.REDEEMED,
+          maxTerminals: 5,
+          maxUsers: 10,
+          validityMonths: 12,
+          redeemedAt: new Date(),
+          createdBy: createdOwner._id,
+        });
+      }
+
+      await this.userModel.updateOne(
+        { _id: createdOwner._id },
+        { $set: { companyId: createdCompany._id } },
+      );
+
+      // Auto-seed default Number Settings, Counter, and Loyalty Settings for new company
+      try {
+        await this.numberSettingsService.createDefaultSettingsForCompany(
+          createdCompany._id.toString(),
+          createdOwner._id.toString(),
+        );
+        await this.counterService.createDefaultCounterForCompany(
+          createdCompany._id.toString(),
+          createdOwner._id.toString(),
+        );
+        await this.loyaltySettingService.createDefaultSettingForCompany(
+          createdCompany._id.toString(),
+          createdOwner._id.toString(),
+        );
+      } catch (seedErr) {
+        console.warn(
+          'Failed to auto-seed defaults for registered store:',
+          seedErr,
+        );
+      }
+
+      await this.emailOtpModel.updateOne(
+        { _id: otpRecord._id },
+        { $set: { isVerified: true } },
+      );
+
+      // Send Store License Key email via Brevo SMTP
+      await this.emailService.sendLicenseIssuedEmail(
+        email,
+        storeDto.ownerName.trim(),
+        createdCompany.name,
+        licenseKey,
+        maxTerminals,
+      );
+
+      return {
+        success: true,
+        message:
+          'Store registration verified and License Key generated successfully! Check your email for activation details.',
+        data: {
+          licenseKey,
+          company: {
+            id: createdCompany._id,
+            name: createdCompany.name,
+            code: createdCompany.code,
+            licenseKey,
+          },
+          owner: {
+            id: createdOwner._id,
+            username: createdOwner.username,
+            name: createdOwner.name,
+            email: createdOwner.email,
+          },
+        },
+      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException(
+        'Error verifying OTP and registering store',
+      );
+    }
   }
 
   async login(user: any, req?: AuthedRequest) {
