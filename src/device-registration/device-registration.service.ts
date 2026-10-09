@@ -150,55 +150,97 @@ export class DeviceRegistrationService extends GenericDatabase<
   async registerDevice(dto: RegisterDeviceDto, req: AuthedRequest) {
     try {
       const ipAddress = await this.getClientIpAddress(req);
-      const cleanLicenseKey = dto.licenseKey.trim().toUpperCase();
-
-      const storeLicense = await this.storeLicenseModel.findOne({
-        licenseKey: cleanLicenseKey,
-        isDeleted: false,
-      });
-
+      let cleanLicenseKey = dto.licenseKey?.trim().toUpperCase();
       let company: CompanyDocument | null = null;
+      let storeLicense: StoreLicenseDocument | null = null;
 
-      if (storeLicense) {
-        if (
-          storeLicense.expiresAt &&
-          new Date(storeLicense.expiresAt) < new Date()
-        ) {
-          await this.storeLicenseModel.updateOne(
-            { _id: storeLicense._id },
-            { $set: { status: LicenseStatus.EXPIRED } },
-          );
-          throw new UnauthorizedException(
-            'Your Store Trial License Key has expired. Please contact Sales/Support to upgrade your license.',
-          );
+      if (cleanLicenseKey) {
+        storeLicense = await this.storeLicenseModel.findOne({
+          licenseKey: cleanLicenseKey,
+          isDeleted: false,
+        });
+
+        if (storeLicense) {
+          if (
+            storeLicense.expiresAt &&
+            new Date(storeLicense.expiresAt) < new Date()
+          ) {
+            await this.storeLicenseModel.updateOne(
+              { _id: storeLicense._id },
+              { $set: { status: LicenseStatus.EXPIRED } },
+            );
+            throw new UnauthorizedException(
+              'Your Store Trial License Key has expired. Please contact Sales/Support to upgrade your license.',
+            );
+          }
+
+          if (
+            storeLicense.status === LicenseStatus.SUSPENDED ||
+            storeLicense.status === LicenseStatus.EXPIRED
+          ) {
+            throw new UnauthorizedException(
+              `Store license key is currently ${storeLicense.status}. Contact system administrator.`,
+            );
+          }
+
+          if (storeLicense.companyId) {
+            company = await this.companyModel.findOne({
+              _id: storeLicense.companyId,
+              isDeleted: false,
+            });
+          }
         }
 
-        if (
-          storeLicense.status === LicenseStatus.SUSPENDED ||
-          storeLicense.status === LicenseStatus.EXPIRED
-        ) {
-          throw new UnauthorizedException(
-            `Store license key is currently ${storeLicense.status}. Contact system administrator.`,
-          );
-        }
-
-        if (storeLicense.companyId) {
+        if (!company) {
           company = await this.companyModel.findOne({
-            _id: storeLicense.companyId,
+            $or: [
+              { licenseKey: cleanLicenseKey },
+              { code: cleanLicenseKey },
+              { slug: cleanLicenseKey.toLowerCase() },
+            ],
             isDeleted: false,
           });
         }
-      }
+      } else if ((dto.username || dto.email) && dto.password) {
+        // Credential fallback option if user forgets or omits license key
+        const loginIdentifier = (dto.username || dto.email || '').trim();
+        const validatedUser = await this.userService.validateUser(
+          loginIdentifier,
+          dto.password,
+        );
 
-      if (!company) {
+        if (
+          !validatedUser ||
+          !(validatedUser as Record<string, any>).companyId
+        ) {
+          throw new UnauthorizedException(
+            'Invalid store owner credentials or user is not associated with a registered company store',
+          );
+        }
+
+        const compId = (validatedUser as Record<string, any>).companyId;
         company = await this.companyModel.findOne({
-          $or: [
-            { licenseKey: cleanLicenseKey },
-            { code: cleanLicenseKey },
-            { slug: cleanLicenseKey.toLowerCase() },
-          ],
+          _id: compId,
           isDeleted: false,
         });
+
+        if (!company) {
+          throw new NotFoundException('Registered company store not found');
+        }
+
+        storeLicense = await this.storeLicenseModel.findOne({
+          companyId: company._id,
+          isDeleted: false,
+        });
+
+        cleanLicenseKey =
+          storeLicense?.licenseKey ||
+          company.licenseKey ||
+          `LIC-${company.code}-${Math.floor(10000 + Math.random() * 90000)}`;
+      } else {
+        throw new BadRequestException(
+          'Please provide either a valid Store License Key or store owner credentials (username/email + password)',
+        );
       }
 
       if (!company) {
@@ -231,14 +273,21 @@ export class DeviceRegistrationService extends GenericDatabase<
         );
       }
 
+      let licenseDoc = storeLicense;
+      if (!licenseDoc) {
+        licenseDoc = await this.storeLicenseModel.findOne({
+          companyId: company._id,
+          isDeleted: false,
+        });
+      }
+
       const activeDevicesCount = await this.deviceModel.countDocuments({
         companyId: company._id,
         status: DeviceStatus.ACTIVE,
         isDeleted: false,
       });
 
-      const maxAllowedCounters =
-        storeLicense?.maxCounters || company.maxCounters || company.subscription?.maxCounters || 5;
+      const maxAllowedCounters = licenseDoc?.maxCounters || 5;
 
       if (activeDevicesCount >= maxAllowedCounters) {
         throw new BadRequestException(
@@ -283,6 +332,13 @@ export class DeviceRegistrationService extends GenericDatabase<
               id: company._id,
               name: company.name,
               code: company.code,
+            },
+            license: {
+              licenseKey: cleanLicenseKey,
+              status: licenseDoc?.status || LicenseStatus.REDEEMED,
+              isTrial: licenseDoc?.isTrial ?? false,
+              expiresAt: licenseDoc?.expiresAt || null,
+              maxCounters: maxAllowedCounters,
             },
           },
           statusCode: HttpStatus.OK,
@@ -337,6 +393,13 @@ export class DeviceRegistrationService extends GenericDatabase<
             id: company._id,
             name: company.name,
             code: company.code,
+          },
+          license: {
+            licenseKey: cleanLicenseKey,
+            status: licenseDoc?.status || LicenseStatus.REDEEMED,
+            isTrial: licenseDoc?.isTrial ?? false,
+            expiresAt: licenseDoc?.expiresAt || null,
+            maxCounters: maxAllowedCounters,
           },
         },
         statusCode: HttpStatus.CREATED,
