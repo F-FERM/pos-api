@@ -12,6 +12,7 @@ import { CompanyModule } from '../company/company.module';
 import { NumberSettingsModule } from '../number-settings/number-settings.module';
 import { CounterModule } from '../counter/counter.module';
 import { LoyaltySettingModule } from '../loyalty-setting/loyalty-setting.module';
+import { SubscriptionModule } from '../subscription/subscription.module';
 import { EmailModule } from '../email/email.module';
 import { ModuleSchema, ModuleSchemaName } from '../models/module.schema';
 import {
@@ -29,6 +30,10 @@ import {
   StoreLicenseSchema,
   StoreLicenseSchemaName,
 } from '../models/store-license.schema';
+import {
+  DeviceRegistrationSchema,
+  DeviceRegistrationSchemaName,
+} from '../models/device-registration.schema';
 
 @Module({
   imports: [
@@ -40,6 +45,10 @@ import {
       { name: CompanySchemaName, schema: CompanySchema },
       { name: PrivilegesSchemaName, schema: PrivilegesSchema },
       { name: StoreLicenseSchemaName, schema: StoreLicenseSchema },
+      {
+        name: DeviceRegistrationSchemaName,
+        schema: DeviceRegistrationSchema,
+      },
     ]),
     UserModule,
     LogModule,
@@ -47,6 +56,7 @@ import {
     NumberSettingsModule,
     CounterModule,
     LoyaltySettingModule,
+    SubscriptionModule,
     EmailModule,
     PassportModule,
     JwtModule.register({
