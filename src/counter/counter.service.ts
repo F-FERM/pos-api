@@ -237,14 +237,12 @@ export class CounterService extends GenericDatabase<Model<CounterDocument>> {
         filter.companyId = new Types.ObjectId(companyId);
       }
 
-      const counter = await this.counterModel
-        .findOne(filter)
-        .populate([
-          {
-            path: CounterModelConstants.createdBy,
-            select: `${UserModelConstants.username} ${UserModelConstants.name}`,
-          },
-        ]);
+      const counter = await this.counterModel.findOne(filter).populate([
+        {
+          path: CounterModelConstants.createdBy,
+          select: `${UserModelConstants.username} ${UserModelConstants.name}`,
+        },
+      ]);
 
       if (!counter) {
         throw new NotFoundException('Counter not found');
@@ -282,6 +280,33 @@ export class CounterService extends GenericDatabase<Model<CounterDocument>> {
 
       if (!counter) {
         throw new NotFoundException('Counter not found');
+      }
+
+      if (dto.name || dto.code) {
+        const conditions: Record<string, unknown>[] = [];
+        if (dto.name) {
+          const escapedName = dto.name
+            .trim()
+            .replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          conditions.push({
+            name: { $regex: `^${escapedName}$`, $options: 'i' },
+          });
+        }
+        if (dto.code) {
+          conditions.push({ code: dto.code.trim().toUpperCase() });
+        }
+
+        const duplicate = await this.genericFindOne({
+          companyId: new Types.ObjectId(companyId),
+          _id: { $ne: new Types.ObjectId(id) },
+          $or: conditions,
+        });
+
+        if (duplicate) {
+          throw new BadRequestException(
+            'Another counter with this name or code already exists',
+          );
+        }
       }
 
       if (dto.isDefault) {
