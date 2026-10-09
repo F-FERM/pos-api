@@ -6,6 +6,7 @@ import {
   StoreLicenseSchema,
   StoreLicenseSchemaName,
 } from '../models/store-license.schema';
+import { CompanySchema, CompanySchemaName } from '../models/company.schema';
 import { LogModule } from '../log/log.module';
 import { UserModule } from '../user/user.module';
 
@@ -13,6 +14,7 @@ import { UserModule } from '../user/user.module';
   imports: [
     MongooseModule.forFeature([
       { name: StoreLicenseSchemaName, schema: StoreLicenseSchema },
+      { name: CompanySchemaName, schema: CompanySchema },
     ]),
     LogModule,
     UserModule,
