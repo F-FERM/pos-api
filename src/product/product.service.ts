@@ -492,6 +492,32 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         }
       }
 
+      if (dto.barcode) {
+        const dupBarcode = await this.genericFindOne({
+          companyId: new Types.ObjectId(companyId),
+          _id: { $ne: new Types.ObjectId(id) },
+          barcode: dto.barcode.trim(),
+        });
+        if (dupBarcode) {
+          throw new BadRequestException(
+            'Another product with this barcode already exists in your store',
+          );
+        }
+      }
+
+      if (dto.sku) {
+        const dupSku = await this.genericFindOne({
+          companyId: new Types.ObjectId(companyId),
+          _id: { $ne: new Types.ObjectId(id) },
+          sku: dto.sku.trim(),
+        });
+        if (dupSku) {
+          throw new BadRequestException(
+            'Another product with this SKU already exists in your store',
+          );
+        }
+      }
+
       const updated = await this.genericUpdateOne(id, {
         ...dto,
         ...(dto.name && { name: dto.name.trim() }),
