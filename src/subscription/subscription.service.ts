@@ -10,9 +10,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { GenericDatabase } from '../helper/genericDatabase';
 import {
-  Subscription,
   SubscriptionDocument,
-  SubscriptionModelConstants,
   SubscriptionSchemaName,
 } from '../models/subscription.schema';
 import { CompanyDocument, CompanySchemaName } from '../models/company.schema';
@@ -30,8 +28,8 @@ import { CompanyService } from '../company/company.service';
 import { LogService } from '../log/log.service';
 import { AuthedRequest } from '../utils/common.types';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
-import { Role } from '../utils/role.enum';
 import {
+  BillingCycle,
   SubscriptionEventType,
   SubscriptionStatus,
 } from '../utils/enums/subscription.enums';
@@ -97,11 +95,6 @@ export class SubscriptionService extends GenericDatabase<
           $set: {
             'subscription.status': status,
             'subscription.endDate': endDate,
-            ...(maxCounters && {
-              'subscription.maxCounters': maxCounters,
-              maxCounters,
-            }),
-            ...(maxUsers && { 'subscription.maxUsers': maxUsers, maxUsers }),
           },
         },
       ),
@@ -656,5 +649,74 @@ export class SubscriptionService extends GenericDatabase<
       }
       throw new BadRequestException('Error updating store subscription');
     }
+  }
+
+  async createDefaultSubscriptionForCompany(
+    companyId: string,
+    userId: string,
+    options?: {
+      status?: SubscriptionStatus;
+      isTrial?: boolean;
+      trialEndDate?: Date;
+      maxCounters?: number;
+      maxUsers?: number;
+    },
+  ): Promise<SubscriptionDocument> {
+    const existing = await this.subscriptionModel.findOne({
+      companyId: new Types.ObjectId(companyId),
+      isDeleted: false,
+    });
+
+    if (existing) return existing;
+
+    const status = options?.status || SubscriptionStatus.TRIAL;
+    const isTrial = options?.isTrial ?? status === SubscriptionStatus.TRIAL;
+    const now = new Date();
+    const trialEndDate =
+      options?.trialEndDate ||
+      new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+    const endDate = trialEndDate;
+
+    const created = await this.subscriptionModel.create({
+      companyId: new Types.ObjectId(companyId),
+      planName: isTrial ? 'Starter Trial Plan' : 'Standard Store Plan',
+      status,
+      isTrial,
+      trialStartDate: isTrial ? now : null,
+      trialEndDate: isTrial ? trialEndDate : null,
+      currentPeriod: {
+        startDate: now,
+        endDate,
+      },
+      currency: 'INR',
+      billingCycle: BillingCycle.MONTHLY,
+      priceMinor: 0,
+      limits: {
+        maxUsers: options?.maxUsers ?? 5,
+        maxTerminals: options?.maxCounters ?? 2,
+        maxProducts: -1,
+        maxCustomers: -1,
+        maxMonthlyTransactions: -1,
+        maxStorageMb: -1,
+      },
+      events: [
+        {
+          type: SubscriptionEventType.CREATED,
+          occurredAt: now,
+          actorId: this.isValidMongoId(userId)
+            ? new Types.ObjectId(userId)
+            : null,
+          previousState: {},
+          newState: { status, isTrial },
+          notes: 'Auto-created default subscription for company',
+        },
+      ],
+      createdBy: this.isValidMongoId(userId)
+        ? new Types.ObjectId(userId)
+        : undefined,
+      isDeleted: false,
+    });
+
+    return created;
   }
 }
