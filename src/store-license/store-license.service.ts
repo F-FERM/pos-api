@@ -9,12 +9,16 @@ import { Model, Types } from 'mongoose';
 import { GenericDatabase } from '../helper/genericDatabase';
 import {
   LicenseStatus,
-  StoreLicense,
   StoreLicenseDocument,
   StoreLicenseModelConstants,
   StoreLicenseSchemaName,
 } from '../models/store-license.schema';
-import { CompanyModelConstants } from '../models/company.schema';
+import {
+  CompanyDocument,
+  CompanyModelConstants,
+  CompanySchemaName,
+} from '../models/company.schema';
+import { CompanySubscriptionStatus } from '../utils/enums/company.enums';
 import { UserModelConstants } from '../models/user.schema';
 import { CreateStoreLicenseDto } from './dto/create-store-license.dto';
 import { UpdateStoreLicenseDto } from './dto/update-store-license.dto';
@@ -30,6 +34,8 @@ export class StoreLicenseService extends GenericDatabase<
   constructor(
     @InjectModel(StoreLicenseSchemaName)
     private readonly licenseModel: Model<StoreLicenseDocument>,
+    @InjectModel(CompanySchemaName)
+    private readonly companyModel: Model<CompanyDocument>,
     private readonly logService: LogService,
     private readonly userService: UserService,
   ) {
@@ -215,8 +221,33 @@ export class StoreLicenseService extends GenericDatabase<
         }),
       });
 
+      // Sync company subscription if companyId is linked
+      if (license.companyId) {
+        const compStatus =
+          dto.status === LicenseStatus.SUSPENDED
+            ? CompanySubscriptionStatus.SUSPENDED
+            : dto.status === LicenseStatus.EXPIRED
+              ? CompanySubscriptionStatus.EXPIRED
+              : dto.isTrial === true ||
+                  (dto.isTrial === undefined && license.isTrial)
+                ? CompanySubscriptionStatus.TRIAL
+                : CompanySubscriptionStatus.ACTIVE;
+
+        await this.companyModel.updateOne(
+          { _id: license.companyId },
+          {
+            $set: {
+              'subscription.status': compStatus,
+              ...(dto.expiresAt && { 'subscription.endDate': dto.expiresAt }),
+            },
+          },
+        );
+      }
+
       await this.logService.createLog({
-        companyId: license.companyId ? new Types.ObjectId(license.companyId) : null,
+        companyId: license.companyId
+          ? new Types.ObjectId(license.companyId)
+          : null,
         createdBy: new Types.ObjectId(superAdminId),
         action: LogActions.UPDATE_STORE_LICENSE,
         entityType: LogEntityType.STORE_LICENSE,
@@ -258,7 +289,9 @@ export class StoreLicenseService extends GenericDatabase<
       });
 
       await this.logService.createLog({
-        companyId: license.companyId ? new Types.ObjectId(license.companyId) : null,
+        companyId: license.companyId
+          ? new Types.ObjectId(license.companyId)
+          : null,
         createdBy: new Types.ObjectId(superAdminId),
         action: LogActions.DELETE_STORE_LICENSE,
         entityType: LogEntityType.STORE_LICENSE,
