@@ -24,8 +24,6 @@ export const SYSTEM_SUBMODULES = [
   },
   {
     moduleIdentity: 'finance',
-    subModules: [
-      { identity: 'expense', label: 'Expense Recording' },
-    ],
+    subModules: [{ identity: 'expense', label: 'Expense Recording' }],
   },
 ];
