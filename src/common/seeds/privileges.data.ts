@@ -1,5 +1,4 @@
-import { Role } from "../../utils/role.enum";
-
+import { Role } from '../../utils/role.enum';
 
 export const SYSTEM_PRIVILEGES = [
   {
