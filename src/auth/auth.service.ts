@@ -36,12 +36,18 @@ import {
   StoreLicenseDocument,
   StoreLicenseSchemaName,
 } from '../models/store-license.schema';
+import {
+  DeviceRegistrationDocument,
+  DeviceRegistrationSchemaName,
+  DeviceStatus,
+} from '../models/device-registration.schema';
 import { RegisterStoreRequestDto } from './dto/register-store-request.dto';
 import { VerifyOtpRequestDto } from './dto/verify-otp-request.dto';
 import { ResendLicenseKeyRequestDto } from './dto/resend-license-key-request.dto';
 import { NumberSettingsService } from '../number-settings/number-settings.service';
 import { CounterService } from '../counter/counter.service';
 import { LoyaltySettingService } from '../loyalty-setting/loyalty-setting.service';
+import { SubscriptionService } from '../subscription/subscription.service';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
 import {
@@ -69,12 +75,15 @@ export class AuthService {
     private readonly privilegeModel: Model<PrivilegesDocument>,
     @InjectModel(StoreLicenseSchemaName)
     private readonly storeLicenseModel: Model<StoreLicenseDocument>,
+    @InjectModel(DeviceRegistrationSchemaName)
+    private readonly deviceModel: Model<DeviceRegistrationDocument>,
     private readonly logService: LogService,
     private readonly emailService: EmailService,
     private readonly jwtService: JwtService,
     private readonly numberSettingsService: NumberSettingsService,
     private readonly counterService: CounterService,
     private readonly loyaltySettingService: LoyaltySettingService,
+    private readonly subscriptionService: SubscriptionService,
   ) {}
 
   async validateUser(username: string, pass: string) {
@@ -242,14 +251,10 @@ export class AuthService {
           timeFormat: TimeFormat.TWELVE_HOUR,
           fiscalYearStartMonth: 4,
         },
-        maxCounters,
-        maxUsers,
         subscription: {
           status: isTrial
             ? CompanySubscriptionStatus.TRIAL
             : CompanySubscriptionStatus.ACTIVE,
-          maxUsers,
-          maxCounters,
           endDate: expiresAt,
         },
       });
@@ -317,7 +322,7 @@ export class AuthService {
         { $set: { companyId: createdCompany._id } },
       );
 
-      // Auto-seed default Number Settings, Counter, and Loyalty Settings for new company
+      // Auto-seed default Number Settings, Counter, Loyalty Settings, and Subscription for new company
       try {
         await this.numberSettingsService.createDefaultSettingsForCompany(
           createdCompany._id.toString(),
@@ -331,6 +336,16 @@ export class AuthService {
           createdCompany._id.toString(),
           createdOwner._id.toString(),
         );
+        await this.subscriptionService.createDefaultSubscriptionForCompany(
+          createdCompany._id.toString(),
+          createdOwner._id.toString(),
+          {
+            isTrial,
+            trialEndDate: expiresAt || undefined,
+            maxCounters,
+            maxUsers,
+          },
+        );
       } catch (seedErr) {
         console.warn(
           'Failed to auto-seed defaults for registered store:',
@@ -343,21 +358,63 @@ export class AuthService {
         { $set: { isVerified: true } },
       );
 
-      // Send Store License Key email via Brevo SMTP
-      await this.emailService.sendLicenseIssuedEmail(
-        email,
-        storeDto.ownerName.trim(),
-        createdCompany.name,
-        licenseKey,
-        maxCounters,
-        isTrial,
-        expiresAt,
-      );
+      // Auto-register calling terminal physical device if deviceId provided
+      let deviceData: Record<string, unknown> | null = null;
+      if (dto.deviceId && dto.deviceName) {
+        try {
+          const devicePayload = {
+            companyId: createdCompany._id.toString(),
+            deviceId: dto.deviceId.trim(),
+            licenseKey,
+          };
+          const deviceToken = this.jwtService.sign(devicePayload);
+
+          const createdDevice = await this.deviceModel.create({
+            deviceId: dto.deviceId.trim(),
+            deviceName: dto.deviceName.trim(),
+            licenseKey,
+            deviceToken,
+            status: DeviceStatus.ACTIVE,
+            isBypassedInhouse: true,
+            companyId: createdCompany._id,
+            counterId: dto.counterId ? new Types.ObjectId(dto.counterId) : null,
+            ipAddress: '127.0.0.1',
+            lastPingAt: new Date(),
+            createdBy: createdOwner._id,
+          });
+
+          deviceData = {
+            deviceToken,
+            device: {
+              id: createdDevice._id,
+              deviceId: createdDevice.deviceId,
+              deviceName: createdDevice.deviceName,
+            },
+          };
+        } catch (deviceErr) {
+          console.warn('Auto device registration notice:', deviceErr);
+        }
+      }
+
+      // Send Store License Key email via Brevo SMTP (graceful fallback)
+      try {
+        await this.emailService.sendLicenseIssuedEmail(
+          email,
+          storeDto.ownerName.trim(),
+          createdCompany.name,
+          licenseKey,
+          maxCounters,
+          isTrial,
+          expiresAt,
+        );
+      } catch (emailErr) {
+        console.warn('Failed to send license email:', emailErr);
+      }
 
       return {
         success: true,
         message:
-          'Store registration verified and License Key generated successfully! Check your email for activation details.',
+          'Store registration verified and 14-Day Trial Store License Key generated successfully!',
         data: {
           licenseKey,
           company: {
@@ -372,6 +429,15 @@ export class AuthService {
             name: createdOwner.name,
             email: createdOwner.email,
           },
+          license: {
+            licenseKey,
+            status: isTrial ? LicenseStatus.TRIAL : LicenseStatus.REDEEMED,
+            isTrial,
+            expiresAt,
+            maxCounters,
+            maxUsers,
+          },
+          ...(deviceData && deviceData),
         },
       };
     } catch (error: unknown) {
@@ -417,8 +483,12 @@ export class AuthService {
         isDeleted: false,
       });
 
-      const maxCounters =
-        company.maxCounters || company.subscription?.maxCounters || 5;
+      const storeLicense = await this.storeLicenseModel.findOne({
+        companyId: company._id,
+        isDeleted: false,
+      });
+
+      const maxCounters = storeLicense?.maxCounters || 5;
 
       await this.emailService.sendLicenseIssuedEmail(
         email,
