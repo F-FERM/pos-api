@@ -189,14 +189,12 @@ export class CategoryService extends GenericDatabase<Model<CategoryDocument>> {
         filter.companyId = new Types.ObjectId(companyId);
       }
 
-      const category = await this.categoryModel
-        .findOne(filter)
-        .populate([
-          {
-            path: CategoryModelConstants.parentId,
-            select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
-          },
-        ]);
+      const category = await this.categoryModel.findOne(filter).populate([
+        {
+          path: CategoryModelConstants.parentId,
+          select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
+        },
+      ]);
 
       if (!category) {
         throw new NotFoundException('Category not found');
