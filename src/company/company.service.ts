@@ -15,6 +15,10 @@ import {
   CompanyModelConstants,
   CompanySchemaName,
 } from '../models/company.schema';
+import {
+  StoreLicenseDocument,
+  StoreLicenseSchemaName,
+} from '../models/store-license.schema';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { UpdateCounterLimitsDto } from './dto/update-counter-limits.dto';
@@ -23,6 +27,7 @@ import { LogService } from '../log/log.service';
 import { NumberSettingsService } from '../number-settings/number-settings.service';
 import { CounterService } from '../counter/counter.service';
 import { LoyaltySettingService } from '../loyalty-setting/loyalty-setting.service';
+import { SubscriptionService } from '../subscription/subscription.service';
 import { AuthedRequest } from '../utils/common.types';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
@@ -33,12 +38,15 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
   constructor(
     @InjectModel(CompanySchemaName)
     private readonly companyModel: Model<CompanyDocument>,
+    @InjectModel(StoreLicenseSchemaName)
+    private readonly storeLicenseModel: Model<StoreLicenseDocument>,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly logService: LogService,
     private readonly numberSettingsService: NumberSettingsService,
     private readonly counterService: CounterService,
     private readonly loyaltySettingService: LoyaltySettingService,
+    private readonly subscriptionService: SubscriptionService,
   ) {
     super(companyModel);
   }
@@ -103,7 +111,7 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
         createdBy: new Types.ObjectId(userId),
       });
 
-      // Auto-create default number settings, counter, and loyalty program settings
+      // Auto-create default number settings, counter, loyalty program settings, and subscription
       try {
         await this.numberSettingsService.createDefaultSettingsForCompany(
           created._id.toString(),
@@ -116,6 +124,14 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
         await this.loyaltySettingService.createDefaultSettingForCompany(
           created._id.toString(),
           userId,
+        );
+        await this.subscriptionService.createDefaultSubscriptionForCompany(
+          created._id.toString(),
+          userId,
+          {
+            maxCounters: (dto as any).maxCounters || 5,
+            maxUsers: (dto as any).maxUsers || 10,
+          },
         );
       } catch (initErr) {
         console.warn('Failed to auto-seed defaults for new company:', initErr);
@@ -244,14 +260,12 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
         }
       }
 
-      const company = await this.companyModel
-        .findOne(filter)
-        .populate([
-          {
-            path: CompanyModelConstants.ownerId,
-            select: `${UserModelConstants.username} ${UserModelConstants.name} ${UserModelConstants.email}`,
-          },
-        ]);
+      const company = await this.companyModel.findOne(filter).populate([
+        {
+          path: CompanyModelConstants.ownerId,
+          select: `${UserModelConstants.username} ${UserModelConstants.name} ${UserModelConstants.email}`,
+        },
+      ]);
       if (!company) {
         throw new NotFoundException('Company not found');
       }
@@ -414,17 +428,17 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
         throw new NotFoundException('Company not found');
       }
 
-      const updated = await this.genericUpdateOne(id, {
-        ...dto,
-        ...(dto.maxCounters && {
-          'subscription.maxCounters': dto.maxCounters,
-          maxCounters: dto.maxCounters,
-        }),
-        ...(dto.maxUsers && {
-          'subscription.maxUsers': dto.maxUsers,
-          maxUsers: dto.maxUsers,
-        }),
-      });
+      await this.storeLicenseModel.updateOne(
+        { companyId: new Types.ObjectId(id), isDeleted: false },
+        {
+          $set: {
+            ...(dto.maxCounters && { maxCounters: dto.maxCounters }),
+            ...(dto.maxUsers && { maxUsers: dto.maxUsers }),
+          },
+        },
+      );
+
+      const updated = company;
 
       await this.logService.createLog({
         companyId: new Types.ObjectId(id),
