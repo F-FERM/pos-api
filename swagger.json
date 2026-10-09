@@ -708,233 +708,6 @@
         ]
       }
     },
-    "/api/privilege": {
-      "post": {
-        "operationId": "PrivilegeController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatePrivilegesDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "summary": "create privilege",
-        "tags": [
-          "Privilege"
-        ]
-      },
-      "get": {
-        "operationId": "PrivilegeController_findAll",
-        "parameters": [
-          {
-            "name": "search",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "get all privileges",
-        "tags": [
-          "Privilege"
-        ]
-      }
-    },
-    "/api/privilege/{id}": {
-      "get": {
-        "operationId": "PrivilegeController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "get privilege by id",
-        "tags": [
-          "Privilege"
-        ]
-      },
-      "patch": {
-        "operationId": "PrivilegeController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePrivilegesDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "update privilege",
-        "tags": [
-          "Privilege"
-        ]
-      },
-      "delete": {
-        "operationId": "PrivilegeController_remove",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "delete privilege",
-        "tags": [
-          "Privilege"
-        ]
-      }
-    },
-    "/api/module": {
-      "get": {
-        "operationId": "ModuleController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "get all modules",
-        "tags": [
-          "Module"
-        ]
-      }
-    },
-    "/api/module/{id}": {
-      "get": {
-        "operationId": "ModuleController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "get module by id",
-        "tags": [
-          "Module"
-        ]
-      }
-    },
-    "/api/sub-module": {
-      "get": {
-        "operationId": "SubModuleController_findAll",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Get all submodules",
-        "tags": [
-          "SubModule"
-        ]
-      }
-    },
-    "/api/sub-module/{id}": {
-      "get": {
-        "operationId": "SubModuleController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Get submodule by ID",
-        "tags": [
-          "SubModule"
-        ]
-      }
-    },
-    "/api/sub-module/module/{moduleId}": {
-      "get": {
-        "operationId": "SubModuleController_findByModule",
-        "parameters": [
-          {
-            "name": "moduleId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Get submodules by module ID",
-        "tags": [
-          "SubModule"
-        ]
-      }
-    },
     "/api/subscription": {
       "post": {
         "operationId": "SubscriptionController_createSubscription",
@@ -1201,6 +974,233 @@
         "summary": "Get subscription status by company id",
         "tags": [
           "Subscriptions"
+        ]
+      }
+    },
+    "/api/privilege": {
+      "post": {
+        "operationId": "PrivilegeController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePrivilegesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "create privilege",
+        "tags": [
+          "Privilege"
+        ]
+      },
+      "get": {
+        "operationId": "PrivilegeController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "get all privileges",
+        "tags": [
+          "Privilege"
+        ]
+      }
+    },
+    "/api/privilege/{id}": {
+      "get": {
+        "operationId": "PrivilegeController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "get privilege by id",
+        "tags": [
+          "Privilege"
+        ]
+      },
+      "patch": {
+        "operationId": "PrivilegeController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePrivilegesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "update privilege",
+        "tags": [
+          "Privilege"
+        ]
+      },
+      "delete": {
+        "operationId": "PrivilegeController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "delete privilege",
+        "tags": [
+          "Privilege"
+        ]
+      }
+    },
+    "/api/module": {
+      "get": {
+        "operationId": "ModuleController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "get all modules",
+        "tags": [
+          "Module"
+        ]
+      }
+    },
+    "/api/module/{id}": {
+      "get": {
+        "operationId": "ModuleController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "get module by id",
+        "tags": [
+          "Module"
+        ]
+      }
+    },
+    "/api/sub-module": {
+      "get": {
+        "operationId": "SubModuleController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all submodules",
+        "tags": [
+          "SubModule"
+        ]
+      }
+    },
+    "/api/sub-module/{id}": {
+      "get": {
+        "operationId": "SubModuleController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get submodule by ID",
+        "tags": [
+          "SubModule"
+        ]
+      }
+    },
+    "/api/sub-module/module/{moduleId}": {
+      "get": {
+        "operationId": "SubModuleController_findByModule",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get submodules by module ID",
+        "tags": [
+          "SubModule"
         ]
       }
     },
@@ -3293,6 +3293,21 @@
             "type": "string",
             "example": "123456",
             "description": "6-digit email OTP code"
+          },
+          "deviceId": {
+            "type": "string",
+            "example": "WIN-DESK-GUID-998877",
+            "description": "Hardware MAC/UUID or GUID fingerprint of physical counter PC"
+          },
+          "deviceName": {
+            "type": "string",
+            "example": "Counter 1 Windows POS Terminal",
+            "description": "Friendly terminal machine display name"
+          },
+          "counterId": {
+            "type": "string",
+            "example": "65f123456789abcdef123456",
+            "description": "Counter ID to bind physical machine to during verification"
           }
         },
         "required": [
@@ -3698,91 +3713,6 @@
           }
         }
       },
-      "SubModulePermissionDto": {
-        "type": "object",
-        "properties": {
-          "subModuleId": {
-            "type": "string"
-          },
-          "canCreate": {
-            "type": "boolean"
-          },
-          "canRead": {
-            "type": "boolean"
-          },
-          "canUpdate": {
-            "type": "boolean"
-          },
-          "canDelete": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "subModuleId",
-          "canCreate",
-          "canRead",
-          "canUpdate",
-          "canDelete"
-        ]
-      },
-      "CreatePrivilegesDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Sales Executive"
-          },
-          "description": {
-            "type": "string"
-          },
-          "modules": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "permissions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SubModulePermissionDto"
-            }
-          }
-        },
-        "required": [
-          "name",
-          "modules",
-          "permissions"
-        ]
-      },
-      "UpdatePrivilegesDto": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "example": "Sales Executive"
-          },
-          "description": {
-            "type": "string"
-          },
-          "modules": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "permissions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SubModulePermissionDto"
-            }
-          }
-        },
-        "required": [
-          "name",
-          "modules",
-          "permissions"
-        ]
-      },
       "CreateSubscriptionDto": {
         "type": "object",
         "properties": {
@@ -3956,6 +3886,91 @@
         "required": [
           "startDate",
           "endDate"
+        ]
+      },
+      "SubModulePermissionDto": {
+        "type": "object",
+        "properties": {
+          "subModuleId": {
+            "type": "string"
+          },
+          "canCreate": {
+            "type": "boolean"
+          },
+          "canRead": {
+            "type": "boolean"
+          },
+          "canUpdate": {
+            "type": "boolean"
+          },
+          "canDelete": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "subModuleId",
+          "canCreate",
+          "canRead",
+          "canUpdate",
+          "canDelete"
+        ]
+      },
+      "CreatePrivilegesDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Sales Executive"
+          },
+          "description": {
+            "type": "string"
+          },
+          "modules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubModulePermissionDto"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "modules",
+          "permissions"
+        ]
+      },
+      "UpdatePrivilegesDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Sales Executive"
+          },
+          "description": {
+            "type": "string"
+          },
+          "modules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubModulePermissionDto"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "modules",
+          "permissions"
         ]
       },
       "CreateCategoryDto": {
@@ -4911,10 +4926,20 @@
             "example": "LIC-SUP-98765-XYZ",
             "description": "Store License Key assigned to supermarket company"
           },
+          "username": {
+            "type": "string",
+            "example": "owner_username",
+            "description": "Store owner username for credential fallback"
+          },
           "email": {
             "type": "string",
             "example": "owner@supermarket.com",
             "description": "Owner email address associated with the store license"
+          },
+          "password": {
+            "type": "string",
+            "example": "OwnerPassword123!",
+            "description": "Owner password for credential fallback"
           },
           "deviceId": {
             "type": "string",
@@ -4933,7 +4958,6 @@
           }
         },
         "required": [
-          "licenseKey",
           "deviceId",
           "deviceName"
         ]
@@ -4980,6 +5004,17 @@
               "EXPIRED"
             ],
             "default": "UNASSIGNED"
+          },
+          "isTrial": {
+            "type": "boolean",
+            "example": false,
+            "description": "Whether this store license is in trial mode"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2026-12-31T23:59:59.000Z",
+            "description": "Custom expiration date for the license"
           },
           "notes": {
             "type": "string",
@@ -5029,6 +5064,17 @@
               "EXPIRED"
             ],
             "default": "UNASSIGNED"
+          },
+          "isTrial": {
+            "type": "boolean",
+            "example": false,
+            "description": "Whether this store license is in trial mode"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2026-12-31T23:59:59.000Z",
+            "description": "Custom expiration date for the license"
           },
           "notes": {
             "type": "string",
