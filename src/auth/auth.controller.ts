@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Req,
-} from '@nestjs/common';
+import { Controller, Post, Body, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from './public.decorator';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -56,8 +47,7 @@ export class AuthController {
   @Public()
   @Post('resend-license-key')
   @ApiOperation({
-    summary:
-      'Resend / Recover Store License Key to owner email address',
+    summary: 'Resend / Recover Store License Key to owner email address',
   })
   resendLicenseKey(@Body() dto: ResendLicenseKeyRequestDto) {
     return this.authService.resendLicenseKey(dto);
