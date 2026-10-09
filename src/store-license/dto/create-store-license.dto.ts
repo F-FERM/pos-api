@@ -1,5 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsBoolean,
+  IsDateString,
   IsEmail,
   IsEnum,
   IsNumber,
@@ -63,6 +65,22 @@ export class CreateStoreLicenseDto {
   @IsOptional()
   @IsEnum(LicenseStatus)
   status?: LicenseStatus;
+
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Whether this store license is in trial mode',
+  })
+  @IsOptional()
+  @IsBoolean()
+  isTrial?: boolean;
+
+  @ApiPropertyOptional({
+    example: '2026-12-31T23:59:59.000Z',
+    description: 'Custom expiration date for the license',
+  })
+  @IsOptional()
+  @IsDateString()
+  expiresAt?: Date;
 
   @ApiPropertyOptional({ description: 'Internal notes or customer order ref' })
   @IsOptional()
