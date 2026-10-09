@@ -180,12 +180,6 @@ class CompanySubscriptionSnapshot {
 
   @Prop({ type: Date, default: null })
   trialEndDate: Date | null;
-
-  @Prop({ type: Number, default: 5, min: 1 })
-  maxUsers: number;
-
-  @Prop({ type: Number, default: 5, min: 1 })
-  maxCounters: number;
 }
 
 export type CompanyDocument = Company & Document;
@@ -206,7 +200,13 @@ export class Company extends BaseSchema {
   @Prop({ required: true, unique: true, lowercase: true, trim: true })
   slug: string;
 
-  @Prop({ required: true, unique: true, uppercase: true, trim: true, index: true })
+  @Prop({
+    required: true,
+    unique: true,
+    uppercase: true,
+    trim: true,
+    index: true,
+  })
   licenseKey: string;
 
   /* --------------------------- Classification --------------------------- */
@@ -284,12 +284,6 @@ export class Company extends BaseSchema {
   subscription: CompanySubscriptionSnapshot;
 
   /* -------------------------- Operational Counters & Limits ---------------------- */
-
-  @Prop({ type: Number, default: 5, min: 1 })
-  maxCounters: number;
-
-  @Prop({ type: Number, default: 10, min: 1 })
-  maxUsers: number;
 
   @Prop({ type: Boolean, default: true })
   isMultiCounterAllowed: boolean;
@@ -391,8 +385,6 @@ export const CompanyModelConstants: { [K in keyof Company]: K } = {
   subscription: 'subscription',
 
   // counters & limits
-  maxCounters: 'maxCounters',
-  maxUsers: 'maxUsers',
   isMultiCounterAllowed: 'isMultiCounterAllowed',
   currentUserCount: 'currentUserCount',
   currentCounterCount: 'currentCounterCount',
