@@ -234,6 +234,12 @@ export class CategoryService extends GenericDatabase<Model<CategoryDocument>> {
         throw new NotFoundException('Category not found');
       }
 
+      if (dto.parentId && dto.parentId.toString() === id) {
+        throw new BadRequestException(
+          'A category cannot be set as its own parent category',
+        );
+      }
+
       const updated = await this.genericUpdateOne(id, {
         ...dto,
         ...(dto.name && { name: dto.name.trim() }),
