@@ -93,10 +93,7 @@ export class AccountService
         );
       }
     } catch (err) {
-      console.error(
-        'Failed to auto-seed default accounts for companies:',
-        err,
-      );
+      console.error('Failed to auto-seed default accounts for companies:', err);
     }
   }
 
@@ -434,7 +431,9 @@ export class AccountService
     session?: ClientSession,
   ): Promise<AccountTransactionDocument> {
     if (amount <= 0) {
-      throw new BadRequestException('Transaction amount must be greater than zero');
+      throw new BadRequestException(
+        'Transaction amount must be greater than zero',
+      );
     }
 
     const compObjId = new Types.ObjectId(companyId);
@@ -449,14 +448,17 @@ export class AccountService
       .session(session || null);
 
     if (!account) {
-      throw new BadRequestException(`Account ID ${accountId} not found in this company`);
+      throw new BadRequestException(
+        `Account ID ${accountId} not found in this company`,
+      );
     }
 
     // Determine balance direction based on Normal Account Types
     // Assets & Expenses increase with DEBIT, decrease with CREDIT
     // Liabilities, Equity, & Income increase with CREDIT, decrease with DEBIT
     const isAssetOrExpense =
-      account.type === AccountType.ASSET || account.type === AccountType.EXPENSE;
+      account.type === AccountType.ASSET ||
+      account.type === AccountType.EXPENSE;
 
     const delta = isAssetOrExpense
       ? type === TransactionType.DEBIT
@@ -583,16 +585,25 @@ export class AccountService
     };
 
     let paymentAccCode = SystemAccountCode.CASH;
-    if (sale.paymentMethod === PaymentMethod.CARD || sale.paymentMethod === PaymentMethod.UPI) {
+    if (
+      sale.paymentMethod === PaymentMethod.CARD ||
+      sale.paymentMethod === PaymentMethod.UPI
+    ) {
       paymentAccCode = SystemAccountCode.BANK;
     } else if (sale.paymentMethod === PaymentMethod.CREDIT) {
       paymentAccCode = SystemAccountCode.ACCOUNTS_RECEIVABLE;
     }
 
     const paymentAccount = await findSystemAccount(paymentAccCode);
-    const revenueAccount = await findSystemAccount(SystemAccountCode.SALES_REVENUE);
-    const discountAccount = await findSystemAccount(SystemAccountCode.SALES_DISCOUNT_EXPENSE);
-    const loyaltyAccount = await findSystemAccount(SystemAccountCode.LOYALTY_EXPENSE);
+    const revenueAccount = await findSystemAccount(
+      SystemAccountCode.SALES_REVENUE,
+    );
+    const discountAccount = await findSystemAccount(
+      SystemAccountCode.SALES_DISCOUNT_EXPENSE,
+    );
+    const loyaltyAccount = await findSystemAccount(
+      SystemAccountCode.LOYALTY_EXPENSE,
+    );
 
     // 1. Debit Cash/Bank/Receivable by paid or total amount
     if (paymentAccount && sale.paidAmount > 0) {
@@ -644,7 +655,11 @@ export class AccountService
     }
 
     // 4. Debit Loyalty Expense if loyalty points redeemed
-    if (loyaltyAccount && sale.loyaltyDiscountAmount && sale.loyaltyDiscountAmount > 0) {
+    if (
+      loyaltyAccount &&
+      sale.loyaltyDiscountAmount &&
+      sale.loyaltyDiscountAmount > 0
+    ) {
       await this.postEntry(
         companyId,
         userId,
@@ -677,7 +692,9 @@ export class AccountService
         .session(session || null);
     };
 
-    const revenueAccount = await findSystemAccount(SystemAccountCode.SALES_REVENUE);
+    const revenueAccount = await findSystemAccount(
+      SystemAccountCode.SALES_REVENUE,
+    );
     const cashAccount = await findSystemAccount(SystemAccountCode.CASH);
 
     if (revenueAccount && saleReturn.totalRefundAmount > 0) {
@@ -730,7 +747,9 @@ export class AccountService
 
     const cogsAccount = await findSystemAccount(SystemAccountCode.COGS_EXPENSE);
     const cashAccount = await findSystemAccount(SystemAccountCode.CASH);
-    const payableAccount = await findSystemAccount(SystemAccountCode.ACCOUNTS_PAYABLE);
+    const payableAccount = await findSystemAccount(
+      SystemAccountCode.ACCOUNTS_PAYABLE,
+    );
 
     // 1. Debit COGS/Purchase Expense for total purchase bill amount
     if (cogsAccount && purchase.totalAmount > 0) {
@@ -798,7 +817,9 @@ export class AccountService
         .session(session || null);
     };
 
-    const expenseAccount = await findSystemAccount(SystemAccountCode.OPERATING_EXPENSE);
+    const expenseAccount = await findSystemAccount(
+      SystemAccountCode.OPERATING_EXPENSE,
+    );
     const cashAccount = await findSystemAccount(SystemAccountCode.CASH);
 
     if (expenseAccount && expense.amount > 0) {
@@ -893,7 +914,8 @@ export class AccountService
 
       for (const acc of accounts) {
         if (acc.type === AccountType.ASSET) totalAssets += acc.balance;
-        else if (acc.type === AccountType.LIABILITY) totalLiabilities += acc.balance;
+        else if (acc.type === AccountType.LIABILITY)
+          totalLiabilities += acc.balance;
         else if (acc.type === AccountType.EQUITY) totalEquity += acc.balance;
         else if (acc.type === AccountType.INCOME) totalIncome += acc.balance;
         else if (acc.type === AccountType.EXPENSE) totalExpenses += acc.balance;
