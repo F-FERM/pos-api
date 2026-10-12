@@ -25,6 +25,14 @@ import {
   PrivilegesModelConstants,
   PrivilegesSchemaName,
 } from '../models/privilege.schema';
+import {
+  CompanyDocument,
+  CompanySchemaName,
+} from '../models/company.schema';
+import {
+  StoreLicenseDocument,
+  StoreLicenseSchemaName,
+} from '../models/store-license.schema';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { seedSuperAdminUser } from '../common/seeds/superadmin.seed';
 
@@ -33,6 +41,10 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
   constructor(
     @InjectModel(UserSchemaName)
     private readonly userModel: Model<UserDocument>,
+    @InjectModel(CompanySchemaName)
+    private readonly companyModel: Model<CompanyDocument>,
+    @InjectModel(StoreLicenseSchemaName)
+    private readonly storeLicenseModel: Model<StoreLicenseDocument>,
     private readonly logService: LogService,
     private readonly companyService: CompanyService,
     @InjectModel(PrivilegesSchemaName)
@@ -98,6 +110,25 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
         throw new NotFoundException('Privilege not found in this company');
       }
 
+      // Validate company max user capacity limits
+      const currentActiveUsers = await this.userModel.countDocuments({
+        companyId: new Types.ObjectId(dto.companyId),
+        isDeleted: false,
+      });
+
+      const storeLicense = await this.storeLicenseModel.findOne({
+        companyId: new Types.ObjectId(dto.companyId),
+        isDeleted: false,
+      });
+
+      const maxAllowedUsers = storeLicense?.maxUsers || 5;
+
+      if (currentActiveUsers >= maxAllowedUsers) {
+        throw new BadRequestException(
+          `User creation limit reached for your store license (${currentActiveUsers}/${maxAllowedUsers} active users). Please upgrade your subscription to add more staff accounts.`,
+        );
+      }
+
       const dup: UserDocument | null = await this.genericFindOne({
         $or: [
           { username: dto.username.toLowerCase() },
@@ -120,6 +151,11 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
         isActive: true,
         createdBy: new Types.ObjectId(userId),
       });
+
+      await this.companyModel.updateOne(
+        { _id: new Types.ObjectId(dto.companyId) },
+        { $inc: { currentUserCount: 1 } },
+      );
 
       await this.logService.createLog({
         companyId: new Types.ObjectId(dto.companyId),
@@ -401,6 +437,11 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
         isActive: false,
         isDeleted: true,
       });
+
+      await this.companyModel.updateOne(
+        { _id: new Types.ObjectId(companyId) },
+        { $inc: { currentUserCount: -1 } },
+      );
 
       await this.logService.createLog({
         companyId: new Types.ObjectId(companyId),
