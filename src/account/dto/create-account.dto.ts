@@ -11,11 +11,14 @@ import {
 import { AccountCategory, AccountType } from '../../models/account.schema';
 
 export class CreateAccountDto {
-  @ApiProperty({ example: '1030', description: 'Unique chart of account numeric/alpha code' })
+  @ApiPropertyOptional({
+    example: '1030',
+    description: 'Chart of account code (Optional - auto-generated if omitted)',
+  })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @Length(1, 20)
-  code: string;
+  code?: string;
 
   @ApiProperty({ example: 'Petty Cash', description: 'Friendly account title' })
   @IsString()
@@ -27,7 +30,10 @@ export class CreateAccountDto {
   @IsEnum(AccountType)
   type: AccountType;
 
-  @ApiPropertyOptional({ enum: AccountCategory, example: AccountCategory.CURRENT_ASSET })
+  @ApiPropertyOptional({
+    enum: AccountCategory,
+    example: AccountCategory.CURRENT_ASSET,
+  })
   @IsOptional()
   @IsEnum(AccountCategory)
   category?: AccountCategory;
@@ -37,7 +43,9 @@ export class CreateAccountDto {
   @IsNumber()
   balance?: number;
 
-  @ApiPropertyOptional({ example: 'Petty cash drawer for small daily incidentals' })
+  @ApiPropertyOptional({
+    example: 'Petty cash drawer for small daily incidentals',
+  })
   @IsOptional()
   @IsString()
   description?: string;
