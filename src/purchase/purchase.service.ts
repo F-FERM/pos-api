@@ -19,6 +19,7 @@ import { CreatePurchaseDto } from './dto/create-purchase.dto';
 import { LogService } from '../log/log.service';
 import { CompanyService } from '../company/company.service';
 import { UserService } from '../user/user.service';
+import { AccountService } from '../account/account.service';
 import { AuthedRequest } from '../utils/common.types';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
@@ -35,6 +36,7 @@ export class PurchaseService extends GenericDatabase<Model<PurchaseDocument>> {
     private readonly logService: LogService,
     private readonly companyService: CompanyService,
     private readonly userService: UserService,
+    private readonly accountService: AccountService,
   ) {
     super(purchaseModel);
   }
@@ -128,12 +130,26 @@ export class PurchaseService extends GenericDatabase<Model<PurchaseDocument>> {
           );
         }
 
-        if (dueAmount > 0) {
+        const netSupplierBalanceChange = totalAmount - dto.paidAmount;
+
+        if (netSupplierBalanceChange !== 0) {
           await this.supplierModel.updateOne(
             { _id: dto.supplierId },
-            { $inc: { balanceDue: dueAmount } },
+            { $inc: { balanceDue: netSupplierBalanceChange } },
             { session },
           );
+        }
+
+        // Auto-post double-entry journal transactions for purchase
+        try {
+          await this.accountService.postPurchaseJournalEntries(
+            created,
+            dto.companyId,
+            userId,
+            session,
+          );
+        } catch (accErr) {
+          console.warn('Failed to auto-post purchase ledger transactions:', accErr);
         }
 
         await this.logService.createLog({
