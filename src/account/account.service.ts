@@ -152,18 +152,20 @@ export class AccountService
       await this.userService.validateAuthenticatedUser(userId);
       await this.companyService.validateCompany(companyId, userId);
 
-      const cleanCode = dto.code.trim().toUpperCase();
+      let cleanCode = dto.code?.trim().toUpperCase();
 
-      const existing = await this.accountModel.findOne({
-        companyId: new Types.ObjectId(companyId),
-        code: cleanCode,
-        isDeleted: false,
-      });
+      if (cleanCode) {
+        const existing = await this.accountModel.findOne({
+          companyId: new Types.ObjectId(companyId),
+          code: cleanCode,
+          isDeleted: false,
+        });
 
-      if (existing) {
-        throw new BadRequestException(
-          `An account with code '${cleanCode}' already exists in your store`,
-        );
+        if (existing) {
+          throw new BadRequestException(
+            `An account with code '${cleanCode}' already exists in your store`,
+          );
+        }
       }
 
       const created = await this.genericCreateOne({
