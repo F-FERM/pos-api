@@ -21,4 +21,5 @@ export const SUB_MODULES = {
   LOYALTY_SETTING: 'loyalty-setting',
   DEVICE_REGISTRATION: 'device-registration',
   STORE_LICENSE: 'store-license',
+  ACCOUNT: 'account',
 } as const;
