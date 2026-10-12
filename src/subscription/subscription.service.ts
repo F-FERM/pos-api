@@ -669,8 +669,10 @@ export class SubscriptionService extends GenericDatabase<
 
     if (existing) return existing;
 
-    const status = options?.status || SubscriptionStatus.TRIAL;
-    const isTrial = options?.isTrial ?? status === SubscriptionStatus.TRIAL;
+    const isTrial = options?.isTrial ?? true;
+    const status =
+      options?.status ||
+      (isTrial ? SubscriptionStatus.TRIAL : SubscriptionStatus.ACTIVE);
     const now = new Date();
     const trialEndDate =
       options?.trialEndDate ||
