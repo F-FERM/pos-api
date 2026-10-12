@@ -16,6 +16,8 @@ import { NumberSettingsModule } from '../number-settings/number-settings.module'
 import { PrinterModule } from '../printer/printer.module';
 import { LoyaltySettingModule } from '../loyalty-setting/loyalty-setting.module';
 
+import { AccountModule } from '../account/account.module';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -30,6 +32,7 @@ import { LoyaltySettingModule } from '../loyalty-setting/loyalty-setting.module'
     NumberSettingsModule,
     PrinterModule,
     LoyaltySettingModule,
+    AccountModule,
   ],
   controllers: [SaleController],
   providers: [SaleService],
