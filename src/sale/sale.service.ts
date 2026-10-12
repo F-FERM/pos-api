@@ -30,6 +30,7 @@ import {
   RegisterSessionDocument,
   RegisterSessionModelConstants,
   RegisterSessionSchemaName,
+  RegisterSessionStatus,
 } from '../models/register-session.schema';
 import { UserModelConstants } from '../models/user.schema';
 import { CreateSaleDto } from './dto/create-sale.dto';
@@ -39,6 +40,7 @@ import { UserService } from '../user/user.service';
 import { NumberSettingsService } from '../number-settings/number-settings.service';
 import { PrinterService } from '../printer/printer.service';
 import { LoyaltySettingService } from '../loyalty-setting/loyalty-setting.service';
+import { AccountService } from '../account/account.service';
 import { AuthedRequest } from '../utils/common.types';
 import {
   LogActions,
@@ -65,6 +67,7 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
     private readonly numberSettingsService: NumberSettingsService,
     private readonly printerService: PrinterService,
     private readonly loyaltySettingService: LoyaltySettingService,
+    private readonly accountService: AccountService,
   ) {
     super(saleModel);
   }
@@ -200,6 +203,28 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
           const changeAmount =
             dto.paidAmount > grandTotal ? dto.paidAmount - grandTotal : 0;
 
+          if (dto.registerSessionId) {
+            const regSession = await this.registerModel
+              .findOne({
+                _id: dto.registerSessionId,
+                companyId: new Types.ObjectId(dto.companyId),
+                isDeleted: false,
+              })
+              .session(session);
+
+            if (!regSession) {
+              throw new BadRequestException(
+                'Register session not found for this store',
+              );
+            }
+
+            if (regSession.status !== RegisterSessionStatus.OPEN) {
+              throw new BadRequestException(
+                'Cannot link sale to a CLOSED register session. Please open an active register shift session.',
+              );
+            }
+          }
+
           const invoiceNumber =
             await this.numberSettingsService.generateNumber(
               dto.companyId,
@@ -250,7 +275,7 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
                 loyaltyConfig?.loyaltyAmountPerPoint || 100;
               const earnedLoyaltyPoints =
                 loyaltyConfig?.isEnabled !== false
-                  ? grandTotal / loyaltyRate
+                  ? Math.floor(grandTotal / loyaltyRate)
                   : 0;
               const loyaltyPointsDelta =
                 earnedLoyaltyPoints - loyaltyPointsRedeemed;
@@ -284,6 +309,18 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
                 { $inc: registerInc },
                 { session },
               );
+            }
+
+            // Auto-post double-entry journal transactions to related accounts
+            try {
+              await this.accountService.postSaleJournalEntries(
+                created,
+                dto.companyId,
+                userId,
+                session,
+              );
+            } catch (accErr) {
+              console.warn('Failed to auto-post sale ledger transactions:', accErr);
             }
           }
 
