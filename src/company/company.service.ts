@@ -16,6 +16,7 @@ import {
   CompanySchemaName,
 } from '../models/company.schema';
 import {
+  LicenseStatus,
   StoreLicenseDocument,
   StoreLicenseSchemaName,
 } from '../models/store-license.schema';
@@ -28,8 +29,15 @@ import { NumberSettingsService } from '../number-settings/number-settings.servic
 import { CounterService } from '../counter/counter.service';
 import { LoyaltySettingService } from '../loyalty-setting/loyalty-setting.service';
 import { SubscriptionService } from '../subscription/subscription.service';
+import {
+  CompanyOnboardingStep,
+  CompanyStatus,
+  CompanySubscriptionStatus,
+} from '../utils/enums/company.enums';
+import { SubscriptionStatus } from '../utils/enums/subscription.enums';
 import { AuthedRequest } from '../utils/common.types';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
+import { AccountService } from '../account/account.service';
 import { Role } from '../utils/role.enum';
 import { UserDocument, UserModelConstants } from '../models/user.schema';
 
@@ -47,6 +55,8 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
     private readonly counterService: CounterService,
     private readonly loyaltySettingService: LoyaltySettingService,
     private readonly subscriptionService: SubscriptionService,
+    @Inject(forwardRef(() => AccountService))
+    private readonly accountService: AccountService,
   ) {
     super(companyModel);
   }
@@ -102,12 +112,44 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
         (dto as any).licenseKey ||
         `LIC-${dto.code.toUpperCase()}-${Math.floor(10000 + Math.random() * 90000)}`;
 
+      const maxCounters = (dto as any).maxCounters || 5;
+      const maxUsers = (dto as any).maxUsers || 10;
+      const validityMonths = (dto as any).validityMonths || 12;
+      const expiresAt = new Date(
+        Date.now() + validityMonths * 30 * 24 * 60 * 60 * 1000,
+      );
+
       const created: CompanyDocument = await this.genericCreateOne({
         ...dto,
         licenseKey,
         code: dto.code.toUpperCase(),
         slug: dto.slug.toLowerCase(),
+        status: CompanyStatus.ACTIVE,
+        activatedAt: new Date(),
+        onboardingStep: CompanyOnboardingStep.COMPLETED,
+        currentUserCount: 1,
+        currentCounterCount: 1,
+        subscription: {
+          status: CompanySubscriptionStatus.ACTIVE,
+          startDate: new Date(),
+          endDate: expiresAt,
+        },
         ownerId: new Types.ObjectId(userId),
+        createdBy: new Types.ObjectId(userId),
+      });
+
+      // Create StoreLicense record for superadmin-created company
+      await this.storeLicenseModel.create({
+        licenseKey,
+        companyId: created._id,
+        assignedEmail: dto.contact.primaryEmail.toLowerCase(),
+        status: LicenseStatus.REDEEMED,
+        isTrial: false,
+        maxCounters,
+        maxUsers,
+        validityMonths,
+        expiresAt,
+        redeemedAt: new Date(),
         createdBy: new Types.ObjectId(userId),
       });
 
@@ -117,11 +159,22 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
           created._id.toString(),
           userId,
         );
-        await this.counterService.createDefaultCounterForCompany(
+        const defaultCounter =
+          await this.counterService.createDefaultCounterForCompany(
+            created._id.toString(),
+            userId,
+          );
+        if (defaultCounter) {
+          await this.companyModel.updateOne(
+            { _id: created._id },
+            { $set: { defaultCounterId: defaultCounter._id } },
+          );
+        }
+        await this.loyaltySettingService.createDefaultSettingForCompany(
           created._id.toString(),
           userId,
         );
-        await this.loyaltySettingService.createDefaultSettingForCompany(
+        await this.accountService.createDefaultAccountsForCompany(
           created._id.toString(),
           userId,
         );
@@ -129,8 +182,11 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
           created._id.toString(),
           userId,
           {
-            maxCounters: (dto as any).maxCounters || 5,
-            maxUsers: (dto as any).maxUsers || 10,
+            status: SubscriptionStatus.ACTIVE,
+            isTrial: false,
+            trialEndDate: expiresAt,
+            maxCounters,
+            maxUsers,
           },
         );
       } catch (initErr) {
@@ -432,13 +488,54 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
         { companyId: new Types.ObjectId(id), isDeleted: false },
         {
           $set: {
-            ...(dto.maxCounters && { maxCounters: dto.maxCounters }),
-            ...(dto.maxUsers && { maxUsers: dto.maxUsers }),
+            ...(dto.maxCounters !== undefined && { maxCounters: dto.maxCounters }),
+            ...(dto.maxUsers !== undefined && { maxUsers: dto.maxUsers }),
+            ...(dto.status && {
+              status:
+                dto.status === CompanyStatus.ACTIVE
+                  ? LicenseStatus.REDEEMED
+                  : LicenseStatus.SUSPENDED,
+            }),
           },
         },
       );
 
-      const updated = company;
+      const companyUpdates: Record<string, unknown> = {};
+      if (dto.isMultiCounterAllowed !== undefined) {
+        companyUpdates.isMultiCounterAllowed = dto.isMultiCounterAllowed;
+      }
+      if (dto.status) {
+        companyUpdates.status = dto.status;
+        if (dto.status === CompanyStatus.ACTIVE && !company.activatedAt) {
+          companyUpdates.activatedAt = new Date();
+        }
+      }
+
+      if (Object.keys(companyUpdates).length > 0) {
+        await this.companyModel.updateOne(
+          { _id: new Types.ObjectId(id) },
+          { $set: companyUpdates },
+        );
+      }
+
+      if (dto.maxCounters || dto.maxUsers || dto.status) {
+        const subStatus = dto.status
+          ? dto.status === CompanyStatus.ACTIVE
+            ? SubscriptionStatus.ACTIVE
+            : SubscriptionStatus.SUSPENDED
+          : (company.subscription?.status as any) || SubscriptionStatus.ACTIVE;
+
+        await this.subscriptionService.syncSubscriptionAcrossSchemas(
+          id,
+          company.subscription?.endDate ||
+            new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+          subStatus,
+          dto.maxCounters,
+          dto.maxUsers,
+        );
+      }
+
+      const updated = await this.genericFindOne({ _id: id });
 
       await this.logService.createLog({
         companyId: new Types.ObjectId(id),
@@ -454,7 +551,7 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
 
       return {
         success: true,
-        message: 'Company store counter limits updated successfully',
+        message: 'Company counter limits and status updated successfully',
         data: updated,
         statusCode: HttpStatus.OK,
       };
