@@ -17,6 +17,7 @@ import {
 } from '../models/counter.schema';
 import { UserModelConstants } from '../models/user.schema';
 import { CreateCounterDto } from './dto/create-counter.dto';
+import { CompanyDocument, CompanySchemaName } from '../models/company.schema';
 import { UpdateCounterDto } from './dto/update-counter.dto';
 import { LogService } from '../log/log.service';
 import { CompanyService } from '../company/company.service';
@@ -31,6 +32,8 @@ export class CounterService extends GenericDatabase<Model<CounterDocument>> {
   constructor(
     @InjectModel(CounterSchemaName)
     private readonly counterModel: Model<CounterDocument>,
+    @InjectModel(CompanySchemaName)
+    private readonly companyModel: Model<CompanyDocument>,
     private readonly logService: LogService,
     @Inject(forwardRef(() => CompanyService))
     private readonly companyService: CompanyService,
@@ -60,14 +63,30 @@ export class CounterService extends GenericDatabase<Model<CounterDocument>> {
       isDeleted: false,
     };
 
+    let created: CounterDocument;
     if (session) {
-      const [created] = await this.counterModel.create([counterData], {
+      const [newCounter] = await this.counterModel.create([counterData], {
         session,
       });
-      return created;
+      created = newCounter;
+    } else {
+      created = await this.counterModel.create(counterData);
     }
 
-    return await this.counterModel.create(counterData);
+    try {
+      await this.companyModel.updateOne(
+        { _id: new Types.ObjectId(companyId) },
+        {
+          $set: { defaultCounterId: created._id },
+          $inc: { currentCounterCount: 1 },
+        },
+        { session },
+      );
+    } catch (err) {
+      console.warn('Failed to update company defaultCounterId:', err);
+    }
+
+    return created;
   }
 
   async createCounter(
