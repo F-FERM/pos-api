@@ -33,6 +33,7 @@ import {
 import {
   RegisterSessionDocument,
   RegisterSessionSchemaName,
+  RegisterSessionStatus,
 } from '../models/register-session.schema';
 import { UserModelConstants } from '../models/user.schema';
 import { CreateSaleReturnDto } from './dto/create-sale-return.dto';
@@ -51,6 +52,8 @@ import {
   RefundMethod,
 } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
+
+import { AccountService } from '../account/account.service';
 
 @Injectable()
 export class SaleReturnService extends GenericDatabase<
@@ -72,6 +75,7 @@ export class SaleReturnService extends GenericDatabase<
     private readonly userService: UserService,
     private readonly numberSettingsService: NumberSettingsService,
     private readonly loyaltySettingService: LoyaltySettingService,
+    private readonly accountService: AccountService,
   ) {
     super(saleReturnModel);
   }
@@ -167,6 +171,28 @@ export class SaleReturnService extends GenericDatabase<
 
         const totalRefundAmount = subtotalRefund + taxRefund;
 
+        if (dto.registerSessionId) {
+          const regSession = await this.registerModel
+            .findOne({
+              _id: dto.registerSessionId,
+              companyId: new Types.ObjectId(dto.companyId),
+              isDeleted: false,
+            })
+            .session(session);
+
+          if (!regSession) {
+            throw new BadRequestException(
+              'Register session not found for this store',
+            );
+          }
+
+          if (regSession.status !== RegisterSessionStatus.OPEN) {
+            throw new BadRequestException(
+              'Cannot process return on a CLOSED register session. Please open an active register shift session.',
+            );
+          }
+        }
+
         let returnNumber = `SR-${Date.now().toString().slice(-6)}`;
         try {
           returnNumber = await this.numberSettingsService.generateNumber(
@@ -218,7 +244,7 @@ export class SaleReturnService extends GenericDatabase<
           const loyaltyRate = loyaltyConfig?.loyaltyAmountPerPoint || 100;
           const loyaltyPointsToDeduct =
             loyaltyConfig?.isEnabled !== false
-              ? totalRefundAmount / loyaltyRate
+              ? Math.floor(totalRefundAmount / loyaltyRate)
               : 0;
 
           const customerInc: Record<string, number> = {
@@ -242,6 +268,18 @@ export class SaleReturnService extends GenericDatabase<
             { $inc: { totalSalesCash: -totalRefundAmount } },
             { session },
           );
+        }
+
+        // Auto-post double-entry journal transactions for sale return
+        try {
+          await this.accountService.postSaleReturnJournalEntries(
+            createdReturn,
+            dto.companyId,
+            userId,
+            session,
+          );
+        } catch (accErr) {
+          console.warn('Failed to auto-post sale return ledger transactions:', accErr);
         }
 
         await this.logService.createLog({
