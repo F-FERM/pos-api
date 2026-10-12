@@ -281,25 +281,13 @@ export class DeviceRegistrationService extends GenericDatabase<
         });
       }
 
-      const activeDevicesCount = await this.deviceModel.countDocuments({
-        companyId: company._id,
-        status: DeviceStatus.ACTIVE,
-        isDeleted: false,
-      });
-
-      const maxAllowedCounters = licenseDoc?.maxCounters || 5;
-
-      if (activeDevicesCount >= maxAllowedCounters) {
-        throw new BadRequestException(
-          `Counter registration limit reached for this store license (${activeDevicesCount}/${maxAllowedCounters} active counters). Upgrade subscription to add more counter PCs.`,
-        );
-      }
-
       const existingDevice = await this.deviceModel.findOne({
         companyId: company._id,
         deviceId: dto.deviceId.trim(),
         isDeleted: false,
       });
+
+      const maxAllowedCounters = licenseDoc?.maxCounters || 5;
 
       if (existingDevice) {
         if (existingDevice.status === DeviceStatus.REVOKED) {
@@ -343,6 +331,18 @@ export class DeviceRegistrationService extends GenericDatabase<
           },
           statusCode: HttpStatus.OK,
         };
+      }
+
+      const activeDevicesCount = await this.deviceModel.countDocuments({
+        companyId: company._id,
+        status: DeviceStatus.ACTIVE,
+        isDeleted: false,
+      });
+
+      if (activeDevicesCount >= maxAllowedCounters) {
+        throw new BadRequestException(
+          `Counter registration limit reached for this store license (${activeDevicesCount}/${maxAllowedCounters} active counters). Upgrade subscription to add more counter PCs.`,
+        );
       }
 
       const devicePayload = {
