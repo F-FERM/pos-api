@@ -43,6 +43,20 @@ export class SupplierService extends GenericDatabase<Model<SupplierDocument>> {
       await this.userService.validateAuthenticatedUser(userId);
       await this.companyService.validateCompany(dto.companyId, userId);
 
+      if (dto.phone) {
+        const dupPhone = await this.supplierModel.findOne({
+          companyId: new Types.ObjectId(dto.companyId),
+          phone: dto.phone.trim(),
+          isDeleted: false,
+        });
+
+        if (dupPhone) {
+          throw new BadRequestException(
+            `A supplier with phone number '${dto.phone.trim()}' already exists in your store`,
+          );
+        }
+      }
+
       const created = await this.genericCreateOne({
         ...dto,
         name: dto.name.trim(),
