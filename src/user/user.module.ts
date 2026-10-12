@@ -10,11 +10,19 @@ import {
 import { CompanyModule } from '../company/company.module';
 import { LogModule } from '../log/log.module';
 
+import { CompanySchema, CompanySchemaName } from '../models/company.schema';
+import {
+  StoreLicenseSchema,
+  StoreLicenseSchemaName,
+} from '../models/store-license.schema';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: UserSchemaName, schema: UserSchema },
       { name: PrivilegesSchemaName, schema: PrivilegesSchema },
+      { name: CompanySchemaName, schema: CompanySchema },
+      { name: StoreLicenseSchemaName, schema: StoreLicenseSchema },
     ]),
     forwardRef(() => CompanyModule),
     LogModule,
