@@ -14,6 +14,7 @@ export enum numberSettingsDocumentType {
   PURCHASE_ORDER = 'PURCHASE_ORDER',
   BILL = 'BILL',
   SALE_RETURN = 'SALE_RETURN',
+  ACCOUNT_TRANSACTION = 'ACCOUNT_TRANSACTION',
 }
 
 export enum RefundMethod {
@@ -140,6 +141,12 @@ export enum LogActions {
   CREATE_STORE_LICENSE = 'CREATE_STORE_LICENSE',
   UPDATE_STORE_LICENSE = 'UPDATE_STORE_LICENSE',
   DELETE_STORE_LICENSE = 'DELETE_STORE_LICENSE',
+
+  // Accounts
+  CREATE_ACCOUNT = 'CREATE_ACCOUNT',
+  UPDATE_ACCOUNT = 'UPDATE_ACCOUNT',
+  DELETE_ACCOUNT = 'DELETE_ACCOUNT',
+  RECORD_ACCOUNT_TRANSACTION = 'RECORD_ACCOUNT_TRANSACTION',
 }
 
 export enum LogEntityType {
@@ -168,4 +175,6 @@ export enum LogEntityType {
   LOYALTY_SETTING = 'LoyaltySetting',
   DEVICE_REGISTRATION = 'DeviceRegistration',
   STORE_LICENSE = 'StoreLicense',
+  ACCOUNT = 'Account',
+  ACCOUNT_TRANSACTION = 'AccountTransaction',
 }
