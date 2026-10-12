@@ -14,6 +14,8 @@ import { CounterModule } from '../counter/counter.module';
 import { LoyaltySettingModule } from '../loyalty-setting/loyalty-setting.module';
 import { SubscriptionModule } from '../subscription/subscription.module';
 
+import { AccountModule } from '../account/account.module';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -26,6 +28,7 @@ import { SubscriptionModule } from '../subscription/subscription.module';
     CounterModule,
     LoyaltySettingModule,
     SubscriptionModule,
+    forwardRef(() => AccountModule),
   ],
   controllers: [CompanyController],
   providers: [CompanyService],
