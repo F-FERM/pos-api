@@ -20,21 +20,21 @@ export class VerifyOtpRequestDto {
   @Length(6, 6)
   otp: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: 'WIN-DESK-GUID-998877',
-    description: 'Hardware MAC/UUID or GUID fingerprint of physical counter PC',
+    description: 'Hardware MAC/UUID or GUID fingerprint of physical counter PC (Required for hardware locking)',
   })
-  @IsOptional()
   @IsString()
-  deviceId?: string;
+  @IsNotEmpty()
+  deviceId: string;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: 'Counter 1 Windows POS Terminal',
-    description: 'Friendly terminal machine display name',
+    description: 'Friendly terminal machine display name (Required for hardware locking)',
   })
-  @IsOptional()
   @IsString()
-  deviceName?: string;
+  @IsNotEmpty()
+  deviceName: string;
 
   @ApiPropertyOptional({
     example: '65f123456789abcdef123456',
@@ -44,3 +44,4 @@ export class VerifyOtpRequestDto {
   @IsMongoId()
   counterId?: string;
 }
+
