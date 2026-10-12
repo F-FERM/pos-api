@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -53,9 +54,14 @@ import { Role } from '../utils/role.enum';
 import {
   CompanyBusinessType,
   CompanyIndustry,
+  CompanyOnboardingStep,
+  CompanyStatus,
   CompanySubscriptionStatus,
   TimeFormat,
 } from '../utils/enums/company.enums';
+import { SubscriptionStatus } from '../utils/enums/subscription.enums';
+
+import { AccountService } from '../account/account.service';
 
 @Injectable()
 export class AuthService {
@@ -84,6 +90,7 @@ export class AuthService {
     private readonly counterService: CounterService,
     private readonly loyaltySettingService: LoyaltySettingService,
     private readonly subscriptionService: SubscriptionService,
+    private readonly accountService: AccountService,
   ) {}
 
   async validateUser(username: string, pass: string) {
@@ -177,29 +184,40 @@ export class AuthService {
         throw new BadRequestException('Invalid registration payload');
       }
 
-      const cleanCode =
-        storeDto.companyName
-          .replace(/[^a-zA-Z0-9]/g, '')
-          .slice(0, 6)
-          .toUpperCase() + Math.floor(100 + Math.random() * 900);
-
-      const cleanSlug = storeDto.companyName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-
-      let existingLicense = await this.storeLicenseModel.findOne({
-        assignedEmail: email,
-        status: { $in: [LicenseStatus.ASSIGNED, LicenseStatus.UNASSIGNED] },
+      // Re-verify user credentials availability before creation
+      const existingUser = await this.userModel.findOne({
+        $or: [
+          { username: (storeDto.username || '').trim() },
+          { phone: (storeDto.ownerPhone || '').trim() },
+          { email },
+        ],
         isDeleted: false,
       });
 
-      if (!existingLicense) {
-        existingLicense = await this.storeLicenseModel.findOne({
-          status: LicenseStatus.UNASSIGNED,
-          isDeleted: false,
-        });
+      if (existingUser) {
+        throw new BadRequestException(
+          'A user or store with this username, phone number, or email already exists',
+        );
       }
+
+      const rawCode =
+        storeDto.companyName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 6).toUpperCase() ||
+        'STORE';
+      const cleanCode = rawCode + Math.floor(100 + Math.random() * 900);
+
+      const rawSlug =
+        storeDto.companyName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '') || 'store';
+      const cleanSlug = `${rawSlug}-${Date.now().toString().slice(-4)}`;
+
+      // Match pre-assigned store licenses specifically for assignedEmail
+      const existingLicense = await this.storeLicenseModel.findOne({
+        assignedEmail: email,
+        status: LicenseStatus.ASSIGNED,
+        isDeleted: false,
+      });
 
       const licenseKey = existingLicense
         ? existingLicense.licenseKey
@@ -221,106 +239,125 @@ export class AuthService {
 
       const tempOwnerId = new Types.ObjectId();
 
-      // 1. Create Company Store
-      const createdCompany = await this.companyModel.create({
-        name: storeDto.companyName.trim(),
-        code: cleanCode,
-        slug: `${cleanSlug}-${Date.now().toString().slice(-4)}`,
-        licenseKey,
-        industry: CompanyIndustry.GENERAL_RETAIL,
-        businessType: CompanyBusinessType.RETAIL,
-        ownerId: tempOwnerId,
-        createdBy: tempOwnerId,
-        contact: {
-          primaryEmail: email,
-          primaryPhone: storeDto.ownerPhone.trim(),
-        },
-        address: {
-          line1: 'Store Address Line 1',
-          city: storeDto.city.trim(),
-          state: storeDto.state.trim(),
-          postalCode: storeDto.postalCode?.trim() || '000000',
-          country: storeDto.country || 'IN',
-        },
-        regional: {
-          currency: 'INR',
-          currencySymbol: '₹',
-          timezone: 'Asia/Kolkata',
-          locale: 'en-IN',
-          dateFormat: 'DD/MM/YYYY',
-          timeFormat: TimeFormat.TWELVE_HOUR,
-          fiscalYearStartMonth: 4,
-        },
-        subscription: {
-          status: isTrial
-            ? CompanySubscriptionStatus.TRIAL
-            : CompanySubscriptionStatus.ACTIVE,
-          endDate: expiresAt,
-        },
-      });
+      let createdCompany: CompanyDocument | null = null;
+      let ownerPrivilege: PrivilegesDocument | null = null;
+      let createdOwner: UserDocument | null = null;
 
-      // 2. Create default Store Admin privilege using actual createdCompany._id
-      const ownerPrivilege = await this.privilegeModel.create({
-        name: 'Store Admin',
-        description: `Default Owner Privilege for ${createdCompany.name}`,
-        roles: [Role.admin],
-        companyId: createdCompany._id,
-        isSystemGenerated: false,
-      });
-
-      // 3. Create Store Owner User with exact companyId & privilegeId
-      const [createdOwner] = await this.userModel.create([
-        {
-          _id: tempOwnerId,
-          username: (storeDto.username || storeDto.ownerPhone).trim(),
-          phone: storeDto.ownerPhone.trim(),
-          name: storeDto.ownerName.trim(),
-          email,
-          password: hashedPassword,
-          companyId: createdCompany._id,
-          privilegeId: ownerPrivilege._id,
-          isActive: true,
-        },
-      ]);
-
-      // 4. Set createdBy on privilege
-      await this.privilegeModel.updateOne(
-        { _id: ownerPrivilege._id },
-        { $set: { createdBy: createdOwner._id } },
-      );
-
-      if (existingLicense) {
-        await this.storeLicenseModel.updateOne(
-          { _id: existingLicense._id },
-          {
-            $set: {
-              companyId: createdCompany._id,
-              assignedEmail: email,
-              status: LicenseStatus.REDEEMED,
-              redeemedAt: new Date(),
-            },
-          },
-        );
-      } else {
-        await this.storeLicenseModel.create({
+      try {
+        // 1. Create Company Store with ACTIVE status & activatedAt
+        createdCompany = await this.companyModel.create({
+          name: storeDto.companyName.trim(),
+          code: cleanCode,
+          slug: cleanSlug,
           licenseKey,
-          assignedEmail: email,
-          companyId: createdCompany._id,
-          status: LicenseStatus.TRIAL,
-          isTrial: true,
-          maxCounters: 2,
-          maxUsers: 5,
-          validityMonths: 1,
-          expiresAt: trialExpiresAt,
-          redeemedAt: new Date(),
-          createdBy: createdOwner._id,
+          industry: CompanyIndustry.GENERAL_RETAIL,
+          businessType: CompanyBusinessType.RETAIL,
+          status: CompanyStatus.ACTIVE,
+          activatedAt: new Date(),
+          onboardingStep: CompanyOnboardingStep.COMPLETED,
+          currentUserCount: 1,
+          currentCounterCount: 1,
+          ownerId: tempOwnerId,
+          createdBy: tempOwnerId,
+          contact: {
+            primaryEmail: email,
+            primaryPhone: storeDto.ownerPhone.trim(),
+          },
+          address: {
+            line1: 'Store Address Line 1',
+            city: storeDto.city.trim(),
+            state: storeDto.state.trim(),
+            postalCode: storeDto.postalCode?.trim() || '000000',
+            country: storeDto.country || 'IN',
+          },
+          regional: {
+            currency: 'INR',
+            currencySymbol: '₹',
+            timezone: 'Asia/Kolkata',
+            locale: 'en-IN',
+            dateFormat: 'DD/MM/YYYY',
+            timeFormat: TimeFormat.TWELVE_HOUR,
+            fiscalYearStartMonth: 4,
+          },
+          subscription: {
+            status: isTrial
+              ? CompanySubscriptionStatus.TRIAL
+              : CompanySubscriptionStatus.ACTIVE,
+            startDate: new Date(),
+            endDate: expiresAt,
+          },
         });
-      }
 
-      await this.userModel.updateOne(
-        { _id: createdOwner._id },
-        { $set: { companyId: createdCompany._id } },
-      );
+        // 2. Create default Store Admin privilege
+        ownerPrivilege = await this.privilegeModel.create({
+          name: 'Store Admin',
+          description: `Default Owner Privilege for ${createdCompany.name}`,
+          roles: [Role.admin],
+          companyId: createdCompany._id,
+          isSystemGenerated: false,
+        });
+
+        // 3. Create Store Owner User
+        const [owner] = await this.userModel.create([
+          {
+            _id: tempOwnerId,
+            username: (storeDto.username || storeDto.ownerPhone).trim(),
+            phone: storeDto.ownerPhone.trim(),
+            name: storeDto.ownerName.trim(),
+            email,
+            password: hashedPassword,
+            companyId: createdCompany._id,
+            privilegeId: ownerPrivilege._id,
+            isActive: true,
+          },
+        ]);
+        createdOwner = owner;
+
+        // 4. Set createdBy on privilege
+        await this.privilegeModel.updateOne(
+          { _id: ownerPrivilege._id },
+          { $set: { createdBy: createdOwner._id } },
+        );
+
+        if (existingLicense) {
+          await this.storeLicenseModel.updateOne(
+            { _id: existingLicense._id },
+            {
+              $set: {
+                companyId: createdCompany._id,
+                assignedEmail: email,
+                status: LicenseStatus.REDEEMED,
+                redeemedAt: new Date(),
+              },
+            },
+          );
+        } else {
+          await this.storeLicenseModel.create({
+            licenseKey,
+            assignedEmail: email,
+            companyId: createdCompany._id,
+            status: LicenseStatus.TRIAL,
+            isTrial: true,
+            maxCounters: 2,
+            maxUsers: 5,
+            validityMonths: 1,
+            expiresAt: trialExpiresAt,
+            redeemedAt: new Date(),
+            createdBy: createdOwner._id,
+          });
+        }
+      } catch (creationErr) {
+        if (createdOwner) {
+          await this.userModel.deleteOne({ _id: createdOwner._id }).catch(() => null);
+        }
+        if (ownerPrivilege) {
+          await this.privilegeModel.deleteOne({ _id: ownerPrivilege._id }).catch(() => null);
+        }
+        if (createdCompany) {
+          await this.companyModel.deleteOne({ _id: createdCompany._id }).catch(() => null);
+        }
+        throw creationErr;
+      }
 
       // Auto-seed default Number Settings, Counter, Loyalty Settings, and Subscription for new company
       try {
@@ -328,11 +365,22 @@ export class AuthService {
           createdCompany._id.toString(),
           createdOwner._id.toString(),
         );
-        await this.counterService.createDefaultCounterForCompany(
+        const defaultCounter =
+          await this.counterService.createDefaultCounterForCompany(
+            createdCompany._id.toString(),
+            createdOwner._id.toString(),
+          );
+        if (defaultCounter) {
+          await this.companyModel.updateOne(
+            { _id: createdCompany._id },
+            { $set: { defaultCounterId: defaultCounter._id } },
+          );
+        }
+        await this.loyaltySettingService.createDefaultSettingForCompany(
           createdCompany._id.toString(),
           createdOwner._id.toString(),
         );
-        await this.loyaltySettingService.createDefaultSettingForCompany(
+        await this.accountService.createDefaultAccountsForCompany(
           createdCompany._id.toString(),
           createdOwner._id.toString(),
         );
@@ -340,6 +388,9 @@ export class AuthService {
           createdCompany._id.toString(),
           createdOwner._id.toString(),
           {
+            status: isTrial
+              ? SubscriptionStatus.TRIAL
+              : SubscriptionStatus.ACTIVE,
             isTrial,
             trialEndDate: expiresAt || undefined,
             maxCounters,
@@ -454,13 +505,23 @@ export class AuthService {
     try {
       const email = dto.email.trim().toLowerCase();
 
-      const company = await this.companyModel.findOne({
-        $or: [
-          { 'contact.primaryEmail': email },
-          { 'contact.secondaryEmail': email },
-        ],
+      let company = await this.companyModel.findOne({
+        'contact.primaryEmail': email,
         isDeleted: false,
       });
+
+      if (!company) {
+        const user = await this.userModel.findOne({
+          email,
+          isDeleted: false,
+        });
+        if (user?.companyId) {
+          company = await this.companyModel.findOne({
+            _id: user.companyId,
+            isDeleted: false,
+          });
+        }
+      }
 
       if (!company) {
         throw new NotFoundException(
@@ -489,6 +550,10 @@ export class AuthService {
       });
 
       const maxCounters = storeLicense?.maxCounters || 5;
+      const isTrial =
+        storeLicense?.isTrial ??
+        company.subscription?.status === CompanySubscriptionStatus.TRIAL;
+      const expiresAt = storeLicense?.expiresAt || company.subscription?.endDate;
 
       await this.emailService.sendLicenseIssuedEmail(
         email,
@@ -496,6 +561,8 @@ export class AuthService {
         company.name,
         licenseKey,
         maxCounters,
+        isTrial,
+        expiresAt,
       );
 
       return {
@@ -540,6 +607,29 @@ export class AuthService {
       const roles = Array.isArray(privilege.roles)
         ? privilege.roles
         : [privilege.roles];
+
+      if (_user.companyId && !roles.includes(Role.superadmin)) {
+        const company = await this.companyModel.findOne({
+          _id: _user.companyId,
+          isDeleted: false,
+        });
+
+        if (!company) {
+          throw new UnauthorizedException('Associated company store not found');
+        }
+
+        if (company.status === CompanyStatus.SUSPENDED) {
+          throw new ForbiddenException(
+            'Your store account has been suspended. Please contact store administration or support.',
+          );
+        }
+
+        if (company.status === CompanyStatus.INACTIVE) {
+          throw new ForbiddenException(
+            'Your store account is currently inactive. Please contact store administration.',
+          );
+        }
+      }
 
       const payload: any = {
         username: _user.username,
