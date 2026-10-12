@@ -19,6 +19,8 @@ import { UserModule } from '../user/user.module';
 import { NumberSettingsModule } from '../number-settings/number-settings.module';
 import { LoyaltySettingModule } from '../loyalty-setting/loyalty-setting.module';
 
+import { AccountModule } from '../account/account.module';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -33,6 +35,7 @@ import { LoyaltySettingModule } from '../loyalty-setting/loyalty-setting.module'
     UserModule,
     NumberSettingsModule,
     LoyaltySettingModule,
+    AccountModule,
   ],
   controllers: [SaleReturnController],
   providers: [SaleReturnService],
