@@ -27,8 +27,8 @@ export enum AccountCategory {
 
 @Schema({ timestamps: true, collection: 'accounts' })
 export class Account extends BaseSchema {
-  @Prop({ required: true, trim: true, uppercase: true })
-  code: string;
+  @Prop({ type: String, trim: true, uppercase: true, default: null })
+  code?: string;
 
   @Prop({ required: true, trim: true })
   name: string;
@@ -72,7 +72,7 @@ export class Account extends BaseSchema {
 export const AccountSchema = SchemaFactory.createForClass(Account);
 export const AccountSchemaName = Account.name;
 
-AccountSchema.index({ companyId: 1, code: 1 }, { unique: true });
+AccountSchema.index({ companyId: 1, code: 1 }, { unique: true, sparse: true });
 AccountSchema.index({ companyId: 1, name: 1 });
 AccountSchema.index({ companyId: 1, type: 1 });
 
