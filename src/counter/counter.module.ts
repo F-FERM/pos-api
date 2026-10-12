@@ -7,10 +7,13 @@ import { LogModule } from '../log/log.module';
 import { CompanyModule } from '../company/company.module';
 import { UserModule } from '../user/user.module';
 
+import { CompanySchema, CompanySchemaName } from '../models/company.schema';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: CounterSchemaName, schema: CounterSchema },
+      { name: CompanySchemaName, schema: CompanySchema },
     ]),
     LogModule,
     forwardRef(() => CompanyModule),
