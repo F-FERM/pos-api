@@ -977,6 +977,242 @@
         ]
       }
     },
+    "/api/account": {
+      "post": {
+        "operationId": "AccountController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create custom account in Chart of Accounts",
+        "tags": [
+          "Chart of Accounts & Finance"
+        ]
+      },
+      "get": {
+        "operationId": "AccountController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "ASSET",
+                "LIABILITY",
+                "EQUITY",
+                "INCOME",
+                "EXPENSE"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all accounts (Chart of Accounts)",
+        "tags": [
+          "Chart of Accounts & Finance"
+        ]
+      }
+    },
+    "/api/account/financial-summary": {
+      "get": {
+        "operationId": "AccountController_getFinancialSummary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get financial summary statement (Assets, Liabilities, Income, Expenses)",
+        "tags": [
+          "Chart of Accounts & Finance"
+        ]
+      }
+    },
+    "/api/account/{id}": {
+      "get": {
+        "operationId": "AccountController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get account details by ID",
+        "tags": [
+          "Chart of Accounts & Finance"
+        ]
+      },
+      "patch": {
+        "operationId": "AccountController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update account details",
+        "tags": [
+          "Chart of Accounts & Finance"
+        ]
+      },
+      "delete": {
+        "operationId": "AccountController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete custom account (Protected: System accounts cannot be deleted)",
+        "tags": [
+          "Chart of Accounts & Finance"
+        ]
+      }
+    },
+    "/api/account/{id}/ledger": {
+      "get": {
+        "operationId": "AccountController_getLedger",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get transaction ledger history for an account",
+        "tags": [
+          "Chart of Accounts & Finance"
+        ]
+      }
+    },
+    "/api/account/transaction": {
+      "post": {
+        "operationId": "AccountController_recordTransaction",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccountTransactionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Post manual account transaction entry",
+        "tags": [
+          "Chart of Accounts & Finance"
+        ]
+      }
+    },
     "/api/privilege": {
       "post": {
         "operationId": "PrivilegeController_create",
@@ -3297,12 +3533,12 @@
           "deviceId": {
             "type": "string",
             "example": "WIN-DESK-GUID-998877",
-            "description": "Hardware MAC/UUID or GUID fingerprint of physical counter PC"
+            "description": "Hardware MAC/UUID or GUID fingerprint of physical counter PC (Required for hardware locking)"
           },
           "deviceName": {
             "type": "string",
             "example": "Counter 1 Windows POS Terminal",
-            "description": "Friendly terminal machine display name"
+            "description": "Friendly terminal machine display name (Required for hardware locking)"
           },
           "counterId": {
             "type": "string",
@@ -3312,7 +3548,9 @@
         },
         "required": [
           "email",
-          "otp"
+          "otp",
+          "deviceId",
+          "deviceName"
         ]
       },
       "ResendLicenseKeyRequestDto": {
@@ -3615,7 +3853,8 @@
               "INVOICE",
               "PURCHASE_ORDER",
               "BILL",
-              "SALE_RETURN"
+              "SALE_RETURN",
+              "ACCOUNT_TRANSACTION"
             ]
           },
           "prefix": {
@@ -3887,6 +4126,169 @@
           "startDate",
           "endDate"
         ]
+      },
+      "CreateAccountDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "1030",
+            "description": "Unique chart of account numeric/alpha code"
+          },
+          "name": {
+            "type": "string",
+            "example": "Petty Cash",
+            "description": "Friendly account title"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "ASSET",
+              "LIABILITY",
+              "EQUITY",
+              "INCOME",
+              "EXPENSE"
+            ],
+            "example": "ASSET"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "CURRENT_ASSET",
+              "NON_CURRENT_ASSET",
+              "CURRENT_LIABILITY",
+              "NON_CURRENT_LIABILITY",
+              "EQUITY",
+              "OPERATING_INCOME",
+              "NON_OPERATING_INCOME",
+              "COST_OF_GOODS_SOLD",
+              "OPERATING_EXPENSE",
+              "OTHER_EXPENSE"
+            ],
+            "example": "CURRENT_ASSET"
+          },
+          "balance": {
+            "type": "number",
+            "example": 0,
+            "description": "Initial opening balance"
+          },
+          "description": {
+            "type": "string",
+            "example": "Petty cash drawer for small daily incidentals"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "type"
+        ]
+      },
+      "CreateAccountTransactionDto": {
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "example": "65f123456789abcdef123456",
+            "description": "Account ID to post entry"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "DEBIT",
+              "CREDIT"
+            ],
+            "example": "DEBIT"
+          },
+          "amount": {
+            "type": "number",
+            "example": 1500,
+            "description": "Transaction monetary amount"
+          },
+          "referenceType": {
+            "type": "string",
+            "enum": [
+              "SALE",
+              "SALE_RETURN",
+              "PURCHASE",
+              "EXPENSE",
+              "MANUAL"
+            ],
+            "example": "MANUAL"
+          },
+          "referenceNumber": {
+            "type": "string",
+            "example": "MAN-TXN-001"
+          },
+          "description": {
+            "type": "string",
+            "example": "Manual adjustment for store bank deposit"
+          }
+        },
+        "required": [
+          "accountId",
+          "type",
+          "amount",
+          "description"
+        ]
+      },
+      "UpdateAccountDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "1030",
+            "description": "Unique chart of account numeric/alpha code"
+          },
+          "name": {
+            "type": "string",
+            "example": "Petty Cash",
+            "description": "Friendly account title"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "ASSET",
+              "LIABILITY",
+              "EQUITY",
+              "INCOME",
+              "EXPENSE"
+            ],
+            "example": "ASSET"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "CURRENT_ASSET",
+              "NON_CURRENT_ASSET",
+              "CURRENT_LIABILITY",
+              "NON_CURRENT_LIABILITY",
+              "EQUITY",
+              "OPERATING_INCOME",
+              "NON_OPERATING_INCOME",
+              "COST_OF_GOODS_SOLD",
+              "OPERATING_EXPENSE",
+              "OTHER_EXPENSE"
+            ],
+            "example": "CURRENT_ASSET"
+          },
+          "balance": {
+            "type": "number",
+            "example": 0,
+            "description": "Initial opening balance"
+          },
+          "description": {
+            "type": "string",
+            "example": "Petty cash drawer for small daily incidentals"
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          }
+        }
       },
       "SubModulePermissionDto": {
         "type": "object",
