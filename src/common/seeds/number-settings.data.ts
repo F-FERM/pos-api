@@ -27,6 +27,11 @@ export const DEFAULT_NUMBER_SETTINGS: DefaultNumberSettingConfig[] = [
     prefix: 'SR-',
     nextNumber: 1,
   },
+  {
+    docType: numberSettingsDocumentType.ACCOUNT_TRANSACTION,
+    prefix: 'TXN-',
+    nextNumber: 1,
+  },
 ];
 
 export const DEFAULT_PREFIX_MAP: Record<numberSettingsDocumentType, string> = {
@@ -34,4 +39,5 @@ export const DEFAULT_PREFIX_MAP: Record<numberSettingsDocumentType, string> = {
   [numberSettingsDocumentType.PURCHASE_ORDER]: 'PO-',
   [numberSettingsDocumentType.BILL]: 'BILL-',
   [numberSettingsDocumentType.SALE_RETURN]: 'SR-',
+  [numberSettingsDocumentType.ACCOUNT_TRANSACTION]: 'TXN-',
 };
