@@ -35,6 +35,8 @@ import {
   DeviceRegistrationSchemaName,
 } from '../models/device-registration.schema';
 
+import { AccountModule } from '../account/account.module';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -58,6 +60,7 @@ import {
     LoyaltySettingModule,
     SubscriptionModule,
     EmailModule,
+    AccountModule,
     PassportModule,
     JwtModule.register({
       secret: JWT_CONSTANTS.secret,
