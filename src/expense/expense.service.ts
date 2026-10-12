@@ -17,6 +17,7 @@ import { LogService } from '../log/log.service';
 import { CompanyService } from '../company/company.service';
 import { UserService } from '../user/user.service';
 import { AuthedRequest } from '../utils/common.types';
+import { AccountService } from '../account/account.service';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
 
@@ -28,6 +29,7 @@ export class ExpenseService extends GenericDatabase<Model<ExpenseDocument>> {
     private readonly logService: LogService,
     private readonly companyService: CompanyService,
     private readonly userService: UserService,
+    private readonly accountService: AccountService,
   ) {
     super(expenseModel);
   }
@@ -52,6 +54,17 @@ export class ExpenseService extends GenericDatabase<Model<ExpenseDocument>> {
         companyId: new Types.ObjectId(dto.companyId),
         createdBy: new Types.ObjectId(userId),
       });
+
+      // Auto-post double-entry journal transactions for expense
+      try {
+        await this.accountService.postExpenseJournalEntries(
+          created,
+          dto.companyId,
+          userId,
+        );
+      } catch (accErr) {
+        console.warn('Failed to auto-post expense ledger transactions:', accErr);
+      }
 
       await this.logService.createLog({
         companyId: new Types.ObjectId(dto.companyId),
