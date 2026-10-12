@@ -43,6 +43,20 @@ export class CustomerService extends GenericDatabase<Model<CustomerDocument>> {
       await this.userService.validateAuthenticatedUser(userId);
       await this.companyService.validateCompany(dto.companyId, userId);
 
+      if (dto.phone) {
+        const dupPhone = await this.customerModel.findOne({
+          companyId: new Types.ObjectId(dto.companyId),
+          phone: dto.phone.trim(),
+          isDeleted: false,
+        });
+
+        if (dupPhone) {
+          throw new BadRequestException(
+            `A customer with phone number '${dto.phone.trim()}' already exists in your store`,
+          );
+        }
+      }
+
       const created = await this.genericCreateOne({
         ...dto,
         name: dto.name.trim(),
