@@ -7,6 +7,8 @@ import { LogModule } from '../log/log.module';
 import { CompanyModule } from '../company/company.module';
 import { UserModule } from '../user/user.module';
 
+import { AccountModule } from '../account/account.module';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -15,6 +17,7 @@ import { UserModule } from '../user/user.module';
     LogModule,
     CompanyModule,
     UserModule,
+    AccountModule,
   ],
   controllers: [ExpenseController],
   providers: [ExpenseService],
