@@ -34,6 +34,7 @@ import { LoyaltySettingModule } from './loyalty-setting/loyalty-setting.module';
 import { DeviceRegistrationModule } from './device-registration/device-registration.module';
 import { StoreLicenseModule } from './store-license/store-license.module';
 import { EmailModule } from './email/email.module';
+import { AccountModule } from './account/account.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { EmailModule } from './email/email.module';
     DeviceRegistrationModule,
     StoreLicenseModule,
     EmailModule,
+    AccountModule,
   ],
   controllers: [AppController],
   providers: [
