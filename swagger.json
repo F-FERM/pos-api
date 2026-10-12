@@ -4133,7 +4133,7 @@
           "code": {
             "type": "string",
             "example": "1030",
-            "description": "Unique chart of account numeric/alpha code"
+            "description": "Chart of account code (Optional - auto-generated if omitted)"
           },
           "name": {
             "type": "string",
@@ -4182,7 +4182,6 @@
           }
         },
         "required": [
-          "code",
           "name",
           "type"
         ]
@@ -4241,7 +4240,7 @@
           "code": {
             "type": "string",
             "example": "1030",
-            "description": "Unique chart of account numeric/alpha code"
+            "description": "Chart of account code (Optional - auto-generated if omitted)"
           },
           "name": {
             "type": "string",
