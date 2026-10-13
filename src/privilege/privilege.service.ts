@@ -42,6 +42,9 @@ export class PrivilegeService
     @InjectModel(UserSchemaName)
     private readonly userModel: Model<UserDocument>,
 
+    @InjectModel(PrivilegesSchemaName, 'cloudConnection')
+    private readonly privilegeModelCloud: Model<PrivilegesDocument>,
+
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     @Inject(forwardRef(() => CompanyService))
@@ -60,24 +63,26 @@ export class PrivilegeService
   }
 
   /**
-   * Seeds platform-level system privileges if they do not already exist.
+   * Seeds platform-level system privileges if they do not already exist on Local and Cloud DB.
    */
   async generateSystemPrivileges() {
     try {
-      for (const privilege of SYSTEM_PRIVILEGES) {
-        const exists: PrivilegesDocument | null = await this.genericFindOne({
-          name: privilege.name,
-        });
-
-        if (!exists) {
-          await this.genericCreateOne({
+      if (this.privilegeModelCloud) {
+        for (const privilege of SYSTEM_PRIVILEGES) {
+          const cloudExists = await this.privilegeModelCloud.findOne({
             name: privilege.name,
-            description: privilege.description,
-            roles: privilege.roles,
-            isSystemGenerated: privilege.isSystemGenerated,
+            isDeleted: false,
           });
 
-          console.log('System privileges generated successfully');
+          if (!cloudExists) {
+            await this.privilegeModelCloud.create({
+              name: privilege.name,
+              description: privilege.description,
+              roles: privilege.roles,
+              isSystemGenerated: privilege.isSystemGenerated,
+            });
+            console.log('System privileges generated successfully on Cloud DB');
+          }
         }
       }
     } catch (error: unknown) {
