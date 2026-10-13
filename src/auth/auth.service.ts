@@ -584,7 +584,7 @@ export class AuthService {
 
   async login(user: any, req?: AuthedRequest) {
     try {
-      const _user = (await this.userService.genericFindOneWithPopulate(
+      let _user = (await this.userService.genericFindOneWithPopulate(
         { _id: user._id },
         [
           {
@@ -592,7 +592,25 @@ export class AuthService {
             select: 'roles modules subModulePermissions',
           },
         ],
-      )) as UserDocument;
+      ).catch(() => null)) as unknown as UserDocument;
+
+      // If user is not found in Local DB (e.g. Global Cloud Superadmin), resolve from Cloud DB
+      if (!_user && this.userService.getUserModelCloud()) {
+        _user = (await this.userService
+          .getUserModelCloud()!
+          .findOne({ _id: user._id, isDeleted: false })
+          .populate({
+            path: UserModelConstants.privilegeId!,
+            select: 'roles modules subModulePermissions',
+          })
+          .exec()
+          .catch(() => null)) as unknown as UserDocument;
+      }
+
+      // If user already had privilegeId populated from validateUser
+      if (!_user && user?.privilegeId) {
+        _user = user;
+      }
 
       const ipAddress = req
         ? await this.userService.getClientIpAddress(req)
