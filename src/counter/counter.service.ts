@@ -27,6 +27,8 @@ import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
 import { DEFAULT_COMPANY_COUNTER } from '../common/seeds/counter.data';
 
+import { SyncService } from '../sync/sync.service';
+
 @Injectable()
 export class CounterService extends GenericDatabase<Model<CounterDocument>> {
   constructor(
@@ -39,6 +41,8 @@ export class CounterService extends GenericDatabase<Model<CounterDocument>> {
     private readonly companyService: CompanyService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
+    @Inject(forwardRef(() => SyncService))
+    private readonly syncService: SyncService,
   ) {
     super(counterModel);
   }
@@ -139,6 +143,8 @@ export class CounterService extends GenericDatabase<Model<CounterDocument>> {
         path: req.url,
         status: LogStatus.SUCCESS,
       });
+
+      this.syncService.syncAllUnsyncedRecords().catch(() => null);
 
       return {
         success: true,

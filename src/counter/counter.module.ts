@@ -9,6 +9,8 @@ import { UserModule } from '../user/user.module';
 
 import { CompanySchema, CompanySchemaName } from '../models/company.schema';
 
+import { SyncModule } from '../sync/sync.module';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -18,6 +20,7 @@ import { CompanySchema, CompanySchemaName } from '../models/company.schema';
     LogModule,
     forwardRef(() => CompanyModule),
     forwardRef(() => UserModule),
+    forwardRef(() => SyncModule),
   ],
   controllers: [CounterController],
   providers: [CounterService],
