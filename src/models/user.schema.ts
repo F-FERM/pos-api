@@ -53,6 +53,8 @@ export const UserModelConstants: { [K in keyof Required<User>]: K } = {
   password: 'password',
   privilegeId: 'privilegeId',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
   name: 'name',
   email: 'email',

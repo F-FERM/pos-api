@@ -56,5 +56,7 @@ export const CustomerModelConstants: { [K in keyof Customer]-?: K } = {
   companyId: 'companyId',
   isActive: 'isActive',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

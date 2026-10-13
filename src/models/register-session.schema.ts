@@ -79,5 +79,7 @@ export const RegisterSessionModelConstants: {
   closedAt: 'closedAt',
   notes: 'notes',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

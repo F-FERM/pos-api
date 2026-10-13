@@ -48,7 +48,7 @@ export class LogsModel extends BaseSchema {
 export const LogsModelSchema = SchemaFactory.createForClass(LogsModel);
 export const LogsModelSchemaName = LogsModel.name;
 
-export const LogsModelModelConstants: { [K in keyof LogsModel]: K } = {
+export const LogsModelModelConstants: { [K in keyof LogsModel]?: K } = {
   companyId: 'companyId',
   action: 'action',
   entityType: 'entityType',
@@ -60,5 +60,7 @@ export const LogsModelModelConstants: { [K in keyof LogsModel]: K } = {
   ipAddress: 'ipAddress',
   status: 'status',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

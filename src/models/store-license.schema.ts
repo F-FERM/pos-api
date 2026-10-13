@@ -83,5 +83,7 @@ export const StoreLicenseModelConstants: {
   redeemedAt: 'redeemedAt',
   notes: 'notes',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

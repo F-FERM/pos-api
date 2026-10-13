@@ -35,5 +35,7 @@ export const EmailOtpModelConstants: { [K in keyof EmailOtp]-?: K } = {
   isVerified: 'isVerified',
   registrationPayload: 'registrationPayload',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

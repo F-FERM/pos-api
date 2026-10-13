@@ -40,5 +40,7 @@ export const CounterModelConstants: { [K in keyof Counter]-?: K } = {
   isActive: 'isActive',
   companyId: 'companyId',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

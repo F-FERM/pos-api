@@ -84,5 +84,7 @@ export const PurchaseModelConstants: { [K in keyof Purchase]-?: K } = {
   companyId: 'companyId',
   notes: 'notes',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

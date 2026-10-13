@@ -45,5 +45,7 @@ export const NumberSettingModelConstants: {
   nextNumber: 'nextNumber',
   nextNumberRaw: 'nextNumberRaw',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

@@ -48,5 +48,7 @@ export const ExpenseModelConstants: { [K in keyof Expense]-?: K } = {
   expenseDate: 'expenseDate',
   companyId: 'companyId',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

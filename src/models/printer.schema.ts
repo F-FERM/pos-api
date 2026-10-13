@@ -59,5 +59,7 @@ export const PrinterModelConstants: { [K in keyof Printer]-?: K } = {
   isActive: 'isActive',
   companyId: 'companyId',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

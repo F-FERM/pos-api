@@ -343,6 +343,9 @@ export class Company extends BaseSchema {
   syncVersion: number;
 
   @Prop({ type: Date, default: null })
+  lastSyncedAt?: Date | null;
+
+  @Prop({ type: Date, default: null })
   deletedAt?: Date | null;
 }
 
@@ -403,6 +406,7 @@ export const CompanyModelConstants: { [K in keyof Company]: K } = {
 
   // sync / soft delete
   syncVersion: 'syncVersion',
+  lastSyncedAt: 'lastSyncedAt',
   deletedAt: 'deletedAt',
 
   // base

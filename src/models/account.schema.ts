@@ -87,5 +87,7 @@ export const AccountModelConstants: { [K in keyof Account]-?: K } = {
   description: 'description',
   companyId: 'companyId',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

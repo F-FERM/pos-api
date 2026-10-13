@@ -7,6 +7,12 @@ export class BaseSchema {
   @Prop({ default: false })
   isDeleted: boolean;
 
+  @Prop({ type: Boolean, default: false, index: true })
+  isSynced?: boolean;
+
+  @Prop({ type: Date, default: null })
+  syncedAt?: Date | null;
+
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

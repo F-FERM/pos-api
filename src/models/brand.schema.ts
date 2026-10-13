@@ -35,5 +35,7 @@ export const BrandModelConstants: { [K in keyof Brand]-?: K } = {
   companyId: 'companyId',
   isActive: 'isActive',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

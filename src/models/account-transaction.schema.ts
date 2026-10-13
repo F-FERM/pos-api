@@ -97,5 +97,7 @@ export const AccountTransactionModelConstants: {
   transactionDate: 'transactionDate',
   companyId: 'companyId',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

@@ -115,5 +115,7 @@ export const SaleReturnModelConstants: { [K in keyof SaleReturn]-?: K } = {
   notes: 'notes',
   companyId: 'companyId',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

@@ -47,5 +47,7 @@ export const CategoryModelConstants: { [K in keyof Category]-?: K } = {
   companyId: 'companyId',
   isActive: 'isActive',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

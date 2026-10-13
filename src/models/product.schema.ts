@@ -125,5 +125,7 @@ export const ProductModelConstants: { [K in keyof Product]-?: K } = {
   description: 'description',
   isActive: 'isActive',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

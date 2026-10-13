@@ -150,5 +150,7 @@ export const SaleModelConstants: { [K in keyof Sale]-?: K } = {
   companyId: 'companyId',
   notes: 'notes',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

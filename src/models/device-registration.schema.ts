@@ -77,5 +77,7 @@ export const DeviceRegistrationModelConstants: {
   ipAddress: 'ipAddress',
   lastPingAt: 'lastPingAt',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };

@@ -41,5 +41,7 @@ export const LoyaltySettingModelConstants: {
   loyaltyPointMonetaryValue: 'loyaltyPointMonetaryValue',
   isEnabled: 'isEnabled',
   isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
   createdBy: 'createdBy',
 };
