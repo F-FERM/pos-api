@@ -5,7 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import { mongooseConnectionString } from './config/config';
+import { cloudMongoUri, localMongoUri } from './config/config';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './common/guards/roles.guard';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
@@ -35,10 +35,14 @@ import { DeviceRegistrationModule } from './device-registration/device-registrat
 import { StoreLicenseModule } from './store-license/store-license.module';
 import { EmailModule } from './email/email.module';
 import { AccountModule } from './account/account.module';
+import { SyncModule } from './sync/sync.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot(mongooseConnectionString),
+    MongooseModule.forRoot(localMongoUri),
+    MongooseModule.forRoot(cloudMongoUri, {
+      connectionName: 'cloudConnection',
+    }),
     AuthModule,
     ConfigModule.forRoot({
       isGlobal: true,
@@ -68,6 +72,7 @@ import { AccountModule } from './account/account.module';
     StoreLicenseModule,
     EmailModule,
     AccountModule,
+    SyncModule,
   ],
   controllers: [AppController],
   providers: [
