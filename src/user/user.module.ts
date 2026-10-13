@@ -26,6 +26,13 @@ import { SyncModule } from '../sync/sync.module';
       { name: CompanySchemaName, schema: CompanySchema },
       { name: StoreLicenseSchemaName, schema: StoreLicenseSchema },
     ]),
+    MongooseModule.forFeature(
+      [
+        { name: UserSchemaName, schema: UserSchema },
+        { name: PrivilegesSchemaName, schema: PrivilegesSchema },
+      ],
+      'cloudConnection',
+    ),
     forwardRef(() => CompanyModule),
     LogModule,
     forwardRef(() => SyncModule),
