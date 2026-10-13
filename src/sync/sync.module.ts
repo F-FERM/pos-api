@@ -35,6 +35,7 @@ import {
   DeviceRegistrationSchema,
   DeviceRegistrationSchemaName,
 } from '../models/device-registration.schema';
+import { EmailOtpSchema, EmailOtpSchemaName } from '../models/email-otp.schema';
 
 import { CategorySchema, CategorySchemaName } from '../models/category.schema';
 import { BrandSchema, BrandSchemaName } from '../models/brand.schema';
@@ -76,6 +77,7 @@ import { LogModule } from '../log/log.module';
         name: DeviceRegistrationSchemaName,
         schema: DeviceRegistrationSchema,
       },
+      { name: EmailOtpSchemaName, schema: EmailOtpSchema },
     ]),
     MongooseModule.forFeature(
       [
@@ -107,6 +109,7 @@ import { LogModule } from '../log/log.module';
           name: DeviceRegistrationSchemaName,
           schema: DeviceRegistrationSchema,
         },
+        { name: EmailOtpSchemaName, schema: EmailOtpSchema },
       ],
       'cloudConnection',
     ),
