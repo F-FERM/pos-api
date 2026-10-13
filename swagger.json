@@ -431,6 +431,106 @@
         ]
       }
     },
+    "/api/sync/push": {
+      "post": {
+        "operationId": "SyncController_pushLocalData",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncPushDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Push local records up to Cloud DB (Local -> Cloud Upward Sync)",
+        "tags": [
+          "Bi-Directional Cloud-Local Sync"
+        ]
+      }
+    },
+    "/api/sync/pull": {
+      "post": {
+        "operationId": "SyncController_pullCloudData",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncPullDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Pull cloud delta updates down to Local DB (Cloud -> Local Downward Sync)",
+        "tags": [
+          "Bi-Directional Cloud-Local Sync"
+        ]
+      }
+    },
+    "/api/sync/bi-directional": {
+      "post": {
+        "operationId": "SyncController_biDirectionalSync",
+        "parameters": [
+          {
+            "name": "lastSyncedAt",
+            "required": false,
+            "in": "query",
+            "description": "ISO timestamp of last successful sync",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncPushDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Unified Bi-Directional Sync (Atomic Push + Pull in one HTTP request)",
+        "tags": [
+          "Bi-Directional Cloud-Local Sync"
+        ]
+      }
+    },
+    "/api/sync/status": {
+      "get": {
+        "operationId": "SyncController_getSyncStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get sync status, server time, and store user/counter capacities",
+        "tags": [
+          "Bi-Directional Cloud-Local Sync"
+        ]
+      }
+    },
     "/api/number-settings": {
       "post": {
         "operationId": "NumberSettingsController_upsert",
@@ -3841,6 +3941,112 @@
               "inactive"
             ],
             "example": "active"
+          }
+        }
+      },
+      "SyncPushDto": {
+        "type": "object",
+        "properties": {
+          "companies": {
+            "description": "Array of company model updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "users": {
+            "description": "Array of user model updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "products": {
+            "description": "Array of product model updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "customers": {
+            "description": "Array of customer model updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "suppliers": {
+            "description": "Array of supplier model updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "sales": {
+            "description": "Array of sale invoice updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "saleReturns": {
+            "description": "Array of sale return updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "purchases": {
+            "description": "Array of purchase bill updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "expenses": {
+            "description": "Array of expense updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "accounts": {
+            "description": "Array of chart of account updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "accountTransactions": {
+            "description": "Array of account transaction ledger updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "registerSessions": {
+            "description": "Array of register shift session updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "deviceRegistrations": {
+            "description": "Array of terminal device registration updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "SyncPullDto": {
+        "type": "object",
+        "properties": {
+          "lastSyncedAt": {
+            "type": "string",
+            "example": "2026-01-01T00:00:00.000Z",
+            "description": "ISO timestamp of last successful sync to query delta updates modified after this time"
           }
         }
       },
