@@ -588,7 +588,7 @@ export class AuthService {
         { _id: user._id },
         [
           {
-            path: UserModelConstants.privilegeId,
+            path: UserModelConstants.privilegeId!,
             select: 'roles modules subModulePermissions',
           },
         ],
