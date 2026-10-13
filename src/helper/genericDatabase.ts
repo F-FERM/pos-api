@@ -215,8 +215,22 @@ export class GenericDatabase<T extends Model<HydratedDocument<any>>> {
     options?: DbOptions,
   ): Promise<HydratedDocument<any> | null> {
     try {
+      const updatePayload = { ...updateDto };
+
+      // Automatically reset isSynced to false on local updates unless explicitly overridden by sync engine
+      if (
+        updatePayload.isSynced === undefined &&
+        updatePayload.$set?.isSynced === undefined
+      ) {
+        if (updatePayload.$set) {
+          updatePayload.$set.isSynced = false;
+        } else {
+          updatePayload.isSynced = false;
+        }
+      }
+
       const updatedDocument = await this.dbModel
-        .findOneAndUpdate({ _id: id, isDeleted: false }, updateDto, {
+        .findOneAndUpdate({ _id: id, isDeleted: false }, updatePayload, {
           new: true,
           session: options?.session,
         })
