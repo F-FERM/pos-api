@@ -24,6 +24,7 @@ import { UserService } from '../user/user.service';
 import { CategoryService } from '../category/category.service';
 import { BrandService } from '../brand/brand.service';
 import { SupplierService } from '../supplier/supplier.service';
+import { SyncService } from '../sync/sync.service';
 import { AuthedRequest } from '../utils/common.types';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
@@ -39,6 +40,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
     private readonly categoryService: CategoryService,
     private readonly brandService: BrandService,
     private readonly supplierService: SupplierService,
+    private readonly syncService: SyncService,
   ) {
     super(productModel);
   }
@@ -211,6 +213,8 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         path: req.url,
         status: LogStatus.SUCCESS,
       });
+
+      this.syncService.syncAllUnsyncedRecords().catch(() => null);
 
       return {
         success: true,
@@ -558,6 +562,8 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         path: req.url,
         status: LogStatus.SUCCESS,
       });
+
+      this.syncService.syncAllUnsyncedRecords().catch(() => null);
 
       return {
         success: true,
