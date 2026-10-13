@@ -53,6 +53,13 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
     private readonly companyService: CompanyService,
     @InjectModel(PrivilegesSchemaName)
     private readonly privilegeModel: Model<PrivilegesDocument>,
+
+    // Cloud DB Models ('cloudConnection')
+    @InjectModel(UserSchemaName, 'cloudConnection')
+    private readonly userModelCloud: Model<UserDocument>,
+    @InjectModel(PrivilegesSchemaName, 'cloudConnection')
+    private readonly privilegeModelCloud: Model<PrivilegesDocument>,
+
     @Inject(forwardRef(() => SyncService))
     private readonly syncService: SyncService,
   ) {
@@ -60,23 +67,57 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
   }
 
   async onModuleInit() {
-    await seedSuperAdminUser(this.userModel, this.privilegeModel);
+    if (this.userModelCloud && this.privilegeModelCloud) {
+      await seedSuperAdminUser(this.userModelCloud, this.privilegeModelCloud).catch(
+        () => null,
+      );
+    }
   }
 
   /**
    * Validate user credentials.
-   * @param username - The username of the user.
-   * @param pass - The password of the user.
-   * @returns The user document if valid, otherwise null.
+   * Checks local user DB first; falls back to Cloud DB for Global Superadmin login.
    */
   async validateUser(username: string, pass: string): Promise<User | null> {
     try {
-      const user = await this.genericFindByUsername(username, [
-        `${UserModelConstants.privilegeId}`,
-      ]);
-      if (user && (await bcrypt.compare(pass, user.password))) {
-        return user;
+      const cleanUsername = username.trim().toLowerCase();
+
+      // 1. Validate local store user in Local DB
+      const localUser = await this.userModel
+        .findOne({
+          $or: [{ username: cleanUsername }, { email: cleanUsername }],
+          isDeleted: false,
+        })
+        .populate(`${UserModelConstants.privilegeId!}`)
+        .exec();
+
+      if (localUser && (await bcrypt.compare(pass, localUser.password))) {
+        return localUser;
       }
+
+      // 2. Validate Superadmin credentials against Cloud DB
+      if (this.userModelCloud) {
+        const cloudUser = await this.userModelCloud
+          .findOne({
+            $or: [{ username: cleanUsername }, { email: cleanUsername }],
+            isDeleted: false,
+          })
+          .populate(`${UserModelConstants.privilegeId!}`)
+          .exec();
+
+        if (cloudUser && (await bcrypt.compare(pass, cloudUser.password))) {
+          // Sync Cloud Superadmin into Local DB so local NestJS JWT guards accept Superadmin operations
+          const cloudObj = cloudUser.toObject();
+          delete (cloudObj as any)._id;
+          await this.userModel.updateOne(
+            { _id: cloudUser._id },
+            { $set: cloudObj },
+            { upsert: true },
+          );
+          return cloudUser;
+        }
+      }
+
       return null;
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -114,6 +155,33 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
         privilege.companyId?.toString() !== dto.companyId
       ) {
         throw new NotFoundException('Privilege not found in this company');
+      }
+
+      // Enforce strictly 1 Company Admin (Role.admin) limit per store
+      const isCreatingAdminRole = Array.isArray(privilege.roles)
+        ? privilege.roles.includes(Role.admin)
+        : privilege.roles === Role.admin;
+
+      if (isCreatingAdminRole) {
+        const adminPrivileges = await this.privilegeModel.find({
+          companyId: new Types.ObjectId(dto.companyId),
+          roles: Role.admin,
+          isDeleted: false,
+        });
+
+        const adminPrivilegeIds = adminPrivileges.map((p) => p._id);
+
+        const existingAdminUser = await this.userModel.findOne({
+          companyId: new Types.ObjectId(dto.companyId),
+          privilegeId: { $in: adminPrivilegeIds },
+          isDeleted: false,
+        });
+
+        if (existingAdminUser) {
+          throw new BadRequestException(
+            'A company can only have strictly ONE Company Admin (the store owner). Additional accounts must be staff / cashier users.',
+          );
+        }
       }
 
       // Validate company max user capacity limits
