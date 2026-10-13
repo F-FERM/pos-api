@@ -5,7 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { MongooseModule } from '@nestjs/mongoose';
-import { cloudMongoUri, localMongoUri } from './config/config';
+import { activeMongoUri, cloudMongoUri } from './config/config';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './common/guards/roles.guard';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
@@ -39,7 +39,7 @@ import { SyncModule } from './sync/sync.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot(localMongoUri),
+    MongooseModule.forRoot(activeMongoUri),
     MongooseModule.forRoot(cloudMongoUri, {
       connectionName: 'cloudConnection',
     }),
