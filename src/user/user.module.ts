@@ -16,6 +16,8 @@ import {
   StoreLicenseSchemaName,
 } from '../models/store-license.schema';
 
+import { SyncModule } from '../sync/sync.module';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -26,6 +28,7 @@ import {
     ]),
     forwardRef(() => CompanyModule),
     LogModule,
+    forwardRef(() => SyncModule),
   ],
   controllers: [UserController],
   providers: [UserService],
