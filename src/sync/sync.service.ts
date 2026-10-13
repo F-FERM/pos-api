@@ -60,12 +60,16 @@ import {
 import { BrandDocument, BrandSchemaName } from '../models/brand.schema';
 import { PrinterDocument, PrinterSchemaName } from '../models/printer.schema';
 import { CounterDocument, CounterSchemaName } from '../models/counter.schema';
+import {
+  EmailOtpDocument,
+  EmailOtpSchemaName,
+} from '../models/email-otp.schema';
 import { SyncPushDto } from './dto/sync-push.dto';
 import { SyncPullDto } from './dto/sync-pull.dto';
 import { UserService } from '../user/user.service';
 import { CompanyService } from '../company/company.service';
 import { LogService } from '../log/log.service';
-import { isCloudOnly } from '../config/config';
+import { isCloudOnly, isSyncMinimal } from '../config/config';
 
 @Injectable()
 export class SyncService
@@ -111,6 +115,8 @@ export class SyncService
     private readonly counterModel: Model<CounterDocument>,
     @InjectModel(DeviceRegistrationSchemaName)
     private readonly deviceModel: Model<DeviceRegistrationDocument>,
+    @InjectModel(EmailOtpSchemaName)
+    private readonly emailOtpModel: Model<EmailOtpDocument>,
 
     // Cloud DB Models ('cloudConnection')
     @InjectModel(CompanySchemaName, 'cloudConnection')
@@ -151,6 +157,8 @@ export class SyncService
     private readonly counterModelCloud: Model<CounterDocument>,
     @InjectModel(DeviceRegistrationSchemaName, 'cloudConnection')
     private readonly deviceModelCloud: Model<DeviceRegistrationDocument>,
+    @InjectModel(EmailOtpSchemaName, 'cloudConnection')
+    private readonly emailOtpModelCloud: Model<EmailOtpDocument>,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     @Inject(forwardRef(() => CompanyService))
@@ -231,11 +239,39 @@ export class SyncService
   }
 
   async syncAllUnsyncedRecords(): Promise<Record<string, number>> {
-    const summary = {
+    const adminSummary = {
+      companies: await this.syncUnsyncedModelRecords(
+        this.companyModel,
+        this.companyModelCloud,
+      ),
       users: await this.syncUnsyncedModelRecords(
         this.userModel,
         this.userModelCloud,
       ),
+      storeLicenses: await this.syncUnsyncedModelRecords(
+        this.storeLicenseModel,
+        this.storeLicenseModelCloud,
+      ),
+      subscriptions: await this.syncUnsyncedModelRecords(
+        this.subscriptionModel,
+        this.subscriptionModelCloud,
+      ),
+      deviceRegistrations: await this.syncUnsyncedModelRecords(
+        this.deviceModel,
+        this.deviceModelCloud,
+      ),
+      emailOtps: await this.syncUnsyncedModelRecords(
+        this.emailOtpModel,
+        this.emailOtpModelCloud,
+      ),
+    };
+
+    if (isSyncMinimal) {
+      return adminSummary;
+    }
+
+    const fullSummary = {
+      ...adminSummary,
       categories: await this.syncUnsyncedModelRecords(
         this.categoryModel,
         this.categoryModelCloud,
@@ -292,13 +328,9 @@ export class SyncService
         this.counterModel,
         this.counterModelCloud,
       ),
-      deviceRegistrations: await this.syncUnsyncedModelRecords(
-        this.deviceModel,
-        this.deviceModelCloud,
-      ),
     };
 
-    return summary;
+    return fullSummary;
   }
 
   private async upsertEntityList<T>(
@@ -351,7 +383,7 @@ export class SyncService
       await this.userService.validateAuthenticatedUser(userId);
       await this.companyService.validateCompany(companyId, userId);
 
-      const pushSummary = {
+      const pushSummary: Record<string, number> = {
         companies: await this.upsertEntityList(
           this.companyModelCloud,
           dto.companies,
@@ -362,62 +394,65 @@ export class SyncService
           dto.users,
           companyId,
         ),
-        products: await this.upsertEntityList(
-          this.productModelCloud,
-          dto.products,
-          companyId,
-        ),
-        customers: await this.upsertEntityList(
-          this.customerModelCloud,
-          dto.customers,
-          companyId,
-        ),
-        suppliers: await this.upsertEntityList(
-          this.supplierModelCloud,
-          dto.suppliers,
-          companyId,
-        ),
-        sales: await this.upsertEntityList(
-          this.saleModelCloud,
-          dto.sales,
-          companyId,
-        ),
-        saleReturns: await this.upsertEntityList(
-          this.saleReturnModelCloud,
-          dto.saleReturns,
-          companyId,
-        ),
-        purchases: await this.upsertEntityList(
-          this.purchaseModelCloud,
-          dto.purchases,
-          companyId,
-        ),
-        expenses: await this.upsertEntityList(
-          this.expenseModelCloud,
-          dto.expenses,
-          companyId,
-        ),
-        accounts: await this.upsertEntityList(
-          this.accountModelCloud,
-          dto.accounts,
-          companyId,
-        ),
-        accountTransactions: await this.upsertEntityList(
-          this.accountTransactionModelCloud,
-          dto.accountTransactions,
-          companyId,
-        ),
-        registerSessions: await this.upsertEntityList(
-          this.registerSessionModelCloud,
-          dto.registerSessions,
-          companyId,
-        ),
         deviceRegistrations: await this.upsertEntityList(
           this.deviceModelCloud,
           dto.deviceRegistrations,
           companyId,
         ),
       };
+
+      if (!isSyncMinimal) {
+        pushSummary.products = await this.upsertEntityList(
+          this.productModelCloud,
+          dto.products,
+          companyId,
+        );
+        pushSummary.customers = await this.upsertEntityList(
+          this.customerModelCloud,
+          dto.customers,
+          companyId,
+        );
+        pushSummary.suppliers = await this.upsertEntityList(
+          this.supplierModelCloud,
+          dto.suppliers,
+          companyId,
+        );
+        pushSummary.sales = await this.upsertEntityList(
+          this.saleModelCloud,
+          dto.sales,
+          companyId,
+        );
+        pushSummary.saleReturns = await this.upsertEntityList(
+          this.saleReturnModelCloud,
+          dto.saleReturns,
+          companyId,
+        );
+        pushSummary.purchases = await this.upsertEntityList(
+          this.purchaseModelCloud,
+          dto.purchases,
+          companyId,
+        );
+        pushSummary.expenses = await this.upsertEntityList(
+          this.expenseModelCloud,
+          dto.expenses,
+          companyId,
+        );
+        pushSummary.accounts = await this.upsertEntityList(
+          this.accountModelCloud,
+          dto.accounts,
+          companyId,
+        );
+        pushSummary.accountTransactions = await this.upsertEntityList(
+          this.accountTransactionModelCloud,
+          dto.accountTransactions,
+          companyId,
+        );
+        pushSummary.registerSessions = await this.upsertEntityList(
+          this.registerSessionModelCloud,
+          dto.registerSessions,
+          companyId,
+        );
+      }
 
       const syncTime = new Date();
       await this.companyModel.updateOne(
