@@ -27,10 +27,7 @@ import {
   PrivilegesModelConstants,
   PrivilegesSchemaName,
 } from '../models/privilege.schema';
-import {
-  CompanyDocument,
-  CompanySchemaName,
-} from '../models/company.schema';
+import { CompanyDocument, CompanySchemaName } from '../models/company.schema';
 import {
   StoreLicenseDocument,
   StoreLicenseSchemaName,
@@ -68,10 +65,15 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
 
   async onModuleInit() {
     if (this.userModelCloud && this.privilegeModelCloud) {
-      await seedSuperAdminUser(this.userModelCloud, this.privilegeModelCloud).catch(
-        () => null,
-      );
+      await seedSuperAdminUser(
+        this.userModelCloud,
+        this.privilegeModelCloud,
+      ).catch(() => null);
     }
+  }
+
+  getUserModelCloud(): Model<UserDocument> | null {
+    return this.userModelCloud || null;
   }
 
   /**
@@ -106,14 +108,7 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
           .exec();
 
         if (cloudUser && (await bcrypt.compare(pass, cloudUser.password))) {
-          // Sync Cloud Superadmin into Local DB so local NestJS JWT guards accept Superadmin operations
-          const cloudObj = cloudUser.toObject();
-          delete (cloudObj as any)._id;
-          await this.userModel.updateOne(
-            { _id: cloudUser._id },
-            { $set: cloudObj },
-            { upsert: true },
-          );
+          // Return Cloud Superadmin user directly without polluting Local DB
           return cloudUser;
         }
       }
@@ -150,10 +145,7 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
       await this.companyService.validateCompany(dto.companyId, userId);
 
       const privilege = await this.privilegeModel.findById(dto.privilegeId);
-      if (
-        !privilege ||
-        privilege.companyId?.toString() !== dto.companyId
-      ) {
+      if (!privilege || privilege.companyId?.toString() !== dto.companyId) {
         throw new NotFoundException('Privilege not found in this company');
       }
 
@@ -425,10 +417,7 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
       }
       if (dto.privilegeId) {
         const priv = await this.privilegeModel.findById(dto.privilegeId);
-        if (
-          !priv ||
-          priv.companyId?.toString() !== companyId
-        ) {
+        if (!priv || priv.companyId?.toString() !== companyId) {
           throw new NotFoundException('Privilege not found in this company');
         }
         update.privilegeId = new Types.ObjectId(dto.privilegeId);
