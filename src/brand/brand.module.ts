@@ -7,12 +7,15 @@ import { LogModule } from '../log/log.module';
 import { CompanyModule } from '../company/company.module';
 import { UserModule } from '../user/user.module';
 
+import { SyncModule } from '../sync/sync.module';
+
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: BrandSchemaName, schema: BrandSchema }]),
     LogModule,
     CompanyModule,
     UserModule,
+    SyncModule,
   ],
   controllers: [BrandController],
   providers: [BrandService],
