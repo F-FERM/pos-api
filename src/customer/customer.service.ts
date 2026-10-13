@@ -21,6 +21,8 @@ import { AuthedRequest } from '../utils/common.types';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
 
+import { SyncService } from '../sync/sync.service';
+
 @Injectable()
 export class CustomerService extends GenericDatabase<Model<CustomerDocument>> {
   constructor(
@@ -29,6 +31,7 @@ export class CustomerService extends GenericDatabase<Model<CustomerDocument>> {
     private readonly logService: LogService,
     private readonly companyService: CompanyService,
     private readonly userService: UserService,
+    private readonly syncService: SyncService,
   ) {
     super(customerModel);
   }
@@ -82,6 +85,8 @@ export class CustomerService extends GenericDatabase<Model<CustomerDocument>> {
         path: req.url,
         status: LogStatus.SUCCESS,
       });
+
+      this.syncService.syncAllUnsyncedRecords().catch(() => null);
 
       return {
         success: true,
@@ -256,6 +261,8 @@ export class CustomerService extends GenericDatabase<Model<CustomerDocument>> {
         path: req.url,
         status: LogStatus.SUCCESS,
       });
+
+      this.syncService.syncAllUnsyncedRecords().catch(() => null);
 
       return {
         success: true,
