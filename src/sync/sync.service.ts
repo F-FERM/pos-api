@@ -65,6 +65,7 @@ import { SyncPullDto } from './dto/sync-pull.dto';
 import { UserService } from '../user/user.service';
 import { CompanyService } from '../company/company.service';
 import { LogService } from '../log/log.service';
+import { isCloudOnly } from '../config/config';
 
 @Injectable()
 export class SyncService
@@ -160,6 +161,13 @@ export class SyncService
   }
 
   async onModuleInit() {
+    if (isCloudOnly) {
+      console.log(
+        '[MASTER SWITCH] Running in IS_CLOUD_ONLY Development Mode — All database queries read and write directly to Central Cloud MongoDB.',
+      );
+      return;
+    }
+
     // 10-second background poller to auto-sync unsynced local records to Cloud DB
     setInterval(() => {
       this.syncAllUnsyncedRecords().catch(() => null);
