@@ -1,6 +1,8 @@
 import {
   BadRequestException,
+  forwardRef,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -36,6 +38,8 @@ import {
 import { UpdateUserDto } from './dto/update-user.dto';
 import { seedSuperAdminUser } from '../common/seeds/superadmin.seed';
 
+import { SyncService } from '../sync/sync.service';
+
 @Injectable()
 export class UserService extends GenericDatabase<Model<UserDocument>> {
   constructor(
@@ -49,6 +53,8 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
     private readonly companyService: CompanyService,
     @InjectModel(PrivilegesSchemaName)
     private readonly privilegeModel: Model<PrivilegesDocument>,
+    @Inject(forwardRef(() => SyncService))
+    private readonly syncService: SyncService,
   ) {
     super(userModel);
   }
@@ -157,6 +163,9 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
         { $inc: { currentUserCount: 1 } },
       );
 
+      // Instantly trigger background sync to Cloud MongoDB
+      this.syncService.syncAllUnsyncedRecords().catch(() => null);
+
       await this.logService.createLog({
         companyId: new Types.ObjectId(dto.companyId),
         createdBy: new Types.ObjectId(userId),
@@ -236,7 +245,7 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
           .select(`-${UserModelConstants.password}`)
           .populate([
             {
-              path: UserModelConstants.privilegeId,
+              path: UserModelConstants.privilegeId!,
               select: `${PrivilegesModelConstants.name} ${PrivilegesModelConstants.roles} ${PrivilegesModelConstants.description}`,
             },
           ])
@@ -291,7 +300,7 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
         .select(`-${UserModelConstants.password}`)
         .populate([
           {
-            path: UserModelConstants.privilegeId,
+            path: UserModelConstants.privilegeId!,
             select: `${PrivilegesModelConstants.name} ${PrivilegesModelConstants.roles} ${PrivilegesModelConstants.description}`,
           },
         ]);
@@ -364,6 +373,8 @@ export class UserService extends GenericDatabase<Model<UserDocument>> {
         id,
         update,
       );
+
+      this.syncService.syncAllUnsyncedRecords().catch(() => null);
 
       await this.logService.createLog({
         companyId: new Types.ObjectId(companyId),
