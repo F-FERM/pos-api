@@ -22,6 +22,10 @@ import { LogModule } from '../log/log.module';
       { name: SubModuleSchemaName, schema: SubModuleSchema },
       { name: UserSchemaName, schema: UserSchema },
     ]),
+    MongooseModule.forFeature(
+      [{ name: PrivilegesSchemaName, schema: PrivilegesSchema }],
+      'cloudConnection',
+    ),
     CompanyModule,
     forwardRef(() => UserModule),
     LogModule,
