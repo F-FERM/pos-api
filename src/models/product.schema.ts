@@ -22,6 +22,14 @@ export class Product extends BaseSchema {
   @Prop({ type: Number, required: true, min: 0 })
   sellingPrice: number;
 
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Unit',
+    required: true,
+    index: true,
+  })
+  unitId: Types.ObjectId;
+
   /* ====================== OPTIONAL MINIMAL FIELDS ====================== */
 
   @Prop({ trim: true })
@@ -106,6 +114,7 @@ export const ProductModelConstants: { [K in keyof Product]-?: K } = {
   name: 'name',
   companyId: 'companyId',
   sellingPrice: 'sellingPrice',
+  unitId: 'unitId',
   sku: 'sku',
   barcode: 'barcode',
   categoryId: 'categoryId',
