@@ -1313,6 +1313,149 @@
         ]
       }
     },
+    "/api/unit": {
+      "post": {
+        "operationId": "UnitController_createUnit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUnitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create a new unit of measurement",
+        "tags": [
+          "Unit"
+        ]
+      },
+      "get": {
+        "operationId": "UnitController_findAllUnits",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 1,
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 10,
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all units for store with pagination",
+        "tags": [
+          "Unit"
+        ]
+      }
+    },
+    "/api/unit/{id}": {
+      "get": {
+        "operationId": "UnitController_findOneUnitById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get unit details by ID",
+        "tags": [
+          "Unit"
+        ]
+      },
+      "patch": {
+        "operationId": "UnitController_updateUnit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUnitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update unit details",
+        "tags": [
+          "Unit"
+        ]
+      },
+      "delete": {
+        "operationId": "UnitController_deleteUnit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Soft delete unit by ID",
+        "tags": [
+          "Unit"
+        ]
+      }
+    },
     "/api/privilege": {
       "post": {
         "operationId": "PrivilegeController_create",
@@ -4495,6 +4638,60 @@
           }
         }
       },
+      "CreateUnitDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unit name (e.g. Kilogram, Piece)",
+            "example": "Kilogram"
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Unit symbol (e.g. kg, pcs)",
+            "example": "kg"
+          },
+          "companyId": {
+            "type": "string",
+            "description": "Company Store ID",
+            "example": "650000000000000000000001"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Active status",
+            "default": true
+          }
+        },
+        "required": [
+          "name",
+          "companyId"
+        ]
+      },
+      "UpdateUnitDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unit name (e.g. Kilogram, Piece)",
+            "example": "Kilogram"
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Unit symbol (e.g. kg, pcs)",
+            "example": "kg"
+          },
+          "companyId": {
+            "type": "string",
+            "description": "Company Store ID",
+            "example": "650000000000000000000001"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Active status",
+            "default": true
+          }
+        }
+      },
       "SubModulePermissionDto": {
         "type": "object",
         "properties": {
@@ -4667,6 +4864,11 @@
             "description": "Selling price per unit (Required)",
             "example": 450
           },
+          "unitId": {
+            "type": "string",
+            "description": "Unit ID (Required)",
+            "example": "65f987654321abcdef654322"
+          },
           "sku": {
             "type": "string",
             "description": "Stock Keeping Unit / Product Code",
@@ -4768,7 +4970,8 @@
         },
         "required": [
           "name",
-          "sellingPrice"
+          "sellingPrice",
+          "unitId"
         ]
       },
       "UpdateProductDto": {
@@ -4783,6 +4986,11 @@
             "type": "number",
             "description": "Selling price per unit (Required)",
             "example": 450
+          },
+          "unitId": {
+            "type": "string",
+            "description": "Unit ID (Required)",
+            "example": "65f987654321abcdef654322"
           },
           "sku": {
             "type": "string",
