@@ -36,6 +36,7 @@ import {
 } from '../models/device-registration.schema';
 
 import { AccountModule } from '../account/account.module';
+import { UnitModule } from '../unit/unit.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { AccountModule } from '../account/account.module';
     SubscriptionModule,
     EmailModule,
     AccountModule,
+    UnitModule,
     PassportModule,
     JwtModule.register({
       secret: JWT_CONSTANTS.secret,
