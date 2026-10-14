@@ -53,6 +53,7 @@ import {
   DeviceRegistrationSchemaName,
   DeviceStatus,
 } from '../models/device-registration.schema';
+import { UnitDocument, UnitSchemaName } from '../models/unit.schema';
 import {
   CategoryDocument,
   CategorySchemaName,
@@ -85,6 +86,8 @@ export class SyncService
     private readonly storeLicenseModel: Model<StoreLicenseDocument>,
     @InjectModel(SubscriptionSchemaName)
     private readonly subscriptionModel: Model<SubscriptionDocument>,
+    @InjectModel(UnitSchemaName)
+    private readonly unitModel: Model<UnitDocument>,
     @InjectModel(CategorySchemaName)
     private readonly categoryModel: Model<CategoryDocument>,
     @InjectModel(BrandSchemaName)
@@ -127,6 +130,8 @@ export class SyncService
     private readonly storeLicenseModelCloud: Model<StoreLicenseDocument>,
     @InjectModel(SubscriptionSchemaName, 'cloudConnection')
     private readonly subscriptionModelCloud: Model<SubscriptionDocument>,
+    @InjectModel(UnitSchemaName, 'cloudConnection')
+    private readonly unitModelCloud: Model<UnitDocument>,
     @InjectModel(CategorySchemaName, 'cloudConnection')
     private readonly categoryModelCloud: Model<CategoryDocument>,
     @InjectModel(BrandSchemaName, 'cloudConnection')
@@ -272,6 +277,10 @@ export class SyncService
 
     const fullSummary = {
       ...adminSummary,
+      units: await this.syncUnsyncedModelRecords(
+        this.unitModel,
+        this.unitModelCloud,
+      ),
       categories: await this.syncUnsyncedModelRecords(
         this.categoryModel,
         this.categoryModelCloud,
@@ -510,6 +519,7 @@ export class SyncService
         storeLicense,
         subscription,
         users,
+        units,
         categories,
         brands,
         products,
@@ -539,6 +549,7 @@ export class SyncService
           updatedAt: { $gt: syncThreshold },
         }),
         this.userModelCloud.find(deltaFilter),
+        this.unitModelCloud.find(deltaFilter),
         this.categoryModelCloud.find(deltaFilter),
         this.brandModelCloud.find(deltaFilter),
         this.productModelCloud.find(deltaFilter),
