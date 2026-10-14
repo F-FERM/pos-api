@@ -37,6 +37,7 @@ import {
 } from '../models/device-registration.schema';
 import { EmailOtpSchema, EmailOtpSchemaName } from '../models/email-otp.schema';
 
+import { UnitSchema, UnitSchemaName } from '../models/unit.schema';
 import { CategorySchema, CategorySchemaName } from '../models/category.schema';
 import { BrandSchema, BrandSchemaName } from '../models/brand.schema';
 import { PrinterSchema, PrinterSchemaName } from '../models/printer.schema';
@@ -53,6 +54,7 @@ import { LogModule } from '../log/log.module';
       { name: UserSchemaName, schema: UserSchema },
       { name: StoreLicenseSchemaName, schema: StoreLicenseSchema },
       { name: SubscriptionSchemaName, schema: SubscriptionSchema },
+      { name: UnitSchemaName, schema: UnitSchema },
       { name: CategorySchemaName, schema: CategorySchema },
       { name: BrandSchemaName, schema: BrandSchema },
       { name: ProductSchemaName, schema: ProductSchema },
@@ -85,6 +87,7 @@ import { LogModule } from '../log/log.module';
         { name: UserSchemaName, schema: UserSchema },
         { name: StoreLicenseSchemaName, schema: StoreLicenseSchema },
         { name: SubscriptionSchemaName, schema: SubscriptionSchema },
+        { name: UnitSchemaName, schema: UnitSchema },
         { name: CategorySchemaName, schema: CategorySchema },
         { name: BrandSchemaName, schema: BrandSchema },
         { name: ProductSchemaName, schema: ProductSchema },
