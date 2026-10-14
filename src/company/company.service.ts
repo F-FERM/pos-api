@@ -38,6 +38,7 @@ import { SubscriptionStatus } from '../utils/enums/subscription.enums';
 import { AuthedRequest } from '../utils/common.types';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { AccountService } from '../account/account.service';
+import { UnitService } from '../unit/unit.service';
 import { Role } from '../utils/role.enum';
 import { UserDocument, UserModelConstants } from '../models/user.schema';
 
@@ -57,6 +58,7 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
     private readonly subscriptionService: SubscriptionService,
     @Inject(forwardRef(() => AccountService))
     private readonly accountService: AccountService,
+    private readonly unitService: UnitService,
   ) {
     super(companyModel);
   }
@@ -175,6 +177,10 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
           userId,
         );
         await this.accountService.createDefaultAccountsForCompany(
+          created._id.toString(),
+          userId,
+        );
+        await this.unitService.seedDefaultUnitsForCompany(
           created._id.toString(),
           userId,
         );
