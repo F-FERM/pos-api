@@ -77,25 +77,8 @@ export class SubscriptionGuard implements CanActivate {
       );
     }
 
-    // Check if trial has expired
-    if (subscription.isTrial && subscription.trialEndDate) {
-      const trialEnd = new Date(subscription.trialEndDate);
-      if (trialEnd < now) {
-        await this.subscriptionService.genericUpdateOne(
-          subscription._id.toString(),
-          {
-            status: SubscriptionStatus.EXPIRED,
-          },
-        );
-        throw new ForbiddenException(
-          'Your 14-day store free trial has expired. Please contact support to upgrade to a paid license.',
-        );
-      }
-    }
-
-    // Check subscription end date
-    const endDate =
-      subscription.currentPeriod?.endDate || subscription.trialEndDate;
+    // Unified single expiration check via currentPeriod.endDate
+    const endDate = subscription.currentPeriod?.endDate;
 
     if (endDate && new Date(endDate) < now) {
       await this.subscriptionService.genericUpdateOne(
@@ -104,23 +87,12 @@ export class SubscriptionGuard implements CanActivate {
           status: SubscriptionStatus.EXPIRED,
         },
       );
-      throw new ForbiddenException(
-        'Your subscription has expired. Please renew your subscription to continue using the service.',
-      );
-    }
 
-    // Check if subscription is cancelled
-    if (subscription.status === SubscriptionStatus.CANCELLED) {
-      throw new ForbiddenException(
-        'Your subscription has been cancelled. Please contact support.',
-      );
-    }
+      const message = subscription.isTrial
+        ? 'Your store free trial has expired. Contact support/sales to convert to an active paid subscription.'
+        : 'Your store subscription has expired. Please renew your subscription to continue using the service.';
 
-    // Check if subscription is suspended
-    if (subscription.status === SubscriptionStatus.SUSPENDED) {
-      throw new ForbiddenException(
-        'Your subscription has been suspended. Please contact support.',
-      );
+      throw new ForbiddenException(message);
     }
 
     // Calculate days remaining
