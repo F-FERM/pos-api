@@ -62,6 +62,7 @@ import {
 import { SubscriptionStatus } from '../utils/enums/subscription.enums';
 
 import { AccountService } from '../account/account.service';
+import { UnitService } from '../unit/unit.service';
 
 @Injectable()
 export class AuthService {
@@ -91,6 +92,7 @@ export class AuthService {
     private readonly loyaltySettingService: LoyaltySettingService,
     private readonly subscriptionService: SubscriptionService,
     private readonly accountService: AccountService,
+    private readonly unitService: UnitService,
   ) {}
 
   async validateUser(username: string, pass: string) {
@@ -381,6 +383,10 @@ export class AuthService {
           createdOwner._id.toString(),
         );
         await this.accountService.createDefaultAccountsForCompany(
+          createdCompany._id.toString(),
+          createdOwner._id.toString(),
+        );
+        await this.unitService.seedDefaultUnitsForCompany(
           createdCompany._id.toString(),
           createdOwner._id.toString(),
         );
