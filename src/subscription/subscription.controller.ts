@@ -15,6 +15,8 @@ import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 import { RenewSubscriptionDto } from './dto/renew-subscription.dto';
 import { UpdateSubscriptionStatusAndDateDto } from './dto/update-subscription-status-and-date.dto';
+import { ExtendTrialDto } from './dto/extend-trial.dto';
+import { ConvertToPaidDto } from './dto/convert-to-paid.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../utils/role.enum';
 import { SubscriptionStatus } from '../utils/enums/subscription.enums';
@@ -57,6 +59,44 @@ export class SubscriptionController {
     @Req() req: AuthedRequest,
   ) {
     return this.subscriptionService.manageSubscription(
+      companyId,
+      dto,
+      req.user.userId,
+      req,
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      'Superadmin: Extend company store trial period by X days (e.g. 7, 14, 30, 60, 90)',
+  })
+  @Roles(Role.superadmin)
+  @Patch('extend-trial/:companyId')
+  extendTrial(
+    @Param('companyId', ParseObjectIdPipe) companyId: string,
+    @Body() dto: ExtendTrialDto,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.subscriptionService.extendTrial(
+      companyId,
+      dto,
+      req.user.userId,
+      req,
+    );
+  }
+
+  @ApiOperation({
+    summary:
+      'Superadmin: Convert store trial into an active paid subscription with capacity limits and validity',
+  })
+  @Roles(Role.superadmin)
+  @Patch('convert-to-paid/:companyId')
+  convertToPaid(
+    @Param('companyId', ParseObjectIdPipe) companyId: string,
+    @Body() dto: ConvertToPaidDto,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.subscriptionService.convertToPaid(
       companyId,
       dto,
       req.user.userId,
