@@ -3,6 +3,8 @@ import {
   HttpStatus,
   Injectable,
   NotFoundException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { ClientSession, Model, Types } from 'mongoose';
@@ -29,7 +31,9 @@ export class UnitService extends GenericDatabase<Model<UnitDocument>> {
     @InjectModel(UnitSchemaName)
     private readonly unitModel: Model<UnitDocument>,
     private readonly logService: LogService,
+    @Inject(forwardRef(() => CompanyService))
     private readonly companyService: CompanyService,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly syncService: SyncService,
   ) {
