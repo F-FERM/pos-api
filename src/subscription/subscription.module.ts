@@ -14,6 +14,7 @@ import {
 import { UserModule } from '../user/user.module';
 import { CompanyModule } from '../company/company.module';
 import { LogModule } from '../log/log.module';
+import { SyncModule } from '../sync/sync.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { LogModule } from '../log/log.module';
     forwardRef(() => UserModule),
     forwardRef(() => CompanyModule),
     LogModule,
+    forwardRef(() => SyncModule),
   ],
   controllers: [SubscriptionController],
   providers: [SubscriptionService],
