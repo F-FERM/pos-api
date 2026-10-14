@@ -188,6 +188,14 @@ export type CompanyDocument = Company & Document;
 export class Company extends BaseSchema {
   /* ------------------------------ Identity ------------------------------ */
 
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subscription',
+    default: null,
+    index: true,
+  })
+  subscriptionId?: Types.ObjectId | null;
+
   @Prop({ required: true, trim: true })
   name: string;
 
@@ -386,6 +394,7 @@ export const CompanyModelConstants: { [K in keyof Company]: K } = {
 
   // subscription
   subscription: 'subscription',
+  subscriptionId: 'subscriptionId',
 
   // counters & limits
   isMultiCounterAllowed: 'isMultiCounterAllowed',
