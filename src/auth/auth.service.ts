@@ -149,6 +149,7 @@ export class AuthService {
         data: {
           email,
           expiresInMinutes: 10,
+          //TODO: devOtpCode should be removed in production, only for dev testing
           devOtpCode: otp, // Included for easy dev testing
         },
       };
