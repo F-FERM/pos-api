@@ -15,6 +15,7 @@ import { PermissionGuard } from './common/guards/permission.guard';
 import { SubscriptionGuard } from './common/guards/subscription.guard';
 import { ModuleModule } from './module/module.module';
 import { SubscriptionModule } from './subscription/subscription.module';
+import { UnitModule } from './unit/unit.module';
 import { CategoryModule } from './category/category.module';
 import { BrandModule } from './brand/brand.module';
 import { ProductModule } from './product/product.module';
@@ -52,6 +53,7 @@ import { SyncModule } from './sync/sync.module';
     PrivilegeModule,
     ModuleModule,
     SubscriptionModule,
+    UnitModule,
     CategoryModule,
     BrandModule,
     ProductModule,
