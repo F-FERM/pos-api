@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UnitController } from './unit.controller';
 import { UnitService } from './unit.service';
@@ -12,8 +12,8 @@ import { SyncModule } from '../sync/sync.module';
   imports: [
     MongooseModule.forFeature([{ name: UnitSchemaName, schema: UnitSchema }]),
     LogModule,
-    CompanyModule,
-    UserModule,
+    forwardRef(() => CompanyModule),
+    forwardRef(() => UserModule),
     SyncModule,
   ],
   controllers: [UnitController],
