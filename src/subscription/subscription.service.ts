@@ -23,11 +23,18 @@ import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 import { RenewSubscriptionDto } from './dto/renew-subscription.dto';
 import { UpdateSubscriptionStatusAndDateDto } from './dto/update-subscription-status-and-date.dto';
+import { ExtendTrialDto } from './dto/extend-trial.dto';
+import { ConvertToPaidDto } from './dto/convert-to-paid.dto';
 import { UserService } from '../user/user.service';
 import { CompanyService } from '../company/company.service';
 import { LogService } from '../log/log.service';
-import { AuthedRequest } from '../utils/common.types';
+import { SyncService } from '../sync/sync.service';
+import type { AuthedRequest } from '../utils/common.types';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
+import {
+  CompanyStatus,
+  CompanySubscriptionStatus,
+} from '../utils/enums/company.enums';
 import {
   BillingCycle,
   SubscriptionEventType,
@@ -50,6 +57,8 @@ export class SubscriptionService extends GenericDatabase<
     @Inject(forwardRef(() => CompanyService))
     private readonly companyService: CompanyService,
     private readonly logService: LogService,
+    @Inject(forwardRef(() => SyncService))
+    private readonly syncService: SyncService,
   ) {
     super(subscriptionModel);
   }
@@ -521,6 +530,271 @@ export class SubscriptionService extends GenericDatabase<
         throw new BadRequestException(error.message);
       }
       throw new BadRequestException('Error extending store subscription');
+    }
+  }
+
+  async extendTrial(
+    companyId: string,
+    dto: ExtendTrialDto,
+    superAdminUserId: string,
+    req: AuthedRequest,
+  ) {
+    try {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.userService.validateAuthenticatedUser(superAdminUserId);
+
+      const compObjId = new Types.ObjectId(companyId);
+      const company = await this.companyModel.findOne({
+        _id: compObjId,
+        isDeleted: false,
+      });
+
+      if (!company) {
+        throw new NotFoundException('Company store not found');
+      }
+
+      let subscription: SubscriptionDocument | null = await this.subscriptionModel.findOne({
+        companyId: compObjId,
+        isDeleted: false,
+      });
+
+      if (!subscription) {
+        subscription = await this.createDefaultSubscriptionForCompany(
+          companyId,
+          superAdminUserId,
+        );
+      }
+
+      if (!subscription) {
+        throw new BadRequestException('Failed to initialize subscription for store');
+      }
+
+      const now = new Date();
+      const currentEnd =
+        subscription.trialEndDate && new Date(subscription.trialEndDate) > now
+          ? new Date(subscription.trialEndDate)
+          : now;
+
+      const newTrialEndDate = new Date(
+        currentEnd.getTime() + dto.additionalDays * 24 * 60 * 60 * 1000,
+      );
+
+      await this.subscriptionModel.updateOne(
+        { _id: subscription._id },
+        {
+          $set: {
+            trialEndDate: newTrialEndDate,
+            'currentPeriod.endDate': newTrialEndDate,
+            isTrial: true,
+            status: SubscriptionStatus.TRIAL,
+            isSynced: false,
+          },
+          $push: {
+            events: {
+              type: SubscriptionEventType.UPGRADED,
+              occurredAt: new Date(),
+              actorId: new Types.ObjectId(superAdminUserId),
+              notes: `Trial extended by ${dto.additionalDays} days. Reason: ${dto.reason || 'Superadmin trial extension'}`,
+            },
+          },
+        },
+      );
+
+      // Synchronize Company status & subscriptionId reference
+      await this.companyModel.updateOne(
+        { _id: compObjId },
+        {
+          $set: {
+            status: CompanyStatus.ACTIVE,
+            'subscription.status': CompanySubscriptionStatus.TRIAL,
+            'subscription.trialEndDate': newTrialEndDate,
+            'subscription.endDate': newTrialEndDate,
+            subscriptionId: subscription._id,
+            isSynced: false,
+          },
+        },
+      );
+
+      // Synchronize StoreLicense status
+      await this.storeLicenseModel.updateOne(
+        { companyId: compObjId },
+        {
+          $set: {
+            status: LicenseStatus.REDEEMED,
+            expiresAt: newTrialEndDate,
+            isSynced: false,
+          },
+        },
+      );
+
+      await this.logService.createLog({
+        companyId: compObjId,
+        createdBy: new Types.ObjectId(superAdminUserId),
+        action: LogActions.UPDATE_SUBSCRIPTION,
+        entityType: LogEntityType.SUBSCRIPTION,
+        entityId: new Types.ObjectId(subscription._id),
+        description: `Trial extended by ${dto.additionalDays} days for store ${company.name}`,
+        ipAddress,
+        path: req.url,
+        status: LogStatus.SUCCESS,
+      });
+
+      this.syncService.syncAllUnsyncedRecords().catch(() => null);
+
+      return {
+        success: true,
+        message: `Store trial successfully extended by ${dto.additionalDays} days until ${newTrialEndDate.toISOString().split('T')[0]}`,
+        data: {
+          companyId,
+          endDate: newTrialEndDate,
+          status: SubscriptionStatus.TRIAL,
+        },
+        statusCode: HttpStatus.OK,
+      };
+    } catch (error: unknown) {
+      if (error instanceof NotFoundException) throw error;
+      if (error instanceof Error) throw new BadRequestException(error.message);
+      throw new BadRequestException('Error extending store trial');
+    }
+  }
+
+  async convertToPaid(
+    companyId: string,
+    dto: ConvertToPaidDto,
+    superAdminUserId: string,
+    req: AuthedRequest,
+  ) {
+    try {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.userService.validateAuthenticatedUser(superAdminUserId);
+
+      const compObjId = new Types.ObjectId(companyId);
+      const company = await this.companyModel.findOne({
+        _id: compObjId,
+        isDeleted: false,
+      });
+
+      if (!company) {
+        throw new NotFoundException('Company store not found');
+      }
+
+      let subscription: SubscriptionDocument | null = await this.subscriptionModel.findOne({
+        companyId: compObjId,
+        isDeleted: false,
+      });
+
+      if (!subscription) {
+        subscription = await this.createDefaultSubscriptionForCompany(
+          companyId,
+          superAdminUserId,
+        );
+      }
+
+      if (!subscription) {
+        throw new BadRequestException('Failed to initialize subscription for store');
+      }
+
+      const now = new Date();
+      const currentEnd =
+        subscription.currentPeriod?.endDate && new Date(subscription.currentPeriod.endDate) > now
+          ? new Date(subscription.currentPeriod.endDate)
+          : now;
+
+      const newEndDate = new Date(
+        currentEnd.getTime() + dto.validityMonths * 30 * 24 * 60 * 60 * 1000,
+      );
+
+      const newPlanName = dto.planName?.trim() || 'Professional Plan';
+      const updatedMaxUsers = dto.maxUsers || subscription.limits?.maxUsers || 5;
+      const updatedMaxCounters = dto.maxCounters || subscription.limits?.maxTerminals || 2;
+
+      await this.subscriptionModel.updateOne(
+        { _id: subscription._id },
+        {
+          $set: {
+            planName: newPlanName,
+            isTrial: false,
+            status: SubscriptionStatus.ACTIVE,
+            'currentPeriod.endDate': newEndDate,
+            'limits.maxUsers': updatedMaxUsers,
+            'limits.maxTerminals': updatedMaxCounters,
+            trialConvertedAt: new Date(),
+            isSynced: false,
+          },
+          $push: {
+            events: {
+              type: SubscriptionEventType.TRIAL_CONVERTED,
+              occurredAt: new Date(),
+              actorId: new Types.ObjectId(superAdminUserId),
+              notes: `Trial converted to paid active subscription (${dto.validityMonths} months). Reason: ${dto.reason || 'Superadmin conversion'}`,
+            },
+          },
+        },
+      );
+
+      // Synchronize Company status & subscriptionId reference
+      await this.companyModel.updateOne(
+        { _id: compObjId },
+        {
+          $set: {
+            status: CompanyStatus.ACTIVE,
+            maxUsers: updatedMaxUsers,
+            maxCounters: updatedMaxCounters,
+            'subscription.status': CompanySubscriptionStatus.ACTIVE,
+            'subscription.endDate': newEndDate,
+            subscriptionId: subscription._id,
+            isSynced: false,
+          },
+        },
+      );
+
+      // Synchronize StoreLicense status
+      await this.storeLicenseModel.updateOne(
+        { companyId: compObjId },
+        {
+          $set: {
+            status: LicenseStatus.REDEEMED,
+            isTrial: false,
+            expiresAt: newEndDate,
+            maxUsers: updatedMaxUsers,
+            maxCounters: updatedMaxCounters,
+            isSynced: false,
+          },
+        },
+      );
+
+      await this.logService.createLog({
+        companyId: compObjId,
+        createdBy: new Types.ObjectId(superAdminUserId),
+        action: LogActions.UPDATE_SUBSCRIPTION,
+        entityType: LogEntityType.SUBSCRIPTION,
+        entityId: new Types.ObjectId(subscription._id),
+        description: `Trial converted to paid active subscription (${dto.validityMonths} months) until ${newEndDate.toISOString().split('T')[0]} for store ${company.name}`,
+        ipAddress,
+        path: req.url,
+        status: LogStatus.SUCCESS,
+      });
+
+      this.syncService.syncAllUnsyncedRecords().catch(() => null);
+
+      return {
+        success: true,
+        message: `Store trial successfully converted to paid active subscription until ${newEndDate.toISOString().split('T')[0]}`,
+        data: {
+          companyId,
+          planName: newPlanName,
+          isTrial: false,
+          endDate: newEndDate,
+          status: SubscriptionStatus.ACTIVE,
+          maxUsers: updatedMaxUsers,
+          maxCounters: updatedMaxCounters,
+        },
+        statusCode: HttpStatus.OK,
+      };
+    } catch (error: unknown) {
+      if (error instanceof NotFoundException) throw error;
+      if (error instanceof Error) throw new BadRequestException(error.message);
+      throw new BadRequestException('Error converting trial to paid subscription');
     }
   }
 
