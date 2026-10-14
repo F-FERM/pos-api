@@ -31,6 +31,14 @@ export class CreateProductDto {
   @Min(0)
   sellingPrice: number;
 
+  @ApiProperty({
+    description: 'Unit ID (Required)',
+    example: '65f987654321abcdef654322',
+  })
+  @IsNotEmpty()
+  @IsMongoId()
+  unitId: string;
+
   /* ====================== OPTIONAL MINIMAL FIELDS ====================== */
 
   @ApiPropertyOptional({
