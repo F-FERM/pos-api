@@ -15,6 +15,7 @@ import { LoyaltySettingModule } from '../loyalty-setting/loyalty-setting.module'
 import { SubscriptionModule } from '../subscription/subscription.module';
 
 import { AccountModule } from '../account/account.module';
+import { UnitModule } from '../unit/unit.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AccountModule } from '../account/account.module';
     LoyaltySettingModule,
     SubscriptionModule,
     forwardRef(() => AccountModule),
+    UnitModule,
   ],
   controllers: [CompanyController],
   providers: [CompanyService],
