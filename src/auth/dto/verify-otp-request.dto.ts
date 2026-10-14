@@ -1,12 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsEmail,
-  IsMongoId,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Length,
-} from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, IsString, Length } from 'class-validator';
 
 export class VerifyOtpRequestDto {
   @ApiProperty({ example: 'owner@supermarket.com' })
@@ -19,29 +12,4 @@ export class VerifyOtpRequestDto {
   @IsNotEmpty()
   @Length(6, 6)
   otp: string;
-
-  @ApiProperty({
-    example: 'WIN-DESK-GUID-998877',
-    description: 'Hardware MAC/UUID or GUID fingerprint of physical counter PC (Required for hardware locking)',
-  })
-  @IsString()
-  @IsNotEmpty()
-  deviceId: string;
-
-  @ApiProperty({
-    example: 'Counter 1 Windows POS Terminal',
-    description: 'Friendly terminal machine display name (Required for hardware locking)',
-  })
-  @IsString()
-  @IsNotEmpty()
-  deviceName: string;
-
-  @ApiPropertyOptional({
-    example: '65f123456789abcdef123456',
-    description: 'Counter ID to bind physical machine to during verification',
-  })
-  @IsOptional()
-  @IsMongoId()
-  counterId?: string;
 }
-
