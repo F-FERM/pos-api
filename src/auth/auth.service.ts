@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpStatus,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -215,30 +216,18 @@ export class AuthService {
           .replace(/^-+|-+$/g, '') || 'store';
       const cleanSlug = `${rawSlug}-${Date.now().toString().slice(-4)}`;
 
-      // Match pre-assigned store licenses specifically for assignedEmail
-      const existingLicense = await this.storeLicenseModel.findOne({
-        assignedEmail: email,
-        status: LicenseStatus.ASSIGNED,
-        isDeleted: false,
-      });
-
-      const licenseKey = existingLicense
-        ? existingLicense.licenseKey
-        : `LIC-${cleanCode}-${Math.floor(10000 + Math.random() * 90000)}`;
-
+      const licenseKey = `LIC-${cleanCode}-${Math.floor(10000 + Math.random() * 90000)}`;
       const hashedPassword = await bcrypt.hash(storeDto.password, 10);
 
-      const isTrial = !existingLicense;
+      const isTrial = true;
       const trialDays = 14;
       const trialExpiresAt = new Date(
         Date.now() + trialDays * 24 * 60 * 60 * 1000,
       );
 
-      const maxCounters = existingLicense ? existingLicense.maxCounters : 2;
-      const maxUsers = existingLicense ? existingLicense.maxUsers : 5;
-      const expiresAt = existingLicense
-        ? existingLicense.expiresAt
-        : trialExpiresAt;
+      const maxCounters = 2;
+      const maxUsers = 5;
+      const expiresAt = trialExpiresAt;
 
       const tempOwnerId = new Types.ObjectId();
 
@@ -322,33 +311,19 @@ export class AuthService {
           { $set: { createdBy: createdOwner._id } },
         );
 
-        if (existingLicense) {
-          await this.storeLicenseModel.updateOne(
-            { _id: existingLicense._id },
-            {
-              $set: {
-                companyId: createdCompany._id,
-                assignedEmail: email,
-                status: LicenseStatus.REDEEMED,
-                redeemedAt: new Date(),
-              },
-            },
-          );
-        } else {
-          await this.storeLicenseModel.create({
-            licenseKey,
-            assignedEmail: email,
-            companyId: createdCompany._id,
-            status: LicenseStatus.TRIAL,
-            isTrial: true,
-            maxCounters: 2,
-            maxUsers: 5,
-            validityMonths: 1,
-            expiresAt: trialExpiresAt,
-            redeemedAt: new Date(),
-            createdBy: createdOwner._id,
-          });
-        }
+        await this.storeLicenseModel.create({
+          licenseKey,
+          assignedEmail: email,
+          companyId: createdCompany._id,
+          status: LicenseStatus.TRIAL,
+          isTrial: true,
+          maxCounters: 2,
+          maxUsers: 5,
+          validityMonths: 1,
+          expiresAt: trialExpiresAt,
+          redeemedAt: new Date(),
+          createdBy: createdOwner._id,
+        });
       } catch (creationErr) {
         if (createdOwner) {
           await this.userModel.deleteOne({ _id: createdOwner._id }).catch(() => null);
@@ -391,19 +366,27 @@ export class AuthService {
           createdCompany._id.toString(),
           createdOwner._id.toString(),
         );
-        await this.subscriptionService.createDefaultSubscriptionForCompany(
-          createdCompany._id.toString(),
-          createdOwner._id.toString(),
-          {
-            status: isTrial
-              ? SubscriptionStatus.TRIAL
-              : SubscriptionStatus.ACTIVE,
-            isTrial,
-            trialEndDate: expiresAt || undefined,
-            maxCounters,
-            maxUsers,
-          },
-        );
+        const defaultSub =
+          await this.subscriptionService.createDefaultSubscriptionForCompany(
+            createdCompany._id.toString(),
+            createdOwner._id.toString(),
+            {
+              status: isTrial
+                ? SubscriptionStatus.TRIAL
+                : SubscriptionStatus.ACTIVE,
+              isTrial,
+              trialEndDate: expiresAt || undefined,
+              maxCounters,
+              maxUsers,
+            },
+          );
+
+        if (defaultSub && defaultSub._id) {
+          await this.companyModel.updateOne(
+            { _id: createdCompany._id },
+            { $set: { subscriptionId: defaultSub._id } },
+          );
+        }
       } catch (seedErr) {
         console.warn(
           'Failed to auto-seed defaults for registered store:',
@@ -416,47 +399,9 @@ export class AuthService {
         { $set: { isVerified: true } },
       );
 
-      // Auto-register calling terminal physical device if deviceId provided
-      let deviceData: Record<string, unknown> | null = null;
-      if (dto.deviceId && dto.deviceName) {
-        try {
-          const devicePayload = {
-            companyId: createdCompany._id.toString(),
-            deviceId: dto.deviceId.trim(),
-            licenseKey,
-          };
-          const deviceToken = this.jwtService.sign(devicePayload);
-
-          const createdDevice = await this.deviceModel.create({
-            deviceId: dto.deviceId.trim(),
-            deviceName: dto.deviceName.trim(),
-            licenseKey,
-            deviceToken,
-            status: DeviceStatus.ACTIVE,
-            isBypassedInhouse: true,
-            companyId: createdCompany._id,
-            counterId: dto.counterId ? new Types.ObjectId(dto.counterId) : null,
-            ipAddress: '127.0.0.1',
-            lastPingAt: new Date(),
-            createdBy: createdOwner._id,
-          });
-
-          deviceData = {
-            deviceToken,
-            device: {
-              id: createdDevice._id,
-              deviceId: createdDevice.deviceId,
-              deviceName: createdDevice.deviceName,
-            },
-          };
-        } catch (deviceErr) {
-          console.warn('Auto device registration notice:', deviceErr);
-        }
-      }
-
-      // Send Store License Key email via Brevo SMTP (graceful fallback)
-      try {
-        await this.emailService.sendLicenseIssuedEmail(
+      // Send Store License Key email via Brevo SMTP
+      this.emailService
+        .sendLicenseIssuedEmail(
           email,
           storeDto.ownerName.trim(),
           createdCompany.name,
@@ -464,28 +409,28 @@ export class AuthService {
           maxCounters,
           isTrial,
           expiresAt,
+        )
+        .catch((emailErr) =>
+          console.warn('Failed to send license email:', emailErr),
         );
-      } catch (emailErr) {
-        console.warn('Failed to send license email:', emailErr);
-      }
 
       return {
         success: true,
         message:
-          'Store registration verified and 14-Day Trial Store License Key generated successfully!',
+          'Store registration verified and Trial Store License Key sent to email successfully!',
         data: {
           licenseKey,
           company: {
-            id: createdCompany._id,
-            name: createdCompany.name,
-            code: createdCompany.code,
+            id: createdCompany?._id,
+            name: createdCompany?.name,
+            code: createdCompany?.code,
             licenseKey,
           },
           owner: {
-            id: createdOwner._id,
-            username: createdOwner.username,
-            name: createdOwner.name,
-            email: createdOwner.email,
+            id: createdOwner?._id,
+            username: createdOwner?.username,
+            name: createdOwner?.name,
+            email: createdOwner?.email,
           },
           license: {
             licenseKey,
@@ -495,8 +440,8 @@ export class AuthService {
             maxCounters,
             maxUsers,
           },
-          ...(deviceData && deviceData),
         },
+        statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
       if (error instanceof Error) {
