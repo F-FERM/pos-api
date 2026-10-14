@@ -289,6 +289,20 @@ export class DeviceRegistrationService extends GenericDatabase<
 
       const maxAllowedCounters = licenseDoc?.maxCounters || 5;
 
+      if (!existingDevice) {
+        const activeDevicesCount = await this.deviceModel.countDocuments({
+          companyId: company._id,
+          status: DeviceStatus.ACTIVE,
+          isDeleted: false,
+        });
+
+        if (activeDevicesCount >= maxAllowedCounters) {
+          throw new BadRequestException(
+            `Terminal registration limit reached (${activeDevicesCount}/${maxAllowedCounters}). Contact Superadmin to upgrade your store's counter capacity.`,
+          );
+        }
+      }
+
       if (existingDevice) {
         if (existingDevice.status === DeviceStatus.REVOKED) {
           throw new UnauthorizedException(
