@@ -29,11 +29,15 @@ import { AuthedRequest } from '../utils/common.types';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
 
+import { UnitDocument, UnitModelConstants, UnitSchemaName } from '../models/unit.schema';
+
 @Injectable()
 export class ProductService extends GenericDatabase<Model<ProductDocument>> {
   constructor(
     @InjectModel(ProductSchemaName)
     private readonly productModel: Model<ProductDocument>,
+    @InjectModel(UnitSchemaName)
+    private readonly unitModel: Model<UnitDocument>,
     private readonly logService: LogService,
     private readonly companyService: CompanyService,
     private readonly userService: UserService,
@@ -122,6 +126,16 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
       await this.userService.validateAuthenticatedUser(userId);
       await this.companyService.validateCompany(dto.companyId, userId);
 
+      const unit = await this.unitModel.findOne({
+        _id: new Types.ObjectId(dto.unitId),
+        companyId: new Types.ObjectId(dto.companyId),
+        isDeleted: false,
+      });
+
+      if (!unit) {
+        throw new BadRequestException('Unit not found in your store');
+      }
+
       if (dto.categoryId) {
         const category = await this.categoryService.genericFindOne({
           _id: dto.categoryId,
@@ -179,6 +193,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
       const created = await this.genericCreateOne({
         ...dto,
         name: dto.name.trim(),
+        unitId: new Types.ObjectId(dto.unitId),
         sku: dto.sku?.trim(),
         barcode: dto.barcode?.trim(),
         partNumber: dto.partNumber?.trim(),
@@ -303,6 +318,10 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         this.productModel
           .find(filter)
           .populate([
+            {
+              path: ProductModelConstants.unitId,
+              select: `${UnitModelConstants.name} ${UnitModelConstants.symbol}`,
+            },
             {
               path: ProductModelConstants.categoryId,
               select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
