@@ -317,7 +317,7 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
       if (!isSuperAdmin) {
         const user = await this.userService.genericFindOne({ _id: userId });
         const userCompanyId = user?.companyId;
-        if (!userCompanyId || userCompanyId.toString() !== id) {
+        if (!userCompanyId || userCompanyId.toString() !== id.toString()) {
           throw new BadRequestException('Access denied');
         }
       }
@@ -361,7 +361,7 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
 
       if (!isSuperAdmin) {
         const userCompanyId = user?.companyId;
-        if (!userCompanyId || userCompanyId.toString() !== id) {
+        if (!userCompanyId || userCompanyId.toString() !== id.toString()) {
           throw new BadRequestException('Access denied');
         }
       }
