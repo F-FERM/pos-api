@@ -889,6 +889,74 @@
         ]
       }
     },
+    "/api/subscription/extend-trial/{companyId}": {
+      "patch": {
+        "operationId": "SubscriptionController_extendTrial",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtendTrialDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Superadmin: Extend company store trial period by X days (e.g. 7, 14, 30, 60, 90)",
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
+    "/api/subscription/convert-to-paid/{companyId}": {
+      "patch": {
+        "operationId": "SubscriptionController_convertToPaid",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConvertToPaidDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Superadmin: Convert store trial into an active paid subscription with capacity limits and validity",
+        "tags": [
+          "Subscriptions"
+        ]
+      }
+    },
     "/api/subscription/company/{companyId}/extend": {
       "patch": {
         "operationId": "SubscriptionController_extendSubscription",
@@ -3772,28 +3840,11 @@
             "type": "string",
             "example": "123456",
             "description": "6-digit email OTP code"
-          },
-          "deviceId": {
-            "type": "string",
-            "example": "WIN-DESK-GUID-998877",
-            "description": "Hardware MAC/UUID or GUID fingerprint of physical counter PC (Required for hardware locking)"
-          },
-          "deviceName": {
-            "type": "string",
-            "example": "Counter 1 Windows POS Terminal",
-            "description": "Friendly terminal machine display name (Required for hardware locking)"
-          },
-          "counterId": {
-            "type": "string",
-            "example": "65f123456789abcdef123456",
-            "description": "Counter ID to bind physical machine to during verification"
           }
         },
         "required": [
           "email",
-          "otp",
-          "deviceId",
-          "deviceName"
+          "otp"
         ]
       },
       "ResendLicenseKeyRequestDto": {
@@ -4390,6 +4441,55 @@
             "description": "Internal admin notes or reason for subscription change"
           }
         }
+      },
+      "ExtendTrialDto": {
+        "type": "object",
+        "properties": {
+          "additionalDays": {
+            "type": "number",
+            "example": 30,
+            "description": "Number of trial extension days (e.g. 7, 14, 30, 60, 90)"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Store owner requested 30 days trial extension for evaluation"
+          }
+        },
+        "required": [
+          "additionalDays"
+        ]
+      },
+      "ConvertToPaidDto": {
+        "type": "object",
+        "properties": {
+          "validityMonths": {
+            "type": "number",
+            "example": 12,
+            "description": "Subscription validity in months (e.g. 1, 3, 6, 12, 24)"
+          },
+          "planName": {
+            "type": "string",
+            "example": "Professional Plan",
+            "default": "Professional Plan"
+          },
+          "maxUsers": {
+            "type": "number",
+            "example": 5,
+            "description": "Max allowed active users"
+          },
+          "maxCounters": {
+            "type": "number",
+            "example": 3,
+            "description": "Max allowed active terminal counters"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Converted store trial to paid 1-year subscription"
+          }
+        },
+        "required": [
+          "validityMonths"
+        ]
       },
       "UpdateSubscriptionDto": {
         "type": "object",
