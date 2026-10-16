@@ -134,6 +134,22 @@ export class UnitService extends GenericDatabase<Model<UnitDocument>> {
         statusCode: HttpStatus.CREATED,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: companyId ? new Types.ObjectId(companyId) : null,
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.CREATE_UNIT,
+        entityType: LogEntityType.UNIT,
+        entityId: new Types.ObjectId(),
+        description: 'Failed to create unit',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
       }
@@ -277,6 +293,22 @@ export class UnitService extends GenericDatabase<Model<UnitDocument>> {
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: companyId ? new Types.ObjectId(companyId) : null,
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.UPDATE_UNIT,
+        entityType: LogEntityType.UNIT,
+        entityId: new Types.ObjectId(id),
+        description: 'Failed to update unit',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
       }
@@ -330,6 +362,22 @@ export class UnitService extends GenericDatabase<Model<UnitDocument>> {
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: companyId ? new Types.ObjectId(companyId) : null,
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.DELETE_UNIT,
+        entityType: LogEntityType.UNIT,
+        entityId: new Types.ObjectId(id),
+        description: 'Failed to delete unit',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
       }
