@@ -276,7 +276,7 @@ export class StaffService extends GenericDatabase<Model<StaffDocument>> {
         .populate([
           {
             path: StaffModelConstants.userId,
-            select: `${UserModelConstants.username} ${UserModelConstants.name} ${UserModelConstants.email}`,
+            select: `${UserModelConstants.username} ${UserModelConstants.name} ${UserModelConstants.email} ${UserModelConstants.privilegeId}`,
           },
           {
             path: StaffModelConstants.privilegeId,
