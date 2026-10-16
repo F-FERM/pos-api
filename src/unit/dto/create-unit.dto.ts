@@ -18,11 +18,6 @@ export class CreateUnitDto {
   @IsString()
   symbol?: string;
 
-  @ApiProperty({ description: 'Company Store ID', example: '650000000000000000000001' })
-  @IsNotEmpty()
-  @IsMongoId()
-  companyId: string;
-
   @ApiPropertyOptional({ description: 'Active status', default: true })
   @IsOptional()
   @IsBoolean()
