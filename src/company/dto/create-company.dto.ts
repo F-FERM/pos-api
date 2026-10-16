@@ -97,6 +97,13 @@ export class CompanyRegionalSettingsDto {
   currencySymbol?: string;
 }
 
+export class CompanyBrandingDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  logoUrl?: string;
+}
+
 export class CreateCompanyDto {
   @ApiProperty()
   @IsString()
@@ -151,4 +158,10 @@ export class CreateCompanyDto {
   @ValidateNested()
   @Type(() => CompanyRegionalSettingsDto)
   regional?: CompanyRegionalSettingsDto;
+
+  @ApiPropertyOptional({ type: CompanyBrandingDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CompanyBrandingDto)
+  branding?: CompanyBrandingDto;
 }
