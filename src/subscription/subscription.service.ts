@@ -204,6 +204,22 @@ export class SubscriptionService extends GenericDatabase<
         statusCode: HttpStatus.CREATED,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: dto.companyId ? new Types.ObjectId(dto.companyId) : null,
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.CREATE_SUBSCRIPTION,
+        entityType: LogEntityType.SUBSCRIPTION,
+        entityId: new Types.ObjectId(),
+        description: 'Failed to create subscription',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
       }
@@ -262,6 +278,22 @@ export class SubscriptionService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: null,
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.UPDATE_SUBSCRIPTION,
+        entityType: LogEntityType.SUBSCRIPTION,
+        entityId: id ? new Types.ObjectId(id) : new Types.ObjectId(),
+        description: 'Failed to update subscription',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof NotFoundException) throw error;
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
@@ -323,6 +355,22 @@ export class SubscriptionService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: companyId ? new Types.ObjectId(companyId) : null,
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.UPDATE_SUBSCRIPTION,
+        entityType: LogEntityType.SUBSCRIPTION,
+        entityId: new Types.ObjectId(),
+        description: 'Failed to renew subscription',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof NotFoundException) throw error;
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
@@ -373,6 +421,22 @@ export class SubscriptionService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: null,
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.DELETE_SUBSCRIPTION,
+        entityType: LogEntityType.SUBSCRIPTION,
+        entityId: id ? new Types.ObjectId(id) : new Types.ObjectId(),
+        description: 'Failed to cancel subscription',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof NotFoundException) throw error;
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
@@ -525,6 +589,22 @@ export class SubscriptionService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: companyId ? new Types.ObjectId(companyId) : null,
+        createdBy: new Types.ObjectId(superAdminId),
+        action: LogActions.UPDATE_SUBSCRIPTION,
+        entityType: LogEntityType.SUBSCRIPTION,
+        entityId: new Types.ObjectId(),
+        description: 'Failed to extend subscription',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof NotFoundException) throw error;
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
@@ -652,6 +732,22 @@ export class SubscriptionService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: companyId ? new Types.ObjectId(companyId) : null,
+        createdBy: new Types.ObjectId(superAdminUserId),
+        action: LogActions.UPDATE_SUBSCRIPTION,
+        entityType: LogEntityType.SUBSCRIPTION,
+        entityId: new Types.ObjectId(),
+        description: 'Failed to extend store trial',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof NotFoundException) throw error;
       if (error instanceof Error) throw new BadRequestException(error.message);
       throw new BadRequestException('Error extending store trial');
@@ -792,6 +888,22 @@ export class SubscriptionService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: companyId ? new Types.ObjectId(companyId) : null,
+        createdBy: new Types.ObjectId(superAdminUserId),
+        action: LogActions.UPDATE_SUBSCRIPTION,
+        entityType: LogEntityType.SUBSCRIPTION,
+        entityId: new Types.ObjectId(),
+        description: 'Failed to convert trial to paid subscription',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof NotFoundException) throw error;
       if (error instanceof Error) throw new BadRequestException(error.message);
       throw new BadRequestException('Error converting trial to paid subscription');
@@ -847,6 +959,22 @@ export class SubscriptionService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: companyId ? new Types.ObjectId(companyId) : null,
+        createdBy: new Types.ObjectId(superAdminId),
+        action: LogActions.UPDATE_SUBSCRIPTION,
+        entityType: LogEntityType.SUBSCRIPTION,
+        entityId: new Types.ObjectId(),
+        description: 'Failed to update subscription status',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof NotFoundException) throw error;
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
@@ -917,6 +1045,22 @@ export class SubscriptionService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: companyId ? new Types.ObjectId(companyId) : null,
+        createdBy: new Types.ObjectId(superAdminId),
+        action: LogActions.UPDATE_SUBSCRIPTION,
+        entityType: LogEntityType.SUBSCRIPTION,
+        entityId: new Types.ObjectId(),
+        description: 'Failed to manage store subscription',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof NotFoundException) throw error;
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
