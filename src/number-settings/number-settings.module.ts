@@ -8,6 +8,7 @@ import {
 } from '../models/number-settings.schema';
 import { CompanyModule } from '../company/company.module';
 import { UserModule } from '../user/user.module';
+import { LogModule } from '../log/log.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UserModule } from '../user/user.module';
     ]),
     forwardRef(() => CompanyModule),
     forwardRef(() => UserModule),
+    LogModule,
   ],
   controllers: [NumberSettingsController],
   providers: [NumberSettingsService],
