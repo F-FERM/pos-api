@@ -31,7 +31,8 @@ export class UnitController {
   ) {
     const { userId, companyId } = req.user;
     return this.unitService.createUnit(
-      { ...dto, companyId: dto.companyId || companyId },
+      dto,
+      companyId,
       userId,
       req,
     );
