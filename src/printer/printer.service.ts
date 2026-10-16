@@ -488,6 +488,17 @@ export class PrinterService extends GenericDatabase<Model<PrinterDocument>> {
       await this.userService.validateAuthenticatedUser(userId);
       await this.companyService.validateCompany(dto.companyId, userId);
 
+      const existing = await this.genericFindOne({
+        companyId: new Types.ObjectId(dto.companyId),
+        printerName: { $regex: `^${dto.printerName.trim()}$`, $options: 'i' },
+      });
+
+      if (existing) {
+        throw new BadRequestException(
+          `Printer '${dto.printerName.trim()}' already exists in your store`,
+        );
+      }
+
       if (dto.isDefault) {
         await this.printerModel.updateMany(
           {
@@ -689,6 +700,20 @@ export class PrinterService extends GenericDatabase<Model<PrinterDocument>> {
 
       if (!printer) {
         throw new NotFoundException('Printer not found');
+      }
+
+      if (dto.printerName) {
+        const existing = await this.genericFindOne({
+          companyId: new Types.ObjectId(companyId),
+          printerName: { $regex: `^${dto.printerName.trim()}$`, $options: 'i' },
+          _id: { $ne: new Types.ObjectId(id) },
+        });
+
+        if (existing) {
+          throw new BadRequestException(
+            `Printer '${dto.printerName.trim()}' already exists in your store`,
+          );
+        }
       }
 
       if (dto.isDefault) {
