@@ -13,12 +13,14 @@ import {
   NumberSettingSchemaName,
 } from '../models/number-settings.schema';
 import { UserService } from '../user/user.service';
-import { numberSettingsDocumentType } from '../utils/common.enum';
+import { LogService } from '../log/log.service';
+import { LogActions, LogEntityType, LogStatus, numberSettingsDocumentType } from '../utils/common.enum';
 import { GenericDatabase } from '../helper/genericDatabase';
 import {
   DEFAULT_NUMBER_SETTINGS,
   DEFAULT_PREFIX_MAP,
 } from '../common/seeds/number-settings.data';
+import { AuthedRequest } from '../utils/common.types';
 
 @Injectable()
 export class NumberSettingsService extends GenericDatabase<
@@ -31,6 +33,7 @@ export class NumberSettingsService extends GenericDatabase<
     private readonly userService: UserService,
     @Inject(forwardRef(() => CompanyService))
     private readonly companyService: CompanyService,
+    private readonly logService: LogService,
   ) {
     super(model);
   }
@@ -156,6 +159,7 @@ export class NumberSettingsService extends GenericDatabase<
       prefix?: string;
       nextNumber?: number;
     },
+    req?: AuthedRequest,
   ) {
     try {
       await this.userService.validateAuthenticatedUser(userId);
@@ -212,12 +216,41 @@ export class NumberSettingsService extends GenericDatabase<
         throw new BadRequestException('Failed to save number setting');
       }
 
+      const ipAddress = req ? await this.getClientIpAddress(req) : '';
+      await this.logService.createLog({
+        companyId: new mongoose.Types.ObjectId(companyId),
+        createdBy: new mongoose.Types.ObjectId(userId),
+        action: LogActions.UPDATE_NUMBER_SETTING,
+        entityType: LogEntityType.NUMBER_SETTING,
+        entityId: new mongoose.Types.ObjectId(result._id),
+        description: `Number setting for ${docType} updated (${result.prefix})`,
+        ipAddress,
+        path: req?.url || '/number-settings',
+        status: LogStatus.SUCCESS,
+      });
+
       return {
         success: true,
         message: 'Number setting saved successfully',
         data: result,
       };
     } catch (error: unknown) {
+      const ipAddress = req ? await this.getClientIpAddress(req) : '';
+      await this.logService.createLog({
+        companyId: companyId ? new mongoose.Types.ObjectId(companyId) : null,
+        createdBy: new mongoose.Types.ObjectId(userId),
+        action: LogActions.UPDATE_NUMBER_SETTING,
+        entityType: LogEntityType.NUMBER_SETTING,
+        entityId: new mongoose.Types.ObjectId(),
+        description: `Failed to update number setting for ${docType}`,
+        ipAddress,
+        path: req?.url || '/number-settings',
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
       }
