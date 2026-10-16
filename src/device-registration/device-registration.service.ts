@@ -140,6 +140,22 @@ export class DeviceRegistrationService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: req.user?.companyId ? new Types.ObjectId(req.user.companyId) : null,
+        createdBy: req.user?.userId ? new Types.ObjectId(req.user.userId) : new Types.ObjectId(),
+        action: LogActions.VERIFY_DEVICE,
+        entityType: LogEntityType.DEVICE_REGISTRATION,
+        entityId: new Types.ObjectId(),
+        description: 'Failed to verify device registration',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
       }
@@ -419,6 +435,22 @@ export class DeviceRegistrationService extends GenericDatabase<
         statusCode: HttpStatus.CREATED,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: req.user?.companyId ? new Types.ObjectId(req.user.companyId) : null,
+        createdBy: req.user?.userId ? new Types.ObjectId(req.user.userId) : new Types.ObjectId(),
+        action: LogActions.REGISTER_DEVICE,
+        entityType: LogEntityType.DEVICE_REGISTRATION,
+        entityId: new Types.ObjectId(),
+        description: 'Failed to register terminal device',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (
         error instanceof NotFoundException ||
         error instanceof UnauthorizedException
@@ -547,6 +579,22 @@ export class DeviceRegistrationService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: companyId ? new Types.ObjectId(companyId) : null,
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.BYPASS_DEVICE,
+        entityType: LogEntityType.DEVICE_REGISTRATION,
+        entityId: new Types.ObjectId(id),
+        description: 'Failed to update terminal bypass mode',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
       }
@@ -596,6 +644,22 @@ export class DeviceRegistrationService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: companyId ? new Types.ObjectId(companyId) : null,
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.REVOKE_DEVICE,
+        entityType: LogEntityType.DEVICE_REGISTRATION,
+        entityId: new Types.ObjectId(id),
+        description: 'Failed to revoke terminal registration',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
       }
