@@ -82,17 +82,18 @@ export class UnitService extends GenericDatabase<Model<UnitDocument>> {
   }
 
   async createUnit(
-    dto: CreateUnitDto & { companyId: string },
+    dto: CreateUnitDto,
+    companyId: string,
     userId: string,
     req: AuthedRequest,
   ) {
     try {
       const ipAddress = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);
-      await this.companyService.validateCompany(dto.companyId, userId);
+      await this.companyService.validateCompany(companyId, userId);
 
       const existing = await this.genericFindOne({
-        companyId: new Types.ObjectId(dto.companyId),
+        companyId: new Types.ObjectId(companyId),
         name: { $regex: `^${dto.name.trim()}$`, $options: 'i' },
       });
 
@@ -106,14 +107,14 @@ export class UnitService extends GenericDatabase<Model<UnitDocument>> {
         ...dto,
         name: dto.name.trim(),
         symbol: dto.symbol?.trim(),
-        companyId: new Types.ObjectId(dto.companyId),
+        companyId: new Types.ObjectId(companyId),
         isActive: dto.isActive ?? true,
         isSystemGenerated: false,
         createdBy: new Types.ObjectId(userId),
       });
 
       await this.logService.createLog({
-        companyId: new Types.ObjectId(dto.companyId),
+        companyId: new Types.ObjectId(companyId),
         createdBy: new Types.ObjectId(userId),
         action: LogActions.CREATE_UNIT,
         entityType: LogEntityType.UNIT,
