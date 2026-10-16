@@ -3988,6 +3988,14 @@
           }
         }
       },
+      "CompanyBrandingDto": {
+        "type": "object",
+        "properties": {
+          "logoUrl": {
+            "type": "string"
+          }
+        }
+      },
       "CreateCompanyDto": {
         "type": "object",
         "properties": {
@@ -4036,6 +4044,9 @@
           },
           "regional": {
             "$ref": "#/components/schemas/CompanyRegionalSettingsDto"
+          },
+          "branding": {
+            "$ref": "#/components/schemas/CompanyBrandingDto"
           }
         },
         "required": [
@@ -4096,6 +4107,9 @@
           },
           "regional": {
             "$ref": "#/components/schemas/CompanyRegionalSettingsDto"
+          },
+          "branding": {
+            "$ref": "#/components/schemas/CompanyBrandingDto"
           },
           "status": {
             "type": "string",
@@ -4751,11 +4765,6 @@
             "description": "Unit symbol (e.g. kg, pcs)",
             "example": "kg"
           },
-          "companyId": {
-            "type": "string",
-            "description": "Company Store ID",
-            "example": "650000000000000000000001"
-          },
           "isActive": {
             "type": "boolean",
             "description": "Active status",
@@ -4763,8 +4772,7 @@
           }
         },
         "required": [
-          "name",
-          "companyId"
+          "name"
         ]
       },
       "UpdateUnitDto": {
@@ -4779,11 +4787,6 @@
             "type": "string",
             "description": "Unit symbol (e.g. kg, pcs)",
             "example": "kg"
-          },
-          "companyId": {
-            "type": "string",
-            "description": "Company Store ID",
-            "example": "650000000000000000000001"
           },
           "isActive": {
             "type": "boolean",
