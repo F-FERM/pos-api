@@ -188,15 +188,76 @@ export class GenericDatabase<T extends Model<HydratedDocument<any>>> {
 
       return response;
     } catch (error: unknown) {
-      console.error('Error creating document:', error);
-      if (error instanceof Error) {
-        throw new BadRequestException(
-          `Error creating document: ${error.message}`,
-        );
-      }
-      console.log('Unknown error creating document:', error);
+      this.handleDatabaseError(error, 'create');
+    }
+  }
+
+  /**
+   * Helper to parse database errors (e.g. MongoDB E11000 duplicate keys)
+   * and throw clean, customer-friendly NestJS exceptions.
+   */
+  private handleDatabaseError(error: unknown, actionName: string): never {
+    if (
+      error instanceof BadRequestException ||
+      error instanceof NotFoundException
+    ) {
       throw error;
     }
+
+    const errObj = error as any;
+
+    if (
+      errObj?.code === 11000 ||
+      errObj?.code === '11000' ||
+      errObj?.name === 'MongoServerError' ||
+      (typeof errObj?.message === 'string' &&
+        (errObj.message.includes('E11000 duplicate key error') ||
+          errObj.message.includes('E11000')))
+    ) {
+      let duplicateField = '';
+      if (errObj.keyValue) {
+        const keys = Object.keys(errObj.keyValue).filter(
+          (k) => k !== 'companyId' && k !== 'isDeleted',
+        );
+        if (keys.length > 0) {
+          duplicateField = keys[0];
+        }
+      } else if (errObj.keyPattern) {
+        const keys = Object.keys(errObj.keyPattern).filter(
+          (k) => k !== 'companyId' && k !== 'isDeleted',
+        );
+        if (keys.length > 0) {
+          duplicateField = keys[0];
+        }
+      }
+
+      const formattedFieldName = duplicateField
+        ? duplicateField
+            .replace(/([A-Z])/g, ' $1')
+            .toLowerCase()
+            .trim()
+        : '';
+
+      const message = formattedFieldName
+        ? `A record with this ${formattedFieldName} already exists in your store`
+        : 'A record with this unique information already exists in your store';
+
+      throw new BadRequestException(message);
+    }
+
+    if (error instanceof Error) {
+      if (
+        error.message.includes('E11000') ||
+        error.message.includes('collection:')
+      ) {
+        throw new BadRequestException(
+          'A record with this unique information already exists in your store',
+        );
+      }
+      throw new BadRequestException(error.message);
+    }
+
+    throw new BadRequestException(`Failed to ${actionName} document`);
   }
 
   /** * Generic method to update a document by its ID.
@@ -244,14 +305,7 @@ export class GenericDatabase<T extends Model<HydratedDocument<any>>> {
 
       return updatedDocument;
     } catch (error: unknown) {
-      console.error('Error updating document:', error);
-      if (error instanceof Error) {
-        throw new BadRequestException(
-          `Error updating document: ${error.message}`,
-        );
-      }
-      console.log('Unknown error updating document:', error);
-      throw error;
+      this.handleDatabaseError(error, 'update');
     }
   }
 
@@ -288,14 +342,7 @@ export class GenericDatabase<T extends Model<HydratedDocument<any>>> {
 
       return deletedDocument;
     } catch (error: unknown) {
-      console.error('Error deleting document:', error);
-      if (error instanceof Error) {
-        throw new BadRequestException(
-          `Error deleting document: ${error.message}`,
-        );
-      }
-      console.log('Unknown error deleting document:', error);
-      throw error;
+      this.handleDatabaseError(error, 'delete');
     }
   }
 
