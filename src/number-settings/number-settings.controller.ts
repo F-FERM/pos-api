@@ -19,6 +19,7 @@ export class NumberSettingsController {
       req.user.userId,
       dto.docType,
       dto,
+      req,
     );
   }
 
