@@ -562,6 +562,22 @@ export class CompanyService extends GenericDatabase<Model<CompanyDocument>> {
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: id ? new Types.ObjectId(id) : null,
+        createdBy: new Types.ObjectId(superAdminId),
+        action: LogActions.UPDATE_COMPANY,
+        entityType: LogEntityType.COMPANY,
+        entityId: id ? new Types.ObjectId(id) : new Types.ObjectId(),
+        description: 'Failed to update store counter limits',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof NotFoundException) throw error;
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
