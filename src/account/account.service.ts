@@ -194,6 +194,22 @@ export class AccountService
         statusCode: HttpStatus.CREATED,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: companyId ? new Types.ObjectId(companyId) : null,
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.CREATE_ACCOUNT,
+        entityType: LogEntityType.ACCOUNT,
+        entityId: new Types.ObjectId(),
+        description: 'Failed to create account',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof Error) throw new BadRequestException(error.message);
       throw new BadRequestException('Error creating account');
     }
@@ -350,6 +366,22 @@ export class AccountService
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: companyId ? new Types.ObjectId(companyId) : null,
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.UPDATE_ACCOUNT,
+        entityType: LogEntityType.ACCOUNT,
+        entityId: new Types.ObjectId(id),
+        description: 'Failed to update account',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof NotFoundException) throw error;
       if (error instanceof Error) throw new BadRequestException(error.message);
       throw new BadRequestException('Error updating account');
@@ -409,6 +441,22 @@ export class AccountService
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: companyId ? new Types.ObjectId(companyId) : null,
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.DELETE_ACCOUNT,
+        entityType: LogEntityType.ACCOUNT,
+        entityId: new Types.ObjectId(id),
+        description: 'Failed to delete account',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof NotFoundException) throw error;
       if (error instanceof Error) throw new BadRequestException(error.message);
       throw new BadRequestException('Error deleting account');
@@ -555,6 +603,22 @@ export class AccountService
         statusCode: HttpStatus.CREATED,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: companyId ? new Types.ObjectId(companyId) : null,
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.RECORD_ACCOUNT_TRANSACTION,
+        entityType: LogEntityType.ACCOUNT_TRANSACTION,
+        entityId: new Types.ObjectId(),
+        description: 'Failed to record manual transaction',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof Error) throw new BadRequestException(error.message);
       throw new BadRequestException('Error recording transaction');
     }
