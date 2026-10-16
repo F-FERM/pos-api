@@ -96,6 +96,22 @@ export class StoreLicenseService extends GenericDatabase<
         statusCode: HttpStatus.CREATED,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: null,
+        createdBy: new Types.ObjectId(superAdminId),
+        action: LogActions.CREATE_STORE_LICENSE,
+        entityType: LogEntityType.STORE_LICENSE,
+        entityId: new Types.ObjectId(),
+        description: 'Failed to generate store license key',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
       }
@@ -265,6 +281,22 @@ export class StoreLicenseService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: null,
+        createdBy: new Types.ObjectId(superAdminId),
+        action: LogActions.UPDATE_STORE_LICENSE,
+        entityType: LogEntityType.STORE_LICENSE,
+        entityId: id ? new Types.ObjectId(id) : new Types.ObjectId(),
+        description: 'Failed to update store license key',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof NotFoundException) throw error;
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
@@ -309,6 +341,22 @@ export class StoreLicenseService extends GenericDatabase<
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: null,
+        createdBy: new Types.ObjectId(superAdminId),
+        action: LogActions.DELETE_STORE_LICENSE,
+        entityType: LogEntityType.STORE_LICENSE,
+        entityId: id ? new Types.ObjectId(id) : new Types.ObjectId(),
+        description: 'Failed to delete store license key',
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
       if (error instanceof NotFoundException) throw error;
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
