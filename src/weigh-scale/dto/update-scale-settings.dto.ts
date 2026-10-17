@@ -9,11 +9,9 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { ScaleBarcodeType } from '../../utils/common.enum';
 
-export enum ScaleBarcodeType {
-  WEIGHT_EMBEDDED = 'WEIGHT_EMBEDDED',
-  PRICE_EMBEDDED = 'PRICE_EMBEDDED',
-}
+export { ScaleBarcodeType };
 
 export class UpdateWeighScaleSettingsDto {
   @ApiPropertyOptional({

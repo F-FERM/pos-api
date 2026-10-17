@@ -24,6 +24,11 @@ export enum RefundMethod {
   STORE_CREDIT = 'STORE_CREDIT',
 }
 
+export enum ScaleBarcodeType {
+  WEIGHT_EMBEDDED = 'WEIGHT_EMBEDDED',
+  PRICE_EMBEDDED = 'PRICE_EMBEDDED',
+}
+
 export enum LogActions {
   // Auth
   USER_LOGIN = 'USER_LOGIN',

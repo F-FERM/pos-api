@@ -14,7 +14,7 @@ import { LogService } from '../log/log.service';
 import { CompanyService } from '../company/company.service';
 import { UserService } from '../user/user.service';
 import { AuthedRequest } from '../utils/common.types';
-import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
+import { LogActions, LogEntityType, LogStatus, ScaleBarcodeType } from '../utils/common.enum';
 
 import { ScaleProtocolParser } from './utils/scale-protocol-parser';
 
@@ -47,7 +47,7 @@ export class WeighScaleService {
       const defaultSettings = {
         enabled: company.features?.weightedItemsEnabled ?? false,
         barcodePrefix: '21',
-        barcodeType: 'WEIGHT_EMBEDDED',
+        barcodeType: ScaleBarcodeType.WEIGHT_EMBEDDED,
         pluLength: 5,
         weightMultiplier: 0.001,
         directScaleProtocol: 'CAS',
@@ -96,7 +96,7 @@ export class WeighScaleService {
       const currentSettings = company.weighScaleSettings || {
         enabled: false,
         barcodePrefix: '21',
-        barcodeType: 'WEIGHT_EMBEDDED',
+        barcodeType: ScaleBarcodeType.WEIGHT_EMBEDDED,
         pluLength: 5,
         weightMultiplier: 0.001,
         directScaleProtocol: 'CAS',
@@ -195,7 +195,7 @@ export class WeighScaleService {
       const settings = company.weighScaleSettings || {
         enabled: true,
         barcodePrefix: '21',
-        barcodeType: 'WEIGHT_EMBEDDED',
+        barcodeType: ScaleBarcodeType.WEIGHT_EMBEDDED,
         pluLength: 5,
         weightMultiplier: 0.001,
       };
@@ -266,7 +266,7 @@ export class WeighScaleService {
       let totalPrice = product.sellingPrice;
       const unitPrice = product.sellingPrice;
 
-      if (settings.barcodeType === 'PRICE_EMBEDDED') {
+      if (settings.barcodeType === ScaleBarcodeType.PRICE_EMBEDDED) {
         totalPrice = Math.round((rawNum / 100) * 100) / 100;
         netQuantity =
           unitPrice > 0 ? Math.round((totalPrice / unitPrice) * 1000) / 1000 : 1;

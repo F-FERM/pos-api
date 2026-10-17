@@ -26,7 +26,7 @@ import { BrandService } from '../brand/brand.service';
 import { SupplierService } from '../supplier/supplier.service';
 import { SyncService } from '../sync/sync.service';
 import { AuthedRequest } from '../utils/common.types';
-import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
+import { LogActions, LogEntityType, LogStatus, ScaleBarcodeType } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
 
 import { UnitDocument, UnitModelConstants, UnitSchemaName } from '../models/unit.schema';
@@ -398,7 +398,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
       const scaleSettings = company?.weighScaleSettings || {
         enabled: true,
         barcodePrefix: '21',
-        barcodeType: 'WEIGHT_EMBEDDED',
+        barcodeType: ScaleBarcodeType.WEIGHT_EMBEDDED,
         pluLength: 5,
         weightMultiplier: 0.001,
       };
@@ -449,7 +449,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
           let totalPrice = product.sellingPrice;
           const unitPrice = product.sellingPrice;
 
-          if (scaleSettings.barcodeType === 'PRICE_EMBEDDED') {
+          if (scaleSettings.barcodeType === ScaleBarcodeType.PRICE_EMBEDDED) {
             totalPrice = Math.round((rawNum / 100) * 100) / 100;
             netQuantity =
               unitPrice > 0 ? Math.round((totalPrice / unitPrice) * 1000) / 1000 : 1;

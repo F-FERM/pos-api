@@ -9,6 +9,7 @@ import {
   CompanySubscriptionStatus,
   TimeFormat,
 } from '../utils/enums/company.enums';
+import { ScaleBarcodeType } from '../utils/common.enum';
 
 //company address
 @Schema({ _id: false })
@@ -97,10 +98,10 @@ export class CompanyWeighScaleSettings {
 
   @Prop({
     type: String,
-    enum: ['WEIGHT_EMBEDDED', 'PRICE_EMBEDDED'],
-    default: 'WEIGHT_EMBEDDED',
+    enum: Object.values(ScaleBarcodeType),
+    default: ScaleBarcodeType.WEIGHT_EMBEDDED,
   })
-  barcodeType: string;
+  barcodeType: ScaleBarcodeType;
 
   @Prop({ type: Number, default: 5, min: 4, max: 5 })
   pluLength: number;
