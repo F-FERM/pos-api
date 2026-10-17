@@ -14,12 +14,14 @@ import { SyncModule } from '../sync/sync.module';
 
 import { UnitModule } from '../unit/unit.module';
 import { UnitSchema, UnitSchemaName } from '../models/unit.schema';
+import { CompanySchema, CompanySchemaName } from '../models/company.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: ProductSchemaName, schema: ProductSchema },
       { name: UnitSchemaName, schema: UnitSchema },
+      { name: CompanySchemaName, schema: CompanySchema },
     ]),
     UnitModule,
     CategoryModule,
