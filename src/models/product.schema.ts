@@ -98,6 +98,19 @@ export class Product extends BaseSchema {
   @Prop({ trim: true })
   description?: string;
 
+  /* Weigh Scale Attributes */
+  @Prop({ type: Boolean, default: false })
+  isWeighted: boolean;
+
+  @Prop({ trim: true, index: true })
+  scalePlu?: string;
+
+  @Prop({ default: 'KG', trim: true })
+  scaleUnit?: string;
+
+  @Prop({ type: Number, default: 0, min: 0 })
+  tareWeight?: number;
+
   @Prop({ default: true })
   isActive: boolean;
 }
@@ -107,6 +120,7 @@ export const ProductSchemaName = Product.name;
 
 ProductSchema.index({ companyId: 1, barcode: 1 }, { sparse: true });
 ProductSchema.index({ companyId: 1, sku: 1 }, { sparse: true });
+ProductSchema.index({ companyId: 1, scalePlu: 1 }, { sparse: true });
 ProductSchema.index({ companyId: 1, name: 1 });
 ProductSchema.index({ companyId: 1, categoryId: 1 });
 
@@ -132,6 +146,10 @@ export const ProductModelConstants: { [K in keyof Product]-?: K } = {
   size: 'size',
   color: 'color',
   description: 'description',
+  isWeighted: 'isWeighted',
+  scalePlu: 'scalePlu',
+  scaleUnit: 'scaleUnit',
+  tareWeight: 'tareWeight',
   isActive: 'isActive',
   isDeleted: 'isDeleted',
   isSynced: 'isSynced',
