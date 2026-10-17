@@ -88,6 +88,34 @@ class CompanyBranding {
 }
 
 @Schema({ _id: false })
+export class CompanyWeighScaleSettings {
+  @Prop({ type: Boolean, default: false })
+  enabled: boolean;
+
+  @Prop({ type: String, default: '21', trim: true })
+  barcodePrefix: string;
+
+  @Prop({
+    type: String,
+    enum: ['WEIGHT_EMBEDDED', 'PRICE_EMBEDDED'],
+    default: 'WEIGHT_EMBEDDED',
+  })
+  barcodeType: string;
+
+  @Prop({ type: Number, default: 5, min: 4, max: 5 })
+  pluLength: number;
+
+  @Prop({ type: Number, default: 0.001 })
+  weightMultiplier: number;
+
+  @Prop({ type: String, default: 'CAS', trim: true })
+  directScaleProtocol: string;
+
+  @Prop({ type: Number, default: 9600 })
+  baudRate: number;
+}
+
+@Schema({ _id: false })
 class CompanyRegionalSettings {
   @Prop({
     type: String,
@@ -281,6 +309,11 @@ export class Company extends BaseSchema {
   @Prop({ type: CompanyFeatureFlags, default: {}, _id: false })
   features: CompanyFeatureFlags;
 
+  /* --------------------------- Weigh Scale Settings --------------------- */
+
+  @Prop({ type: CompanyWeighScaleSettings, default: {}, _id: false })
+  weighScaleSettings: CompanyWeighScaleSettings;
+
   /* --------------------------- Subscription ----------------------------- */
 
   @Prop({
@@ -391,6 +424,7 @@ export const CompanyModelConstants: { [K in keyof Company]: K } = {
 
   // features
   features: 'features',
+  weighScaleSettings: 'weighScaleSettings',
 
   // subscription
   subscription: 'subscription',
