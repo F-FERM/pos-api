@@ -3735,6 +3735,124 @@
           "Store License (Superadmin)"
         ]
       }
+    },
+    "/api/weigh-scale/settings": {
+      "get": {
+        "description": "Retrieves the weigh scale settings (barcode prefix, barcode type, weight multiplier, direct scale settings) for the company store.",
+        "operationId": "WeighScaleController_getSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get store weigh scale configuration settings",
+        "tags": [
+          "Weigh Scale"
+        ]
+      },
+      "patch": {
+        "description": "Configures store weigh scale parameters (enable/disable, 2-digit scale barcode prefix, WEIGHT_EMBEDDED vs PRICE_EMBEDDED, USB/Serial COM port protocol).",
+        "operationId": "WeighScaleController_updateSettings",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWeighScaleSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update store weigh scale configuration settings",
+        "tags": [
+          "Weigh Scale"
+        ]
+      }
+    },
+    "/api/weigh-scale/parse-barcode": {
+      "post": {
+        "description": "Parses scale barcode stickers (e.g., 2100012015003), extracts PLU and weight/price, resolves product from store catalog, and calculates checkout item quantity and subtotal.",
+        "operationId": "WeighScaleController_parseBarcode",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParseScaleBarcodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Parse weighing scale sticker barcode for checkout",
+        "tags": [
+          "Weigh Scale"
+        ]
+      }
+    },
+    "/api/weigh-scale/parse-direct-weight": {
+      "post": {
+        "description": "Parses raw serial scale string data (CAS, NCI, Toledo, Dibal) read from direct checkout scale via Web Serial API or scale agent, extracts weight, deducts tare packaging, and calculates total price.",
+        "operationId": "WeighScaleController_parseDirectWeight",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParseDirectWeightDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Parse raw ASCII buffer read from direct USB/Serial COM scale",
+        "tags": [
+          "Weigh Scale"
+        ]
+      }
+    },
+    "/api/weigh-scale/calculate-weight": {
+      "post": {
+        "description": "Calculates net weight and subtotal for a product given a gross weight reading and optional tare container deduction.",
+        "operationId": "WeighScaleController_calculateWeight",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalculateWeightDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Calculate item pricing for weighed produce with tare deduction",
+        "tags": [
+          "Weigh Scale"
+        ]
+      }
     }
   },
   "info": {
@@ -5064,6 +5182,29 @@
             "description": "Product description or notes",
             "example": "Premium Cotton Comfort Fit Shirt"
           },
+          "isWeighted": {
+            "type": "boolean",
+            "default": false,
+            "description": "Flag indicating item is sold by weight / volume on scale",
+            "example": true
+          },
+          "scalePlu": {
+            "type": "string",
+            "description": "Short Price Look-Up (PLU) code mapped on weighing scale machine",
+            "example": "00012"
+          },
+          "scaleUnit": {
+            "type": "string",
+            "default": "KG",
+            "description": "Weighing scale measurement unit (KG, G, LB, OZ)",
+            "example": "KG"
+          },
+          "tareWeight": {
+            "type": "number",
+            "default": 0,
+            "description": "Tare weight in kg to automatically deduct for packaging/box",
+            "example": 0.05
+          },
           "isActive": {
             "type": "boolean",
             "default": true,
@@ -5186,6 +5327,29 @@
             "type": "string",
             "description": "Product description or notes",
             "example": "Premium Cotton Comfort Fit Shirt"
+          },
+          "isWeighted": {
+            "type": "boolean",
+            "default": false,
+            "description": "Flag indicating item is sold by weight / volume on scale",
+            "example": true
+          },
+          "scalePlu": {
+            "type": "string",
+            "description": "Short Price Look-Up (PLU) code mapped on weighing scale machine",
+            "example": "00012"
+          },
+          "scaleUnit": {
+            "type": "string",
+            "default": "KG",
+            "description": "Weighing scale measurement unit (KG, G, LB, OZ)",
+            "example": "KG"
+          },
+          "tareWeight": {
+            "type": "number",
+            "default": 0,
+            "description": "Tare weight in kg to automatically deduct for packaging/box",
+            "example": 0.05
           },
           "isActive": {
             "type": "boolean",
@@ -5999,6 +6163,110 @@
             "description": "Internal notes or customer order ref"
           }
         }
+      },
+      "UpdateWeighScaleSettingsDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Master toggle to enable/disable weigh scale barcode parsing",
+            "example": true
+          },
+          "barcodePrefix": {
+            "type": "string",
+            "description": "2-digit standard prefix for scale-printed barcodes (20-29)",
+            "example": "21"
+          },
+          "barcodeType": {
+            "type": "string",
+            "enum": [
+              "WEIGHT_EMBEDDED",
+              "PRICE_EMBEDDED"
+            ],
+            "description": "Whether scale barcode embeds weight in grams or total price in cents",
+            "example": "WEIGHT_EMBEDDED"
+          },
+          "pluLength": {
+            "type": "number",
+            "description": "Number of digits used for product PLU code in barcode (4 or 5)",
+            "example": 5
+          },
+          "weightMultiplier": {
+            "type": "number",
+            "description": "Weight multiplier to convert scale raw integer digits to kilograms",
+            "example": 0.001
+          },
+          "directScaleProtocol": {
+            "type": "string",
+            "description": "Direct checkout scale USB/Serial COM protocol (CAS, NCI, TOLEDO, DIBAL)",
+            "example": "CAS"
+          },
+          "baudRate": {
+            "type": "number",
+            "description": "Serial COM port baud rate for direct checkout scale",
+            "example": 9600
+          }
+        }
+      },
+      "ParseScaleBarcodeDto": {
+        "type": "object",
+        "properties": {
+          "barcode": {
+            "type": "string",
+            "description": "Scanned barcode string from weighing scale label or barcode scanner",
+            "example": "2100012015003"
+          }
+        },
+        "required": [
+          "barcode"
+        ]
+      },
+      "ParseDirectWeightDto": {
+        "type": "object",
+        "properties": {
+          "rawData": {
+            "type": "string",
+            "description": "Raw ASCII string read from USB/Serial COM port scale (e.g., ST,GS,+001.500kg)",
+            "example": "ST,GS,+001.500kg"
+          },
+          "productId": {
+            "type": "string",
+            "description": "Product ID to automatically calculate selling subtotal for this weight",
+            "example": "65f987654321abcdef654321"
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Scale protocol identifier (CAS, NCI, TOLEDO, DIBAL, GENERIC)",
+            "example": "CAS"
+          }
+        },
+        "required": [
+          "rawData"
+        ]
+      },
+      "CalculateWeightDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "description": "Product ID being weighed",
+            "example": "65f987654321abcdef654321"
+          },
+          "grossWeight": {
+            "type": "number",
+            "description": "Gross weight read from scale in kg",
+            "example": 1.55
+          },
+          "tareWeightOverride": {
+            "type": "number",
+            "description": "Optional tare weight override in kg (e.g. 0.05 kg for container)",
+            "example": 0.05
+          }
+        },
+        "required": [
+          "productId",
+          "grossWeight"
+        ]
       }
     }
   }
