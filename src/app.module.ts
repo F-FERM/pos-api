@@ -37,6 +37,7 @@ import { StoreLicenseModule } from './store-license/store-license.module';
 import { EmailModule } from './email/email.module';
 import { AccountModule } from './account/account.module';
 import { SyncModule } from './sync/sync.module';
+import { WeighScaleModule } from './weigh-scale/weigh-scale.module';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { SyncModule } from './sync/sync.module';
     EmailModule,
     AccountModule,
     SyncModule,
+    WeighScaleModule,
   ],
   controllers: [AppController],
   providers: [
