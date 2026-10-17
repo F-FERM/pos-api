@@ -9,6 +9,7 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
+import { ParseObjectIdPipe } from '@nestjs/mongoose';
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { UnitService } from './unit.service';
 import { CreateUnitDto } from './dto/create-unit.dto';
@@ -67,7 +68,7 @@ export class UnitController {
   @Roles(Role.admin, Role.user)
   @ApiOperation({ summary: 'Get unit details by ID' })
   async findOneUnitById(
-    @Param('id') id: string,
+    @Param('id', ParseObjectIdPipe) id: string,
     @Req() req: AuthedRequest,
   ) {
     const { userId, companyId } = req.user;
@@ -78,7 +79,7 @@ export class UnitController {
   @Roles(Role.admin, Role.user)
   @ApiOperation({ summary: 'Update unit details' })
   async updateUnit(
-    @Param('id') id: string,
+    @Param('id', ParseObjectIdPipe) id: string,
     @Body() dto: UpdateUnitDto,
     @Req() req: AuthedRequest,
   ) {
@@ -90,7 +91,7 @@ export class UnitController {
   @Roles(Role.admin)
   @ApiOperation({ summary: 'Soft delete unit by ID' })
   async deleteUnit(
-    @Param('id') id: string,
+    @Param('id', ParseObjectIdPipe) id: string,
     @Req() req: AuthedRequest,
   ) {
     const { userId, companyId } = req.user;
