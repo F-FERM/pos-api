@@ -30,6 +30,7 @@ import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
 
 import { UnitDocument, UnitModelConstants, UnitSchemaName } from '../models/unit.schema';
+import { CompanyDocument, CompanySchemaName } from '../models/company.schema';
 
 @Injectable()
 export class ProductService extends GenericDatabase<Model<ProductDocument>> {
@@ -38,6 +39,8 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
     private readonly productModel: Model<ProductDocument>,
     @InjectModel(UnitSchemaName)
     private readonly unitModel: Model<UnitDocument>,
+    @InjectModel(CompanySchemaName)
+    private readonly companyModel: Model<CompanyDocument>,
     private readonly logService: LogService,
     private readonly companyService: CompanyService,
     private readonly userService: UserService,
@@ -190,12 +193,28 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         }
       }
 
+      if (dto.scalePlu) {
+        const dupPlu = await this.genericFindOne({
+          companyId: new Types.ObjectId(dto.companyId),
+          scalePlu: dto.scalePlu.trim(),
+        });
+        if (dupPlu) {
+          throw new BadRequestException(
+            'Product with this scale PLU code already exists in your store',
+          );
+        }
+      }
+
       const created = await this.genericCreateOne({
         ...dto,
         name: dto.name.trim(),
         unitId: new Types.ObjectId(dto.unitId),
         sku: dto.sku?.trim(),
         barcode: dto.barcode?.trim(),
+        isWeighted: dto.isWeighted ?? false,
+        scalePlu: dto.scalePlu?.trim(),
+        scaleUnit: dto.scaleUnit?.trim() || 'KG',
+        tareWeight: dto.tareWeight ?? 0,
         partNumber: dto.partNumber?.trim(),
         size: dto.size?.trim(),
         color: dto.color?.trim(),
@@ -369,10 +388,99 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
     try {
       await this.userService.validateAuthenticatedUser(userId);
 
+      const rawBarcode = barcode.trim();
+
+      const company = await this.companyModel.findOne({
+        _id: new Types.ObjectId(companyId),
+        isDeleted: false,
+      });
+
+      const scaleSettings = company?.weighScaleSettings || {
+        enabled: true,
+        barcodePrefix: '21',
+        barcodeType: 'WEIGHT_EMBEDDED',
+        pluLength: 5,
+        weightMultiplier: 0.001,
+      };
+
+      const prefix = scaleSettings.barcodePrefix || '21';
+      const pluLength = scaleSettings.pluLength || 5;
+
+      const isScaleBarcode =
+        rawBarcode.startsWith(prefix) ||
+        (rawBarcode.length === 13 && /^2[0-9]/.test(rawBarcode));
+
+      if (isScaleBarcode) {
+        const prefixLen = prefix.length;
+        const pluCode = rawBarcode.substring(prefixLen, prefixLen + pluLength);
+        const valueDigits = rawBarcode.substring(prefixLen + pluLength, 12);
+        const rawNum = parseFloat(valueDigits) || 0;
+
+        const product = await this.productModel
+          .findOne({
+            companyId: new Types.ObjectId(companyId),
+            $or: [
+              { scalePlu: pluCode },
+              { scalePlu: pluCode.replace(/^0+/, '') },
+              { barcode: pluCode },
+              { barcode: rawBarcode },
+              { sku: pluCode },
+            ],
+            isDeleted: false,
+            isActive: true,
+          })
+          .populate([
+            {
+              path: ProductModelConstants.categoryId,
+              select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
+            },
+            {
+              path: ProductModelConstants.brandId,
+              select: BrandModelConstants.name,
+            },
+            {
+              path: ProductModelConstants.supplierId,
+              select: `${SupplierModelConstants.name} ${SupplierModelConstants.phone} ${SupplierModelConstants.contactPerson}`,
+            },
+          ]);
+
+        if (product) {
+          let netQuantity = 1;
+          let totalPrice = product.sellingPrice;
+          const unitPrice = product.sellingPrice;
+
+          if (scaleSettings.barcodeType === 'PRICE_EMBEDDED') {
+            totalPrice = Math.round((rawNum / 100) * 100) / 100;
+            netQuantity =
+              unitPrice > 0 ? Math.round((totalPrice / unitPrice) * 1000) / 1000 : 1;
+          } else {
+            const grossWeight = rawNum * (scaleSettings.weightMultiplier || 0.001);
+            const tare = product.tareWeight || 0;
+            netQuantity = Math.max(0.001, grossWeight - tare);
+            netQuantity = Math.round(netQuantity * 1000) / 1000;
+            totalPrice = Math.round(netQuantity * unitPrice * 100) / 100;
+          }
+
+          return {
+            success: true,
+            message: 'Scale product scanned successfully',
+            data: {
+              ...product.toObject(),
+              isScaleBarcode: true,
+              scannedQuantity: netQuantity,
+              scannedUnitPrice: unitPrice,
+              scannedTotalPrice: totalPrice,
+            },
+            statusCode: HttpStatus.OK,
+          };
+        }
+      }
+
+      // Exact barcode lookup fallback
       const product = await this.productModel
         .findOne({
           companyId: new Types.ObjectId(companyId),
-          barcode: barcode.trim(),
+          barcode: rawBarcode,
           isDeleted: false,
           isActive: true,
         })
@@ -393,7 +501,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
 
       if (!product) {
         throw new NotFoundException(
-          `Product with barcode '${barcode}' not found`,
+          `Product with barcode '${rawBarcode}' not found`,
         );
       }
 
@@ -404,6 +512,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
+      if (error instanceof NotFoundException) throw error;
       if (error instanceof Error) {
         throw new BadRequestException(error.message);
       }
@@ -541,11 +650,28 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         }
       }
 
+      if (dto.scalePlu) {
+        const dupPlu = await this.genericFindOne({
+          companyId: new Types.ObjectId(companyId),
+          _id: { $ne: new Types.ObjectId(id) },
+          scalePlu: dto.scalePlu.trim(),
+        });
+        if (dupPlu) {
+          throw new BadRequestException(
+            'Another product with this scale PLU code already exists in your store',
+          );
+        }
+      }
+
       const updated = await this.genericUpdateOne(id, {
         ...dto,
         ...(dto.name && { name: dto.name.trim() }),
         ...(dto.sku !== undefined && { sku: dto.sku?.trim() }),
         ...(dto.barcode !== undefined && { barcode: dto.barcode?.trim() }),
+        ...(dto.isWeighted !== undefined && { isWeighted: dto.isWeighted }),
+        ...(dto.scalePlu !== undefined && { scalePlu: dto.scalePlu?.trim() }),
+        ...(dto.scaleUnit !== undefined && { scaleUnit: dto.scaleUnit?.trim() }),
+        ...(dto.tareWeight !== undefined && { tareWeight: dto.tareWeight }),
         ...(dto.partNumber !== undefined && {
           partNumber: dto.partNumber?.trim(),
         }),
