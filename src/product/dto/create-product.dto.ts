@@ -190,6 +190,42 @@ export class CreateProductDto {
   description?: string;
 
   @ApiPropertyOptional({
+    default: false,
+    description: 'Flag indicating item is sold by weight / volume on scale',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isWeighted?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Short Price Look-Up (PLU) code mapped on weighing scale machine',
+    example: '00012',
+  })
+  @IsOptional()
+  @IsString()
+  scalePlu?: string;
+
+  @ApiPropertyOptional({
+    default: 'KG',
+    description: 'Weighing scale measurement unit (KG, G, LB, OZ)',
+    example: 'KG',
+  })
+  @IsOptional()
+  @IsString()
+  scaleUnit?: string;
+
+  @ApiPropertyOptional({
+    default: 0,
+    description: 'Tare weight in kg to automatically deduct for packaging/box',
+    example: 0.05,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  tareWeight?: number;
+
+  @ApiPropertyOptional({
     default: true,
     description: 'Product active status',
     example: true,
