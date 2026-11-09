@@ -34,7 +34,7 @@ export class CreateSupplierDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  taxId?: string;
+  taxPercentage?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

@@ -5374,7 +5374,7 @@
           "email": {
             "type": "string"
           },
-          "taxId": {
+          "taxPercentage": {
             "type": "string"
           },
           "address": {
@@ -5409,7 +5409,7 @@
           "email": {
             "type": "string"
           },
-          "taxId": {
+          "taxPercentage": {
             "type": "string"
           },
           "address": {

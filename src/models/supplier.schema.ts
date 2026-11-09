@@ -18,8 +18,8 @@ export class Supplier extends BaseSchema {
   @Prop({ trim: true, lowercase: true })
   email?: string;
 
-  @Prop({ trim: true, uppercase: true })
-  taxId?: string;
+  @Prop({ type:Number, default: 0 })
+  taxPercentage?: string;
 
   @Prop({ trim: true })
   address?: string;
@@ -50,7 +50,7 @@ export const SupplierModelConstants: { [K in keyof Supplier]-?: K } = {
   contactPerson: 'contactPerson',
   phone: 'phone',
   email: 'email',
-  taxId: 'taxId',
+  taxPercentage: 'taxPercentage',
   address: 'address',
   balanceDue: 'balanceDue',
   companyId: 'companyId',

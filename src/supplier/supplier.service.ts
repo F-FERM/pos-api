@@ -66,7 +66,7 @@ export class SupplierService extends GenericDatabase<Model<SupplierDocument>> {
         contactPerson: dto.contactPerson?.trim(),
         phone: dto.phone.trim(),
         email: dto.email?.toLowerCase().trim(),
-        taxId: dto.taxId?.trim(),
+        taxPercentage: dto.taxPercentage?.trim(),
         address: dto.address?.trim(),
         balanceDue: dto.balanceDue ?? 0,
         companyId: new Types.ObjectId(dto.companyId),
@@ -248,7 +248,9 @@ export class SupplierService extends GenericDatabase<Model<SupplierDocument>> {
         ...(dto.email !== undefined && {
           email: dto.email?.toLowerCase().trim(),
         }),
-        ...(dto.taxId !== undefined && { taxId: dto.taxId?.trim() }),
+        ...(dto.taxPercentage !== undefined && {
+          taxPercentage: dto.taxPercentage,
+        }),
         ...(dto.address !== undefined && { address: dto.address?.trim() }),
       });
 
