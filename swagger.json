@@ -1664,6 +1664,21 @@
         ]
       }
     },
+    "/api/module/with-submodules": {
+      "get": {
+        "operationId": "ModuleController_findAllWithSubModules",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "get modules with submodules for privilege creation",
+        "tags": [
+          "Module"
+        ]
+      }
+    },
     "/api/module/{id}": {
       "get": {
         "operationId": "ModuleController_findOne",
