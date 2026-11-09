@@ -181,6 +181,67 @@ export class ModuleService
   }
 
   /**
+   * Retrieves all active modules along with their active submodules
+   * for the privilege creation section.
+   */
+  async findAllModulesWithSubModules(user: AuthedRequest): Promise<{
+    success: boolean;
+    message: string;
+    data: any[];
+    statusCode: number;
+  }> {
+    try {
+      await this.companyService.validateCompany(
+        user.user.companyId,
+        user.user.userId,
+      );
+
+      const modules = await this.moduleModel
+        .find({ isActive: true, isDeleted: false })
+        .sort({ createdAt: 1 })
+        .lean();
+
+      const subModules = await this.subModuleModel
+        .find({ isActive: true, isDeleted: false })
+        .sort({ createdAt: 1 })
+        .lean();
+
+      const subModuleMap = new Map<string, any[]>();
+      for (const sub of subModules) {
+        const modId = sub.moduleId.toString();
+        if (!subModuleMap.has(modId)) {
+          subModuleMap.set(modId, []);
+        }
+        subModuleMap.get(modId)!.push(sub);
+      }
+
+      const data = modules.map((mod) => ({
+        ...mod,
+        subModules: subModuleMap.get(mod._id.toString()) || [],
+      }));
+
+      return {
+        success: true,
+        message: 'Modules with submodules fetched successfully',
+        data,
+        statusCode: HttpStatus.OK,
+      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.log(
+          'Error while fetching modules with submodules',
+          error.message,
+        );
+        throw new BadRequestException(error.message);
+      }
+      console.log('Error while fetching modules with submodules', error);
+      throw new BadRequestException(
+        'Error while fetching modules with submodules',
+      );
+    }
+  }
+
+  /**
    * Retrieves a module by its ID.
    */
   async findOneModuleById(id: string): Promise<{
