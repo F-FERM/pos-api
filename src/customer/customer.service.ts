@@ -20,14 +20,16 @@ import { UserService } from '../user/user.service';
 import { AuthedRequest } from '../utils/common.types';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
-
 import { SyncService } from '../sync/sync.service';
+import { SaleDocument, SaleSchemaName } from '../models/sale.schema';
 
 @Injectable()
 export class CustomerService extends GenericDatabase<Model<CustomerDocument>> {
   constructor(
     @InjectModel(CustomerSchemaName)
     private readonly customerModel: Model<CustomerDocument>,
+    @InjectModel(SaleSchemaName)
+    private readonly saleModel: Model<SaleDocument>,
     private readonly logService: LogService,
     private readonly companyService: CompanyService,
     private readonly userService: UserService,
@@ -206,10 +208,31 @@ export class CustomerService extends GenericDatabase<Model<CustomerDocument>> {
         throw new NotFoundException('Customer not found');
       }
 
+      const purchaseHistory = await this.saleModel
+        .find({
+          customerId: new Types.ObjectId(id),
+          isDeleted: false,
+        })
+        .sort({ createdAt: -1 })
+        .lean();
+
+      const totalPurchases = purchaseHistory.length;
+      const totalSpent = purchaseHistory.reduce(
+        (sum, sale) => sum + (sale.grandTotal || 0),
+        0,
+      );
+
+      const customerData = customer.toObject();
+
       return {
         success: true,
         message: 'Customer fetched successfully',
-        data: customer,
+        data: {
+          ...customerData,
+          purchaseHistory,
+          totalPurchases,
+          totalSpent,
+        },
         statusCode: HttpStatus.OK,
       };
     } catch (error: unknown) {
