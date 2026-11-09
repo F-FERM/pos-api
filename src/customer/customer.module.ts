@@ -8,11 +8,13 @@ import { CompanyModule } from '../company/company.module';
 import { UserModule } from '../user/user.module';
 
 import { SyncModule } from '../sync/sync.module';
+import { SaleSchema, SaleSchemaName } from 'src/models/sale.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: CustomerSchemaName, schema: CustomerSchema },
+      { name: SaleSchemaName, schema: SaleSchema },
     ]),
     LogModule,
     CompanyModule,
