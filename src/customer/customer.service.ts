@@ -18,7 +18,7 @@ import { LogService } from '../log/log.service';
 import { CompanyService } from '../company/company.service';
 import { UserService } from '../user/user.service';
 import { AuthedRequest } from '../utils/common.types';
-import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
+import { LogActions, LogEntityType, LogStatus, CustomerTag } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
 import { SyncService } from '../sync/sync.service';
 import { SaleDocument, SaleSchemaName } from '../models/sale.schema';
@@ -71,6 +71,7 @@ export class CustomerService extends GenericDatabase<Model<CustomerDocument>> {
         creditLimit: dto.creditLimit ?? 0,
         balanceDue: dto.balanceDue ?? 0,
         loyaltyPoints: dto.loyaltyPoints ?? 0,
+        tag: dto.tag ?? CustomerTag.REGULAR,
         companyId: new Types.ObjectId(dto.companyId),
         isActive: dto.isActive ?? true,
         createdBy: new Types.ObjectId(userId),
@@ -271,6 +272,7 @@ export class CustomerService extends GenericDatabase<Model<CustomerDocument>> {
           email: dto.email?.toLowerCase().trim(),
         }),
         ...(dto.address !== undefined && { address: dto.address?.trim() }),
+        ...(dto.tag && { tag: dto.tag }),
       });
 
       await this.logService.createLog({
