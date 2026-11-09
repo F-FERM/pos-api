@@ -152,6 +152,11 @@ export enum LogActions {
   UPDATE_ACCOUNT = 'UPDATE_ACCOUNT',
   DELETE_ACCOUNT = 'DELETE_ACCOUNT',
   RECORD_ACCOUNT_TRANSACTION = 'RECORD_ACCOUNT_TRANSACTION',
+
+  //Payment Terms
+  CREATE_PAYMENT_TERMS = 'CREATE_PAYMENT_TERMS',
+  UPDATE_PAYMENT_TERMS = 'UPDATE_PAYMENT_TERMS',
+  DELETE_PAYMENT_TERMS = 'DELETE_PAYMENT_TERMS',
 }
 
 export enum LogEntityType {
@@ -182,6 +187,7 @@ export enum LogEntityType {
   STORE_LICENSE = 'StoreLicense',
   ACCOUNT = 'Account',
   ACCOUNT_TRANSACTION = 'AccountTransaction',
+  PAYMENT_TERMS = 'PaymentTerms',
 }
 
 export enum PaymentTermType {
