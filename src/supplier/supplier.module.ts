@@ -6,8 +6,8 @@ import { SupplierSchema, SupplierSchemaName } from '../models/supplier.schema';
 import { LogModule } from '../log/log.module';
 import { CompanyModule } from '../company/company.module';
 import { UserModule } from '../user/user.module';
-
 import { SyncModule } from '../sync/sync.module';
+import { PaymentTermsModule } from '../payment-terms/payment-terms.module';
 
 @Module({
   imports: [
@@ -18,6 +18,7 @@ import { SyncModule } from '../sync/sync.module';
     CompanyModule,
     UserModule,
     SyncModule,
+    PaymentTermsModule,
   ],
   controllers: [SupplierController],
   providers: [SupplierService],
