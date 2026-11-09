@@ -5603,6 +5603,15 @@
             "type": "number",
             "default": 0
           },
+          "tag": {
+            "type": "string",
+            "enum": [
+              "REGULAR",
+              "VIP",
+              "WHOLESALE"
+            ],
+            "default": "REGULAR"
+          },
           "isActive": {
             "type": "boolean",
             "default": true
@@ -5639,6 +5648,15 @@
           "loyaltyPoints": {
             "type": "number",
             "default": 0
+          },
+          "tag": {
+            "type": "string",
+            "enum": [
+              "REGULAR",
+              "VIP",
+              "WHOLESALE"
+            ],
+            "default": "REGULAR"
           },
           "isActive": {
             "type": "boolean",
