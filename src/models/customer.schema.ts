@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
 import { BaseSchema } from './common/base.schema';
+import { CustomerTag } from '../utils/common.enum';
 
 export type CustomerDocument = Customer & Document;
 
@@ -28,6 +29,13 @@ export class Customer extends BaseSchema {
   loyaltyPoints: number;
 
   @Prop({
+    type: String,
+    enum: CustomerTag,
+    default: CustomerTag.REGULAR,
+  })
+  tag: CustomerTag;
+
+  @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Company',
     required: true,
@@ -53,6 +61,7 @@ export const CustomerModelConstants: { [K in keyof Customer]-?: K } = {
   creditLimit: 'creditLimit',
   balanceDue: 'balanceDue',
   loyaltyPoints: 'loyaltyPoints',
+  tag: 'tag',
   companyId: 'companyId',
   isActive: 'isActive',
   isDeleted: 'isDeleted',
