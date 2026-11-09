@@ -38,6 +38,7 @@ import { EmailModule } from './email/email.module';
 import { AccountModule } from './account/account.module';
 import { SyncModule } from './sync/sync.module';
 import { WeighScaleModule } from './weigh-scale/weigh-scale.module';
+import { PaymentTermsModule } from './payment-terms/payment-terms.module';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { WeighScaleModule } from './weigh-scale/weigh-scale.module';
     AccountModule,
     SyncModule,
     WeighScaleModule,
+    PaymentTermsModule,
   ],
   controllers: [AppController],
   providers: [
