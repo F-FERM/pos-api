@@ -196,3 +196,9 @@ export enum PaymentTermType {
   END_OF_NEXT_MONTH = 'END_OF_NEXT_MONTH',
   CUSTOM = 'CUSTOM',
 }
+
+export enum CustomerTag {
+  REGULAR = 'REGULAR',
+  VIP = 'VIP',
+  WHOLESALE = 'WHOLESALE',
+}
