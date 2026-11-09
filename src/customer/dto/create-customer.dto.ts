@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -9,6 +10,7 @@ import {
   Length,
   Min,
 } from 'class-validator';
+import { CustomerTag } from '../../utils/common.enum';
 
 export class CreateCustomerDto {
   @ApiProperty()
@@ -48,6 +50,11 @@ export class CreateCustomerDto {
   @IsNumber()
   @Min(0)
   loyaltyPoints?: number;
+
+  @ApiPropertyOptional({ enum: CustomerTag, default: CustomerTag.REGULAR })
+  @IsOptional()
+  @IsEnum(CustomerTag)
+  tag?: CustomerTag;
 
   @ApiPropertyOptional({ default: true })
   @IsOptional()
