@@ -21,6 +21,16 @@ export class ModuleController {
   }
 
   /**
+   * Retrieves all modules along with their submodules for privilege creation.
+   */
+  @ApiOperation({ summary: 'get modules with submodules for privilege creation' })
+  @SkipSubscription()
+  @Get('with-submodules')
+  findAllWithSubModules(@Req() req: AuthedRequest) {
+    return this.moduleService.findAllModulesWithSubModules(req);
+  }
+
+  /**
    * Retrieves a module by its ID from the database.
    * @param {string} id - The ID of the module to retrieve.
    * @returns {Promise<ModuleDocument>} A promise that resolves to the retrieved module.
