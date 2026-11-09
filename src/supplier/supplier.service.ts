@@ -10,6 +10,7 @@ import { GenericDatabase } from '../helper/genericDatabase';
 import {
   Supplier,
   SupplierDocument,
+  SupplierModelConstants,
   SupplierSchemaName,
 } from '../models/supplier.schema';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
@@ -20,8 +21,9 @@ import { UserService } from '../user/user.service';
 import { AuthedRequest } from '../utils/common.types';
 import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
-
 import { SyncService } from '../sync/sync.service';
+import { PaymentTermsService } from '../payment-terms/payment-terms.service';
+import { PaymentTermModelConstants } from 'src/models/payment-terms.schema';
 
 @Injectable()
 export class SupplierService extends GenericDatabase<Model<SupplierDocument>> {
@@ -32,6 +34,7 @@ export class SupplierService extends GenericDatabase<Model<SupplierDocument>> {
     private readonly companyService: CompanyService,
     private readonly userService: UserService,
     private readonly syncService: SyncService,
+    private readonly paymentTermsService: PaymentTermsService,
   ) {
     super(supplierModel);
   }
@@ -45,6 +48,18 @@ export class SupplierService extends GenericDatabase<Model<SupplierDocument>> {
       const ipAddress = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);
       await this.companyService.validateCompany(dto.companyId, userId);
+
+      if (!dto.paymentTermsId) {
+        throw new BadRequestException('Payment term is required');
+      }
+
+      const paymentTerm = await this.paymentTermsService.genericFindOne({
+        _id: new Types.ObjectId(dto.paymentTermsId),
+      });
+
+      if (!paymentTerm) {
+        throw new BadRequestException('Invalid or non-existent payment term');
+      }
 
       if (dto.phone) {
         const dupPhone = await this.supplierModel.findOne({
@@ -69,6 +84,8 @@ export class SupplierService extends GenericDatabase<Model<SupplierDocument>> {
         taxPercentage: dto.taxPercentage?.trim(),
         address: dto.address?.trim(),
         balanceDue: dto.balanceDue ?? 0,
+        gstinNumber: dto.gstinNumber?.trim(),
+        paymentTermsId: new Types.ObjectId(dto.paymentTermsId),
         companyId: new Types.ObjectId(dto.companyId),
         isActive: dto.isActive ?? true,
         createdBy: new Types.ObjectId(userId),
@@ -153,6 +170,10 @@ export class SupplierService extends GenericDatabase<Model<SupplierDocument>> {
       const [data, totalCount] = await Promise.all([
         this.supplierModel
           .find(filter)
+          .populate({
+            path: SupplierModelConstants.paymentTermsId,
+            select: `${PaymentTermModelConstants.name} ${PaymentTermModelConstants.type} ${PaymentTermModelConstants.numberOfDays}`,
+          })
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit),
@@ -198,7 +219,10 @@ export class SupplierService extends GenericDatabase<Model<SupplierDocument>> {
         filter.companyId = new Types.ObjectId(companyId);
       }
 
-      const supplier = await this.supplierModel.findOne(filter);
+      const supplier = await this.supplierModel.findOne(filter).populate({
+        path: SupplierModelConstants.paymentTermsId,
+        select: `${PaymentTermModelConstants.name} ${PaymentTermModelConstants.type} ${PaymentTermModelConstants.numberOfDays}`,
+      });
 
       if (!supplier) {
         throw new NotFoundException('Supplier not found');
@@ -238,6 +262,16 @@ export class SupplierService extends GenericDatabase<Model<SupplierDocument>> {
         throw new NotFoundException('Supplier not found');
       }
 
+      if (dto.paymentTermsId) {
+        const paymentTerm = await this.paymentTermsService.genericFindOne({
+          _id: new Types.ObjectId(dto.paymentTermsId),
+        });
+
+        if (!paymentTerm) {
+          throw new BadRequestException('Invalid or non-existent payment term');
+        }
+      }
+
       const updated = await this.genericUpdateOne(id, {
         ...dto,
         ...(dto.name && { name: dto.name.trim() }),
@@ -252,6 +286,12 @@ export class SupplierService extends GenericDatabase<Model<SupplierDocument>> {
           taxPercentage: dto.taxPercentage,
         }),
         ...(dto.address !== undefined && { address: dto.address?.trim() }),
+        ...(dto.gstinNumber !== undefined && {
+          gstinNumber: dto.gstinNumber?.trim(),
+        }),
+        ...(dto.paymentTermsId && {
+          paymentTermsId: new Types.ObjectId(dto.paymentTermsId),
+        }),
       });
 
       await this.logService.createLog({
