@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
 import { BaseSchema } from './common/base.schema';
+import { PaymentTermSchemaName } from './payment-terms.schema';
 
 export type SupplierDocument = Supplier & Document;
 
@@ -18,7 +19,7 @@ export class Supplier extends BaseSchema {
   @Prop({ trim: true, lowercase: true })
   email?: string;
 
-  @Prop({ type:Number, default: 0 })
+  @Prop({ type: Number, default: 0 })
   taxPercentage?: string;
 
   @Prop({ trim: true })
@@ -26,6 +27,16 @@ export class Supplier extends BaseSchema {
 
   @Prop({ type: Number, default: 0 })
   balanceDue: number;
+
+  @Prop({ trim: true })
+  gstinNumber?: string;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: PaymentTermSchemaName,
+    required: true,
+  })
+  paymentTermsId: Types.ObjectId;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
@@ -53,6 +64,8 @@ export const SupplierModelConstants: { [K in keyof Supplier]-?: K } = {
   taxPercentage: 'taxPercentage',
   address: 'address',
   balanceDue: 'balanceDue',
+  gstinNumber: 'gstinNumber',
+  paymentTermsId: 'paymentTermsId',
   companyId: 'companyId',
   isActive: 'isActive',
   isDeleted: 'isDeleted',
