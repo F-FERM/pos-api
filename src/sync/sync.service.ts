@@ -65,6 +65,23 @@ import {
   EmailOtpDocument,
   EmailOtpSchemaName,
 } from '../models/email-otp.schema';
+import {
+  PaymentTermDocument,
+  PaymentTermSchemaName,
+} from '../models/payment-terms.schema';
+import {
+  LoyaltySettingDocument,
+  LoyaltySettingSchemaName,
+} from '../models/loyalty-setting.schema';
+import {
+  NumberSettingDocument,
+  NumberSettingSchemaName,
+} from '../models/number-settings.schema';
+import { StaffDocument, StaffSchemaName } from '../models/staff.schema';
+import {
+  PrivilegesDocument,
+  PrivilegesSchemaName,
+} from '../models/privilege.schema';
 import { SyncPushDto } from './dto/sync-push.dto';
 import { SyncPullDto } from './dto/sync-pull.dto';
 import { UserService } from '../user/user.service';
@@ -120,6 +137,16 @@ export class SyncService
     private readonly deviceModel: Model<DeviceRegistrationDocument>,
     @InjectModel(EmailOtpSchemaName)
     private readonly emailOtpModel: Model<EmailOtpDocument>,
+    @InjectModel(PaymentTermSchemaName)
+    private readonly paymentTermModel: Model<PaymentTermDocument>,
+    @InjectModel(LoyaltySettingSchemaName)
+    private readonly loyaltySettingModel: Model<LoyaltySettingDocument>,
+    @InjectModel(NumberSettingSchemaName)
+    private readonly numberSettingModel: Model<NumberSettingDocument>,
+    @InjectModel(StaffSchemaName)
+    private readonly staffModel: Model<StaffDocument>,
+    @InjectModel(PrivilegesSchemaName)
+    private readonly privilegesModel: Model<PrivilegesDocument>,
 
     // Cloud DB Models ('cloudConnection')
     @InjectModel(CompanySchemaName, 'cloudConnection')
@@ -164,6 +191,16 @@ export class SyncService
     private readonly deviceModelCloud: Model<DeviceRegistrationDocument>,
     @InjectModel(EmailOtpSchemaName, 'cloudConnection')
     private readonly emailOtpModelCloud: Model<EmailOtpDocument>,
+    @InjectModel(PaymentTermSchemaName, 'cloudConnection')
+    private readonly paymentTermModelCloud: Model<PaymentTermDocument>,
+    @InjectModel(LoyaltySettingSchemaName, 'cloudConnection')
+    private readonly loyaltySettingModelCloud: Model<LoyaltySettingDocument>,
+    @InjectModel(NumberSettingSchemaName, 'cloudConnection')
+    private readonly numberSettingModelCloud: Model<NumberSettingDocument>,
+    @InjectModel(StaffSchemaName, 'cloudConnection')
+    private readonly staffModelCloud: Model<StaffDocument>,
+    @InjectModel(PrivilegesSchemaName, 'cloudConnection')
+    private readonly privilegesModelCloud: Model<PrivilegesDocument>,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     @Inject(forwardRef(() => CompanyService))
@@ -337,6 +374,26 @@ export class SyncService
         this.counterModel,
         this.counterModelCloud,
       ),
+      paymentTerms: await this.syncUnsyncedModelRecords(
+        this.paymentTermModel,
+        this.paymentTermModelCloud,
+      ),
+      loyaltySettings: await this.syncUnsyncedModelRecords(
+        this.loyaltySettingModel,
+        this.loyaltySettingModelCloud,
+      ),
+      numberSettings: await this.syncUnsyncedModelRecords(
+        this.numberSettingModel,
+        this.numberSettingModelCloud,
+      ),
+      staff: await this.syncUnsyncedModelRecords(
+        this.staffModel,
+        this.staffModelCloud,
+      ),
+      privileges: await this.syncUnsyncedModelRecords(
+        this.privilegesModel,
+        this.privilegesModelCloud,
+      ),
     };
 
     return fullSummary;
@@ -461,6 +518,31 @@ export class SyncService
           dto.registerSessions,
           companyId,
         );
+        pushSummary.paymentTerms = await this.upsertEntityList(
+          this.paymentTermModelCloud,
+          dto.paymentTerms,
+          companyId,
+        );
+        pushSummary.loyaltySettings = await this.upsertEntityList(
+          this.loyaltySettingModelCloud,
+          dto.loyaltySettings,
+          companyId,
+        );
+        pushSummary.numberSettings = await this.upsertEntityList(
+          this.numberSettingModelCloud,
+          dto.numberSettings,
+          companyId,
+        );
+        pushSummary.staff = await this.upsertEntityList(
+          this.staffModelCloud,
+          dto.staff,
+          companyId,
+        );
+        pushSummary.privileges = await this.upsertEntityList(
+          this.privilegesModelCloud,
+          dto.privileges,
+          companyId,
+        );
       }
 
       const syncTime = new Date();
@@ -535,6 +617,11 @@ export class SyncService
         printers,
         counters,
         deviceRegistrations,
+        paymentTerms,
+        loyaltySettings,
+        numberSettings,
+        staff,
+        privileges,
       ] = await Promise.all([
         this.companyModelCloud.findOne({
           _id: compObjId,
@@ -565,6 +652,11 @@ export class SyncService
         this.printerModelCloud.find(deltaFilter),
         this.counterModelCloud.find(deltaFilter),
         this.deviceModelCloud.find(deltaFilter),
+        this.paymentTermModelCloud.find(deltaFilter),
+        this.loyaltySettingModelCloud.find(deltaFilter),
+        this.numberSettingModelCloud.find(deltaFilter),
+        this.staffModelCloud.find(deltaFilter),
+        this.privilegesModelCloud.find(deltaFilter),
       ]);
 
       return {
@@ -592,6 +684,11 @@ export class SyncService
             printers,
             counters,
             deviceRegistrations,
+            paymentTerms,
+            loyaltySettings,
+            numberSettings,
+            staff,
+            privileges,
           },
         },
         statusCode: HttpStatus.OK,
