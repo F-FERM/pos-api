@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
@@ -28,6 +29,10 @@ export class CreateSupplierDto {
   phone: string;
 
   @ApiPropertyOptional()
+  @Transform(({ value }) => {
+    if (value === '' || value == null) return undefined;
+    return typeof value === 'string' ? value.toLowerCase() : value;
+  })
   @IsOptional()
   @IsEmail()
   email?: string;
