@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsEmail,
+  IsMongoId,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -45,6 +46,16 @@ export class CreateSupplierDto {
   @IsOptional()
   @IsNumber()
   balanceDue?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  gstinNumber?: string;
+
+  @ApiProperty({ description: 'ObjectId of PaymentTerm' })
+  @IsMongoId()
+  @IsNotEmpty()
+  paymentTermsId: string;
 
   @ApiPropertyOptional({ default: true })
   @IsOptional()
