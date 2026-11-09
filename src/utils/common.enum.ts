@@ -183,3 +183,10 @@ export enum LogEntityType {
   ACCOUNT = 'Account',
   ACCOUNT_TRANSACTION = 'AccountTransaction',
 }
+
+export enum PaymentTermType {
+  FIXED = 'FIXED', // Net 30, Net 15
+  END_OF_MONTH = 'END_OF_MONTH',
+  END_OF_NEXT_MONTH = 'END_OF_NEXT_MONTH',
+  CUSTOM = 'CUSTOM',
+}
