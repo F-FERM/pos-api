@@ -66,4 +66,29 @@ export class SyncPushDto {
   @IsOptional()
   @IsArray()
   deviceRegistrations?: Record<string, any>[];
+
+  @ApiPropertyOptional({ type: [Object], description: 'Array of payment term updates' })
+  @IsOptional()
+  @IsArray()
+  paymentTerms?: Record<string, any>[];
+
+  @ApiPropertyOptional({ type: [Object], description: 'Array of loyalty setting updates' })
+  @IsOptional()
+  @IsArray()
+  loyaltySettings?: Record<string, any>[];
+
+  @ApiPropertyOptional({ type: [Object], description: 'Array of number setting updates' })
+  @IsOptional()
+  @IsArray()
+  numberSettings?: Record<string, any>[];
+
+  @ApiPropertyOptional({ type: [Object], description: 'Array of staff model updates' })
+  @IsOptional()
+  @IsArray()
+  staff?: Record<string, any>[];
+
+  @ApiPropertyOptional({ type: [Object], description: 'Array of privilege model updates' })
+  @IsOptional()
+  @IsArray()
+  privileges?: Record<string, any>[];
 }
