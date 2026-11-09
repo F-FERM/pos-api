@@ -3853,6 +3853,127 @@
           "Weigh Scale"
         ]
       }
+    },
+    "/api/payment-terms": {
+      "post": {
+        "operationId": "PaymentTermsController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "create payment term",
+        "tags": [
+          "PaymentTerms"
+        ]
+      },
+      "get": {
+        "operationId": "PaymentTermsController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "get all payment terms",
+        "tags": [
+          "PaymentTerms"
+        ]
+      }
+    },
+    "/api/payment-terms/{id}": {
+      "get": {
+        "operationId": "PaymentTermsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "get payment term by id",
+        "tags": [
+          "PaymentTerms"
+        ]
+      },
+      "patch": {
+        "operationId": "PaymentTermsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "update payment term(s)",
+        "tags": [
+          "PaymentTerms"
+        ]
+      },
+      "delete": {
+        "operationId": "PaymentTermsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "delete payment term",
+        "tags": [
+          "PaymentTerms"
+        ]
+      }
     }
   },
   "info": {
