@@ -26,10 +26,19 @@ import { BrandService } from '../brand/brand.service';
 import { SupplierService } from '../supplier/supplier.service';
 import { SyncService } from '../sync/sync.service';
 import { AuthedRequest } from '../utils/common.types';
-import { LogActions, LogEntityType, LogStatus, ScaleBarcodeType } from '../utils/common.enum';
+import {
+  LogActions,
+  LogEntityType,
+  LogStatus,
+  ScaleBarcodeType,
+} from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
 
-import { UnitDocument, UnitModelConstants, UnitSchemaName } from '../models/unit.schema';
+import {
+  UnitDocument,
+  UnitModelConstants,
+  UnitSchemaName,
+} from '../models/unit.schema';
 import { CompanyDocument, CompanySchemaName } from '../models/company.schema';
 
 @Injectable()
@@ -86,7 +95,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
       while (!isUnique && attempts < 10) {
         barcode = this.generateEan13Barcode();
         const filter: Record<string, unknown> = {
-          barcode,
+          'basicInfo.barcode': barcode,
           isDeleted: false,
         };
         if (this.isValidMongoId(companyId)) {
@@ -129,8 +138,23 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
       await this.userService.validateAuthenticatedUser(userId);
       await this.companyService.validateCompany(dto.companyId, userId);
 
+      const unitId = dto.basicInfo?.unitId;
+      if (!unitId) {
+        throw new BadRequestException('Unit ID is required');
+      }
+
+      const name = dto.basicInfo?.name;
+      if (!name) {
+        throw new BadRequestException('Product name is required');
+      }
+
+      const sellingPrice = dto.pricingAndTax?.sellingPrice;
+      if (sellingPrice === undefined || sellingPrice < 0) {
+        throw new BadRequestException('Selling price is required');
+      }
+
       const unit = await this.unitModel.findOne({
-        _id: new Types.ObjectId(dto.unitId),
+        _id: new Types.ObjectId(unitId),
         companyId: new Types.ObjectId(dto.companyId),
         isDeleted: false,
       });
@@ -139,9 +163,10 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         throw new BadRequestException('Unit not found in your store');
       }
 
-      if (dto.categoryId) {
+      const categoryId = dto.basicInfo?.categoryId;
+      if (categoryId) {
         const category = await this.categoryService.genericFindOne({
-          _id: dto.categoryId,
+          _id: categoryId,
           companyId: new Types.ObjectId(dto.companyId),
         });
         if (!category) {
@@ -149,9 +174,10 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         }
       }
 
-      if (dto.brandId) {
+      const brandId = dto.basicInfo?.brandId;
+      if (brandId) {
         const brand = await this.brandService.genericFindOne({
-          _id: dto.brandId,
+          _id: brandId,
           companyId: new Types.ObjectId(dto.companyId),
         });
         if (!brand) {
@@ -159,9 +185,10 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         }
       }
 
-      if (dto.supplierId) {
+      const supplierId = dto.basicInfo?.supplierId;
+      if (supplierId) {
         const supplier = await this.supplierService.genericFindOne({
-          _id: dto.supplierId,
+          _id: supplierId,
           companyId: new Types.ObjectId(dto.companyId),
         });
         if (!supplier) {
@@ -169,10 +196,11 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         }
       }
 
-      if (dto.barcode) {
+      const barcode = dto.basicInfo?.barcode?.trim();
+      if (barcode) {
         const dupBarcode = await this.genericFindOne({
           companyId: new Types.ObjectId(dto.companyId),
-          barcode: dto.barcode.trim(),
+          'basicInfo.barcode': barcode,
         });
         if (dupBarcode) {
           throw new BadRequestException(
@@ -181,10 +209,11 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         }
       }
 
-      if (dto.sku) {
+      const sku = dto.basicInfo?.sku?.trim();
+      if (sku) {
         const dupSku = await this.genericFindOne({
           companyId: new Types.ObjectId(dto.companyId),
-          sku: dto.sku.trim(),
+          'basicInfo.sku': sku,
         });
         if (dupSku) {
           throw new BadRequestException(
@@ -193,10 +222,11 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         }
       }
 
-      if (dto.scalePlu) {
+      const scalePlu = dto.scalePlu?.trim();
+      if (scalePlu) {
         const dupPlu = await this.genericFindOne({
           companyId: new Types.ObjectId(dto.companyId),
-          scalePlu: dto.scalePlu.trim(),
+          scalePlu,
         });
         if (dupPlu) {
           throw new BadRequestException(
@@ -205,34 +235,63 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         }
       }
 
+      const purchasePrice = dto.pricingAndTax?.purchasePrice ?? 0;
+      const vatRate = dto.pricingAndTax?.vatRate ?? 0;
+      const sellingPriceBeforeVat =
+        dto.pricingAndTax?.sellingPriceBeforeVat ?? sellingPrice;
+      const vatAmount =
+        dto.pricingAndTax?.vatAmount ??
+        Math.round(sellingPriceBeforeVat * (vatRate / 100) * 100) / 100;
+      const priceIncludingVat =
+        dto.pricingAndTax?.priceIncludingVat ??
+        Math.round((sellingPriceBeforeVat + vatAmount) * 100) / 100;
+      const profitMargin =
+        dto.pricingAndTax?.profitMargin ??
+        (sellingPrice > 0
+          ? Math.round(
+              ((sellingPrice - purchasePrice) / sellingPrice) * 100 * 10,
+            ) / 10
+          : 0);
+
+      const enableStockTracking =
+        dto.inventoryManagement?.enableStockTracking ?? true;
+      const openingStock = dto.inventoryManagement?.openingStock ?? 0;
+      const lowStockAlert = dto.inventoryManagement?.lowStockAlert ?? 10;
+      const description = (dto.inventoryManagement?.description ?? '').trim();
+      const isActive = dto.isActive ?? true;
+
       const created = await this.genericCreateOne({
-        ...dto,
-        name: dto.name.trim(),
-        unitId: new Types.ObjectId(dto.unitId),
-        sku: dto.sku?.trim(),
-        barcode: dto.barcode?.trim(),
+        companyId: new Types.ObjectId(dto.companyId),
+        basicInfo: {
+          name: name.trim(),
+          image: dto.basicInfo?.image?.trim() || '',
+          sku: sku || undefined,
+          barcode: barcode || undefined,
+          categoryId: categoryId ? new Types.ObjectId(categoryId) : null,
+          brandId: brandId ? new Types.ObjectId(brandId) : null,
+          unitId: new Types.ObjectId(unitId),
+          supplierId: supplierId ? new Types.ObjectId(supplierId) : null,
+        },
+        pricingAndTax: {
+          purchasePrice,
+          sellingPrice,
+          vatRate,
+          profitMargin,
+          sellingPriceBeforeVat,
+          vatAmount,
+          priceIncludingVat,
+        },
+        inventoryManagement: {
+          enableStockTracking,
+          openingStock,
+          lowStockAlert,
+          description,
+        },
         isWeighted: dto.isWeighted ?? false,
-        scalePlu: dto.scalePlu?.trim(),
+        scalePlu: scalePlu || undefined,
         scaleUnit: dto.scaleUnit?.trim() || 'KG',
         tareWeight: dto.tareWeight ?? 0,
-        partNumber: dto.partNumber?.trim(),
-        size: dto.size?.trim(),
-        color: dto.color?.trim(),
-        description: dto.description?.trim(),
-        categoryId: dto.categoryId ? new Types.ObjectId(dto.categoryId) : null,
-        brandId: dto.brandId ? new Types.ObjectId(dto.brandId) : null,
-        supplierId: dto.supplierId ? new Types.ObjectId(dto.supplierId) : null,
-        companyId: new Types.ObjectId(dto.companyId),
-        unitOfMeasure: dto.unitOfMeasure?.trim() || 'PCS',
-        costPrice: dto.costPrice ?? 0,
-        sellingPrice: dto.sellingPrice,
-        mrp: dto.mrp ?? dto.sellingPrice,
-        taxRate: dto.taxRate ?? 0,
-        isTaxInclusive: dto.isTaxInclusive ?? true,
-        stockQuantity: dto.stockQuantity ?? 0,
-        minStockAlert: dto.minStockAlert ?? 5,
-        hasBatchExpiry: dto.hasBatchExpiry ?? false,
-        isActive: dto.isActive ?? true,
+        isActive,
         createdBy: new Types.ObjectId(userId),
       });
 
@@ -242,7 +301,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         action: LogActions.CREATE_PRODUCT,
         entityType: LogEntityType.PRODUCT,
         entityId: new Types.ObjectId(created._id),
-        description: `Product ${created.name} created`,
+        description: `Product ${created.basicInfo?.name || name} created`,
         ipAddress,
         path: req.url,
         status: LogStatus.SUCCESS,
@@ -308,28 +367,32 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
       }
 
       if (categoryId) {
-        filter.categoryId = new Types.ObjectId(categoryId);
+        filter['basicInfo.categoryId'] = new Types.ObjectId(categoryId);
       }
 
       if (brandId) {
-        filter.brandId = new Types.ObjectId(brandId);
+        filter['basicInfo.brandId'] = new Types.ObjectId(brandId);
       }
 
       if (supplierId) {
-        filter.supplierId = new Types.ObjectId(supplierId);
+        filter['basicInfo.supplierId'] = new Types.ObjectId(supplierId);
       }
 
       if (search) {
         filter.$or = [
-          { name: { $regex: search, $options: 'i' } },
-          { barcode: { $regex: search, $options: 'i' } },
-          { sku: { $regex: search, $options: 'i' } },
-          { partNumber: { $regex: search, $options: 'i' } },
+          { 'basicInfo.name': { $regex: search, $options: 'i' } },
+          { 'basicInfo.barcode': { $regex: search, $options: 'i' } },
+          { 'basicInfo.sku': { $regex: search, $options: 'i' } },
         ];
       }
 
       if (lowStockOnly) {
-        filter.$expr = { $lte: ['$stockQuantity', '$minStockAlert'] };
+        filter.$expr = {
+          $lte: [
+            '$inventoryManagement.openingStock',
+            '$inventoryManagement.lowStockAlert',
+          ],
+        };
       }
 
       const skip = (page - 1) * limit;
@@ -422,9 +485,9 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
             $or: [
               { scalePlu: pluCode },
               { scalePlu: pluCode.replace(/^0+/, '') },
-              { barcode: pluCode },
-              { barcode: rawBarcode },
-              { sku: pluCode },
+              { 'basicInfo.barcode': pluCode },
+              { 'basicInfo.barcode': rawBarcode },
+              { 'basicInfo.sku': pluCode },
             ],
             isDeleted: false,
             isActive: true,
@@ -446,15 +509,19 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
 
         if (product) {
           let netQuantity = 1;
-          let totalPrice = product.sellingPrice;
-          const unitPrice = product.sellingPrice;
+          const sellingPrice = product.pricingAndTax?.sellingPrice ?? 0;
+          let totalPrice = sellingPrice;
+          const unitPrice = sellingPrice;
 
           if (scaleSettings.barcodeType === ScaleBarcodeType.PRICE_EMBEDDED) {
             totalPrice = Math.round((rawNum / 100) * 100) / 100;
             netQuantity =
-              unitPrice > 0 ? Math.round((totalPrice / unitPrice) * 1000) / 1000 : 1;
+              unitPrice > 0
+                ? Math.round((totalPrice / unitPrice) * 1000) / 1000
+                : 1;
           } else {
-            const grossWeight = rawNum * (scaleSettings.weightMultiplier || 0.001);
+            const grossWeight =
+              rawNum * (scaleSettings.weightMultiplier || 0.001);
             const tare = product.tareWeight || 0;
             netQuantity = Math.max(0.001, grossWeight - tare);
             netQuantity = Math.round(netQuantity * 1000) / 1000;
@@ -480,7 +547,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
       const product = await this.productModel
         .findOne({
           companyId: new Types.ObjectId(companyId),
-          barcode: rawBarcode,
+          'basicInfo.barcode': rawBarcode,
           isDeleted: false,
           isActive: true,
         })
@@ -539,22 +606,20 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         filter.companyId = new Types.ObjectId(companyId);
       }
 
-      const product = await this.productModel
-        .findOne(filter)
-        .populate([
-          {
-            path: ProductModelConstants.categoryId,
-            select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
-          },
-          {
-            path: ProductModelConstants.brandId,
-            select: BrandModelConstants.name,
-          },
-          {
-            path: ProductModelConstants.supplierId,
-            select: `${SupplierModelConstants.name} ${SupplierModelConstants.phone} ${SupplierModelConstants.contactPerson}`,
-          },
-        ]);
+      const product = await this.productModel.findOne(filter).populate([
+        {
+          path: ProductModelConstants.categoryId,
+          select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
+        },
+        {
+          path: ProductModelConstants.brandId,
+          select: BrandModelConstants.name,
+        },
+        {
+          path: ProductModelConstants.supplierId,
+          select: `${SupplierModelConstants.name} ${SupplierModelConstants.phone} ${SupplierModelConstants.contactPerson}`,
+        },
+      ]);
 
       if (!product) {
         throw new NotFoundException('Product not found');
@@ -594,9 +659,10 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         throw new NotFoundException('Product not found');
       }
 
-      if (dto.categoryId) {
+      const categoryId = dto.basicInfo?.categoryId;
+      if (categoryId) {
         const category = await this.categoryService.genericFindOne({
-          _id: dto.categoryId,
+          _id: categoryId,
           companyId: new Types.ObjectId(companyId),
         });
         if (!category) {
@@ -604,9 +670,10 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         }
       }
 
-      if (dto.brandId) {
+      const brandId = dto.basicInfo?.brandId;
+      if (brandId) {
         const brand = await this.brandService.genericFindOne({
-          _id: dto.brandId,
+          _id: brandId,
           companyId: new Types.ObjectId(companyId),
         });
         if (!brand) {
@@ -614,9 +681,10 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         }
       }
 
-      if (dto.supplierId) {
+      const supplierId = dto.basicInfo?.supplierId;
+      if (supplierId) {
         const supplier = await this.supplierService.genericFindOne({
-          _id: dto.supplierId,
+          _id: supplierId,
           companyId: new Types.ObjectId(companyId),
         });
         if (!supplier) {
@@ -624,11 +692,12 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         }
       }
 
-      if (dto.barcode) {
+      const barcode = dto.basicInfo?.barcode?.trim();
+      if (barcode) {
         const dupBarcode = await this.genericFindOne({
           companyId: new Types.ObjectId(companyId),
           _id: { $ne: new Types.ObjectId(id) },
-          barcode: dto.barcode.trim(),
+          'basicInfo.barcode': barcode,
         });
         if (dupBarcode) {
           throw new BadRequestException(
@@ -637,11 +706,12 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         }
       }
 
-      if (dto.sku) {
+      const sku = dto.basicInfo?.sku?.trim();
+      if (sku) {
         const dupSku = await this.genericFindOne({
           companyId: new Types.ObjectId(companyId),
           _id: { $ne: new Types.ObjectId(id) },
-          sku: dto.sku.trim(),
+          'basicInfo.sku': sku,
         });
         if (dupSku) {
           throw new BadRequestException(
@@ -663,38 +733,86 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         }
       }
 
-      const updated = await this.genericUpdateOne(id, {
-        ...dto,
-        ...(dto.name && { name: dto.name.trim() }),
-        ...(dto.sku !== undefined && { sku: dto.sku?.trim() }),
-        ...(dto.barcode !== undefined && { barcode: dto.barcode?.trim() }),
-        ...(dto.isWeighted !== undefined && { isWeighted: dto.isWeighted }),
-        ...(dto.scalePlu !== undefined && { scalePlu: dto.scalePlu?.trim() }),
-        ...(dto.scaleUnit !== undefined && { scaleUnit: dto.scaleUnit?.trim() }),
-        ...(dto.tareWeight !== undefined && { tareWeight: dto.tareWeight }),
-        ...(dto.partNumber !== undefined && {
-          partNumber: dto.partNumber?.trim(),
-        }),
-        ...(dto.size !== undefined && { size: dto.size?.trim() }),
-        ...(dto.color !== undefined && { color: dto.color?.trim() }),
-        ...(dto.description !== undefined && {
-          description: dto.description?.trim(),
-        }),
-        ...(dto.categoryId !== undefined && {
-          categoryId: dto.categoryId
-            ? new Types.ObjectId(dto.categoryId)
-            : null,
-        }),
-        ...(dto.brandId !== undefined && {
-          brandId: dto.brandId ? new Types.ObjectId(dto.brandId) : null,
-        }),
-        ...(dto.supplierId !== undefined && {
-          supplierId: dto.supplierId
-            ? new Types.ObjectId(dto.supplierId)
-            : null,
-        }),
-        ...(dto.unitOfMeasure && { unitOfMeasure: dto.unitOfMeasure.trim() }),
-      });
+      const updateFields: Record<string, any> = {};
+
+      if (dto.basicInfo) {
+        if (dto.basicInfo.name !== undefined)
+          updateFields['basicInfo.name'] = dto.basicInfo.name.trim();
+        if (dto.basicInfo.sku !== undefined)
+          updateFields['basicInfo.sku'] = dto.basicInfo.sku?.trim();
+        if (dto.basicInfo.barcode !== undefined)
+          updateFields['basicInfo.barcode'] = dto.basicInfo.barcode?.trim();
+        if (dto.basicInfo.image !== undefined)
+          updateFields['basicInfo.image'] = dto.basicInfo.image?.trim();
+        if (dto.basicInfo.unitId !== undefined)
+          updateFields['basicInfo.unitId'] = new Types.ObjectId(
+            dto.basicInfo.unitId,
+          );
+        if (dto.basicInfo.categoryId !== undefined) {
+          updateFields['basicInfo.categoryId'] = dto.basicInfo.categoryId
+            ? new Types.ObjectId(dto.basicInfo.categoryId)
+            : null;
+        }
+        if (dto.basicInfo.brandId !== undefined) {
+          updateFields['basicInfo.brandId'] = dto.basicInfo.brandId
+            ? new Types.ObjectId(dto.basicInfo.brandId)
+            : null;
+        }
+        if (dto.basicInfo.supplierId !== undefined) {
+          updateFields['basicInfo.supplierId'] = dto.basicInfo.supplierId
+            ? new Types.ObjectId(dto.basicInfo.supplierId)
+            : null;
+        }
+      }
+
+      if (dto.pricingAndTax) {
+        if (dto.pricingAndTax.purchasePrice !== undefined)
+          updateFields['pricingAndTax.purchasePrice'] =
+            dto.pricingAndTax.purchasePrice;
+        if (dto.pricingAndTax.sellingPrice !== undefined)
+          updateFields['pricingAndTax.sellingPrice'] =
+            dto.pricingAndTax.sellingPrice;
+        if (dto.pricingAndTax.vatRate !== undefined)
+          updateFields['pricingAndTax.vatRate'] = dto.pricingAndTax.vatRate;
+        if (dto.pricingAndTax.profitMargin !== undefined)
+          updateFields['pricingAndTax.profitMargin'] =
+            dto.pricingAndTax.profitMargin;
+        if (dto.pricingAndTax.sellingPriceBeforeVat !== undefined)
+          updateFields['pricingAndTax.sellingPriceBeforeVat'] =
+            dto.pricingAndTax.sellingPriceBeforeVat;
+        if (dto.pricingAndTax.vatAmount !== undefined)
+          updateFields['pricingAndTax.vatAmount'] = dto.pricingAndTax.vatAmount;
+        if (dto.pricingAndTax.priceIncludingVat !== undefined)
+          updateFields['pricingAndTax.priceIncludingVat'] =
+            dto.pricingAndTax.priceIncludingVat;
+      }
+
+      if (dto.inventoryManagement) {
+        if (dto.inventoryManagement.enableStockTracking !== undefined)
+          updateFields['inventoryManagement.enableStockTracking'] =
+            dto.inventoryManagement.enableStockTracking;
+        if (dto.inventoryManagement.openingStock !== undefined)
+          updateFields['inventoryManagement.openingStock'] =
+            dto.inventoryManagement.openingStock;
+        if (dto.inventoryManagement.lowStockAlert !== undefined)
+          updateFields['inventoryManagement.lowStockAlert'] =
+            dto.inventoryManagement.lowStockAlert;
+        if (dto.inventoryManagement.description !== undefined)
+          updateFields['inventoryManagement.description'] =
+            dto.inventoryManagement.description?.trim();
+      }
+
+      if (dto.isActive !== undefined) updateFields['isActive'] = dto.isActive;
+      if (dto.isWeighted !== undefined)
+        updateFields['isWeighted'] = dto.isWeighted;
+      if (dto.scalePlu !== undefined)
+        updateFields['scalePlu'] = dto.scalePlu?.trim();
+      if (dto.scaleUnit !== undefined)
+        updateFields['scaleUnit'] = dto.scaleUnit?.trim();
+      if (dto.tareWeight !== undefined)
+        updateFields['tareWeight'] = dto.tareWeight;
+
+      const updated = await this.genericUpdateOne(id, updateFields);
 
       await this.logService.createLog({
         companyId: new Types.ObjectId(companyId),
@@ -702,7 +820,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         action: LogActions.UPDATE_PRODUCT,
         entityType: LogEntityType.PRODUCT,
         entityId: new Types.ObjectId(id),
-        description: `Product ${updated?.name} updated`,
+        description: `Product ${updated?.basicInfo?.name || product?.basicInfo?.name} updated`,
         ipAddress,
         path: req.url,
         status: LogStatus.SUCCESS,
@@ -770,7 +888,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         action: LogActions.DELETE_PRODUCT,
         entityType: LogEntityType.PRODUCT,
         entityId: new Types.ObjectId(id),
-        description: `Product ${product.name} deleted`,
+        description: `Product ${product.basicInfo?.name || product.name} deleted`,
         ipAddress,
         path: req.url,
         status: LogStatus.SUCCESS,
