@@ -11,7 +11,7 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ParseObjectIdPipe } from '@nestjs/mongoose';
 import { SupplierService } from './supplier.service';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
@@ -37,7 +37,8 @@ export class SupplierController {
     );
   }
 
-  @ApiOperation({ summary: 'Get all suppliers' })
+  @ApiOperation({ summary: 'Get all suppliers with optional isActive filter' })
+  @ApiQuery({ name: 'isActive', required: false, type: Boolean })
   @CheckPermission({ subModule: SUB_MODULES.SUPPLIER, action: ACTIONS.READ })
   @Get()
   findAll(
@@ -45,6 +46,7 @@ export class SupplierController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search?: string,
+    @Query('isActive') isActive?: boolean,
   ) {
     return this.supplierService.findAllSuppliers(
       req.user.userId,
@@ -53,6 +55,7 @@ export class SupplierController {
       page,
       limit,
       search,
+      isActive,
     );
   }
 
