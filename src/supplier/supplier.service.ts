@@ -142,6 +142,7 @@ export class SupplierService extends GenericDatabase<Model<SupplierDocument>> {
     page: number,
     limit: number,
     search?: string,
+    isActive?: boolean,
   ) {
     try {
       await this.userService.validateAuthenticatedUser(userId);
@@ -156,6 +157,10 @@ export class SupplierService extends GenericDatabase<Model<SupplierDocument>> {
         filter.companyId = new Types.ObjectId(companyId);
       } else if (companyId) {
         filter.companyId = new Types.ObjectId(companyId);
+      }
+
+      if (isActive !== undefined && isActive !== null) {
+        filter.isActive = String(isActive) === 'true';
       }
 
       if (search) {
