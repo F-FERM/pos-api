@@ -4,33 +4,14 @@ import { BaseSchema, BaseModelConstants } from './common/base.schema';
 
 export type ProductDocument = Product & Document;
 
-@Schema({ timestamps: true, collection: 'products' })
-export class Product extends BaseSchema {
-  /* ====================== MANDATORY FIELDS ====================== */
-
+/* ====================== TAB 1: BASIC INFO ====================== */
+@Schema({ _id: false })
+export class BasicInfo {
   @Prop({ required: true, trim: true })
   name: string;
 
-  @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Company',
-    required: true,
-    index: true,
-  })
-  companyId: Types.ObjectId;
-
-  @Prop({ type: Number, required: true, min: 0 })
-  sellingPrice: number;
-
-  @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Unit',
-    required: true,
-    index: true,
-  })
-  unitId: Types.ObjectId;
-
-  /* ====================== OPTIONAL MINIMAL FIELDS ====================== */
+  @Prop({ trim: true, default: '' })
+  image?: string;
 
   @Prop({ trim: true })
   sku?: string;
@@ -55,48 +36,87 @@ export class Product extends BaseSchema {
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
+    ref: 'Unit',
+    required: true,
+    index: true,
+  })
+  unitId: Types.ObjectId;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'Supplier',
     default: null,
   })
   supplierId?: Types.ObjectId | null;
+}
+export const BasicInfoSchema = SchemaFactory.createForClass(BasicInfo);
 
-  @Prop({ default: 'PCS', trim: true })
-  unitOfMeasure: string;
+/* ====================== TAB 2: PRICING & TAX ====================== */
+@Schema({ _id: false })
+export class PricingAndTax {
+  @Prop({ type: Number, default: 0, min: 0 })
+  purchasePrice: number;
+
+  @Prop({ type: Number, required: true, min: 0 })
+  sellingPrice: number;
 
   @Prop({ type: Number, default: 0, min: 0 })
-  costPrice: number;
+  vatRate: number;
 
-  @Prop({ type: Number, min: 0 })
-  mrp?: number;
-
-  @Prop({ type: Number, default: 0, min: 0 })
-  taxRate: number;
-
-  @Prop({ type: Boolean, default: true })
-  isTaxInclusive: boolean;
-
-  /* Stock & Perishable Controls */
   @Prop({ type: Number, default: 0 })
-  stockQuantity: number;
+  profitMargin: number;
 
-  @Prop({ type: Number, default: 5, min: 0 })
-  minStockAlert: number;
+  @Prop({ type: Number, default: 0, min: 0 })
+  sellingPriceBeforeVat: number;
 
-  @Prop({ type: Boolean, default: false })
-  hasBatchExpiry: boolean;
+  @Prop({ type: Number, default: 0, min: 0 })
+  vatAmount: number;
 
-  /* Universal Attributes (Apparel / Spare Parts / General) */
-  @Prop({ trim: true })
-  partNumber?: string;
+  @Prop({ type: Number, default: 0, min: 0 })
+  priceIncludingVat: number;
+}
+export const PricingAndTaxSchema = SchemaFactory.createForClass(PricingAndTax);
 
-  @Prop({ trim: true })
-  size?: string;
+/* ====================== TAB 3: INVENTORY MANAGEMENT ====================== */
+@Schema({ _id: false })
+export class InventoryManagement {
+  @Prop({ type: Boolean, default: true })
+  enableStockTracking: boolean;
 
-  @Prop({ trim: true })
-  color?: string;
+  @Prop({ type: Number, default: 0 })
+  openingStock: number;
 
-  @Prop({ trim: true })
+  @Prop({ type: Number, default: 10, min: 0 })
+  lowStockAlert: number;
+
+  @Prop({ trim: true, default: '' })
   description?: string;
+}
+export const InventoryManagementSchema =
+  SchemaFactory.createForClass(InventoryManagement);
+
+/* ====================== MAIN PRODUCT SCHEMA ====================== */
+@Schema({
+  timestamps: true,
+  collection: 'products',
+})
+export class Product extends BaseSchema {
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company',
+    required: true,
+    index: true,
+  })
+  companyId: Types.ObjectId;
+
+  @Prop({ type: BasicInfoSchema, required: true })
+  basicInfo: BasicInfo;
+
+  @Prop({ type: PricingAndTaxSchema, required: true })
+  pricingAndTax: PricingAndTax;
+
+  @Prop({ type: InventoryManagementSchema, required: true })
+  inventoryManagement: InventoryManagement;
 
   /* Weigh Scale Attributes */
   @Prop({ type: Boolean, default: false })
@@ -118,38 +138,46 @@ export class Product extends BaseSchema {
 export const ProductSchema = SchemaFactory.createForClass(Product);
 export const ProductSchemaName = Product.name;
 
-ProductSchema.index({ companyId: 1, barcode: 1 }, { sparse: true });
-ProductSchema.index({ companyId: 1, sku: 1 }, { sparse: true });
+/* Indexes */
+ProductSchema.index({ companyId: 1, 'basicInfo.barcode': 1 }, { sparse: true });
+ProductSchema.index({ companyId: 1, 'basicInfo.sku': 1 }, { sparse: true });
 ProductSchema.index({ companyId: 1, scalePlu: 1 }, { sparse: true });
-ProductSchema.index({ companyId: 1, name: 1 });
-ProductSchema.index({ companyId: 1, categoryId: 1 });
+ProductSchema.index({ companyId: 1, 'basicInfo.name': 1 });
+ProductSchema.index({ companyId: 1, 'basicInfo.categoryId': 1 });
 
-export const ProductModelConstants: { [K in keyof Product]-?: K } = {
+export const ProductModelConstants = {
   ...BaseModelConstants,
-  name: 'name',
   companyId: 'companyId',
-  sellingPrice: 'sellingPrice',
-  unitId: 'unitId',
-  sku: 'sku',
-  barcode: 'barcode',
-  categoryId: 'categoryId',
-  brandId: 'brandId',
-  supplierId: 'supplierId',
-  unitOfMeasure: 'unitOfMeasure',
-  costPrice: 'costPrice',
-  mrp: 'mrp',
-  taxRate: 'taxRate',
-  isTaxInclusive: 'isTaxInclusive',
-  stockQuantity: 'stockQuantity',
-  minStockAlert: 'minStockAlert',
-  hasBatchExpiry: 'hasBatchExpiry',
-  partNumber: 'partNumber',
-  size: 'size',
-  color: 'color',
-  description: 'description',
+  basicInfo: 'basicInfo',
+  pricingAndTax: 'pricingAndTax',
+  inventoryManagement: 'inventoryManagement',
   isWeighted: 'isWeighted',
   scalePlu: 'scalePlu',
   scaleUnit: 'scaleUnit',
   tareWeight: 'tareWeight',
   isActive: 'isActive',
-};
+
+  // Convenience property paths
+  name: 'basicInfo.name',
+  sku: 'basicInfo.sku',
+  barcode: 'basicInfo.barcode',
+  categoryId: 'basicInfo.categoryId',
+  brandId: 'basicInfo.brandId',
+  unitId: 'basicInfo.unitId',
+  supplierId: 'basicInfo.supplierId',
+  image: 'basicInfo.image',
+  unitOfMeasure: 'scaleUnit',
+
+  purchasePrice: 'pricingAndTax.purchasePrice',
+  sellingPrice: 'pricingAndTax.sellingPrice',
+  vatRate: 'pricingAndTax.vatRate',
+  profitMargin: 'pricingAndTax.profitMargin',
+  sellingPriceBeforeVat: 'pricingAndTax.sellingPriceBeforeVat',
+  vatAmount: 'pricingAndTax.vatAmount',
+  priceIncludingVat: 'pricingAndTax.priceIncludingVat',
+
+  enableStockTracking: 'inventoryManagement.enableStockTracking',
+  openingStock: 'inventoryManagement.openingStock',
+  lowStockAlert: 'inventoryManagement.lowStockAlert',
+  description: 'inventoryManagement.description',
+} as const;
