@@ -88,22 +88,25 @@ export class LabelDesignerService extends GenericDatabase<
         }
 
         const barcodeValue =
-          product.barcode?.trim() ||
-          product.sku?.trim() ||
+          product.basicInfo?.barcode?.trim() ||
+          product.basicInfo?.sku?.trim() ||
           product._id.toString().slice(-12).toUpperCase();
 
+        const sellingPrice = product.pricingAndTax?.sellingPrice ?? 0;
+        const productName = product.basicInfo?.name || '';
+
         const barcodeSvg = generateCode128Svg(barcodeValue, 42);
-        const formattedPrice = `PRICE: ${currency}${product.sellingPrice}`;
+        const formattedPrice = `PRICE: ${currency}${sellingPrice}`;
 
         for (let i = 0; i < itemDto.quantity; i++) {
           labelsList.push({
             productId: product._id.toString(),
-            productName: product.name,
+            productName,
             companyName: storeName,
             barcode: barcodeValue,
             barcodeSvg,
             price: formattedPrice,
-            rawPrice: product.sellingPrice,
+            rawPrice: sellingPrice,
           });
         }
       }
@@ -176,7 +179,10 @@ export class LabelDesignerService extends GenericDatabase<
         }
       }
 
-      const barcodeSvg = generateCode128Svg(DEFAULT_TEST_LABEL_DATA.barcode, 42);
+      const barcodeSvg = generateCode128Svg(
+        DEFAULT_TEST_LABEL_DATA.barcode,
+        42,
+      );
       const formattedPrice = `PRICE: ${currency}${DEFAULT_TEST_LABEL_DATA.rawPrice}`;
 
       const labelUnit: GeneratedLabelUnit = {
