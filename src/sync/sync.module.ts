@@ -42,6 +42,23 @@ import { CategorySchema, CategorySchemaName } from '../models/category.schema';
 import { BrandSchema, BrandSchemaName } from '../models/brand.schema';
 import { PrinterSchema, PrinterSchemaName } from '../models/printer.schema';
 import { CounterSchema, CounterSchemaName } from '../models/counter.schema';
+import {
+  PaymentTermSchema,
+  PaymentTermSchemaName,
+} from '../models/payment-terms.schema';
+import {
+  LoyaltySettingSchema,
+  LoyaltySettingSchemaName,
+} from '../models/loyalty-setting.schema';
+import {
+  NumberSettingSchema,
+  NumberSettingSchemaName,
+} from '../models/number-settings.schema';
+import { StaffSchema, StaffSchemaName } from '../models/staff.schema';
+import {
+  PrivilegesSchema,
+  PrivilegesSchemaName,
+} from '../models/privilege.schema';
 
 import { CompanyModule } from '../company/company.module';
 import { UserModule } from '../user/user.module';
@@ -80,6 +97,11 @@ import { LogModule } from '../log/log.module';
         schema: DeviceRegistrationSchema,
       },
       { name: EmailOtpSchemaName, schema: EmailOtpSchema },
+      { name: PaymentTermSchemaName, schema: PaymentTermSchema },
+      { name: LoyaltySettingSchemaName, schema: LoyaltySettingSchema },
+      { name: NumberSettingSchemaName, schema: NumberSettingSchema },
+      { name: StaffSchemaName, schema: StaffSchema },
+      { name: PrivilegesSchemaName, schema: PrivilegesSchema },
     ]),
     MongooseModule.forFeature(
       [
@@ -113,6 +135,11 @@ import { LogModule } from '../log/log.module';
           schema: DeviceRegistrationSchema,
         },
         { name: EmailOtpSchemaName, schema: EmailOtpSchema },
+        { name: PaymentTermSchemaName, schema: PaymentTermSchema },
+        { name: LoyaltySettingSchemaName, schema: LoyaltySettingSchema },
+        { name: NumberSettingSchemaName, schema: NumberSettingSchema },
+        { name: StaffSchemaName, schema: StaffSchema },
+        { name: PrivilegesSchemaName, schema: PrivilegesSchema },
       ],
       'cloudConnection',
     ),
