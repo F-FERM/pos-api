@@ -111,19 +111,23 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
               );
             }
 
+            const stockQuantity = product.inventoryManagement?.openingStock ?? 0;
+            const productName = product.basicInfo?.name || '';
+            const taxRate = product.pricingAndTax?.vatRate ?? 0;
+
             if (
               saleStatus === SaleStatus.COMPLETED &&
-              product.stockQuantity < itemDto.quantity
+              stockQuantity < itemDto.quantity
             ) {
               throw new BadRequestException(
-                `Insufficient stock for product '${product.name}'. Available: ${product.stockQuantity}`,
+                `Insufficient stock for product '${productName}'. Available: ${stockQuantity}`,
               );
             }
 
             const lineSubtotal = itemDto.unitPrice * itemDto.quantity;
             const lineDiscount = itemDto.discountAmount || 0;
             const netLine = Math.max(0, lineSubtotal - lineDiscount);
-            const lineTaxRate = itemDto.taxRate || product.taxRate || 0;
+            const lineTaxRate = itemDto.taxRate || taxRate || 0;
             const lineTax = (netLine * lineTaxRate) / 100;
             const lineTotal = netLine + lineTax;
 
@@ -133,7 +137,7 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
 
             preparedItems.push({
               productId: new Types.ObjectId(itemDto.productId),
-              productName: product.name,
+              productName,
               quantity: itemDto.quantity,
               unitPrice: itemDto.unitPrice,
               discountAmount: lineDiscount,
@@ -265,7 +269,7 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
             for (const item of preparedItems) {
               await this.productModel.updateOne(
                 { _id: item.productId },
-                { $inc: { stockQuantity: -item.quantity } },
+                { $inc: { 'inventoryManagement.openingStock': -item.quantity } },
                 { session },
               );
             }
@@ -641,7 +645,7 @@ export class SaleService extends GenericDatabase<Model<SaleDocument>> {
         for (const item of sale.items) {
           await this.productModel.updateOne(
             { _id: item.productId },
-            { $inc: { stockQuantity: item.quantity } },
+            { $inc: { 'inventoryManagement.openingStock': item.quantity } },
             { session },
           );
         }
