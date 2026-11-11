@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 
 export type AccountTransactionDocument = AccountTransaction & Document;
 
@@ -85,6 +85,7 @@ AccountTransactionSchema.index({ companyId: 1, transactionNumber: 1 });
 export const AccountTransactionModelConstants: {
   [K in keyof AccountTransaction]-?: K;
 } = {
+  ...BaseModelConstants,
   transactionNumber: 'transactionNumber',
   accountId: 'accountId',
   type: 'type',
@@ -96,8 +97,4 @@ export const AccountTransactionModelConstants: {
   description: 'description',
   transactionDate: 'transactionDate',
   companyId: 'companyId',
-  isDeleted: 'isDeleted',
-  isSynced: 'isSynced',
-  syncedAt: 'syncedAt',
-  createdBy: 'createdBy',
 };

@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
 import { numberSettingsDocumentType } from '../utils/common.enum';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 
 export type NumberSettingDocument = NumberSetting & Document;
 
@@ -39,13 +39,10 @@ NumberSettingSchema.index({ companyId: 1, docType: 1 }, { unique: true });
 export const NumberSettingModelConstants: {
   [K in keyof NumberSetting]-?: K;
 } = {
+  ...BaseModelConstants,
   companyId: 'companyId',
   docType: 'docType',
   prefix: 'prefix',
   nextNumber: 'nextNumber',
   nextNumberRaw: 'nextNumberRaw',
-  isDeleted: 'isDeleted',
-  isSynced: 'isSynced',
-  syncedAt: 'syncedAt',
-  createdBy: 'createdBy',
 };

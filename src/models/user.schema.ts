@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 import { PrivilegesSchemaName } from './privilege.schema';
 
 export type UserDocument = User & Document;
@@ -49,13 +49,10 @@ export const UserSchema = SchemaFactory.createForClass(User);
 export const UserSchemaName = User.name;
 
 export const UserModelConstants: { [K in keyof Required<User>]: K } = {
+  ...BaseModelConstants,
   username: 'username',
   password: 'password',
   privilegeId: 'privilegeId',
-  isDeleted: 'isDeleted',
-  isSynced: 'isSynced',
-  syncedAt: 'syncedAt',
-  createdBy: 'createdBy',
   name: 'name',
   email: 'email',
   phone: 'phone',

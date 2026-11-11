@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 import {
   BillingCycle,
   SubscriptionEventType,
@@ -222,9 +222,6 @@ export class Subscription extends BaseSchema {
   @Prop({ type: String, trim: true, maxlength: 500 })
   cancellationReason?: string;
 
-  @Prop({ type: Number, default: 1, min: 1 })
-  syncVersion: number;
-
   @Prop({ type: Date, default: null })
   deletedAt?: Date | null;
 }
@@ -240,6 +237,7 @@ SubscriptionSchema.index({ planId: 1 });
 SubscriptionSchema.index({ deletedAt: 1 });
 
 export const SubscriptionModelConstants: { [K in keyof Subscription]: K } = {
+  ...BaseModelConstants,
   companyId: 'companyId',
   planName: 'planName',
   status: 'status',
@@ -260,8 +258,5 @@ export const SubscriptionModelConstants: { [K in keyof Subscription]: K } = {
   externalProviderId: 'externalProviderId',
   externalProviderName: 'externalProviderName',
   cancellationReason: 'cancellationReason',
-  syncVersion: 'syncVersion',
   deletedAt: 'deletedAt',
-  isDeleted: 'isDeleted',
-  createdBy: 'createdBy',
 };

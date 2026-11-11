@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 
 export type RegisterSessionDocument = RegisterSession & Document;
 
@@ -67,6 +67,7 @@ RegisterSessionSchema.index({ companyId: 1, userId: 1, status: 1 });
 export const RegisterSessionModelConstants: {
   [K in keyof RegisterSession]-?: K;
 } = {
+  ...BaseModelConstants,
   userId: 'userId',
   companyId: 'companyId',
   openingCash: 'openingCash',
@@ -78,8 +79,4 @@ export const RegisterSessionModelConstants: {
   openedAt: 'openedAt',
   closedAt: 'closedAt',
   notes: 'notes',
-  isDeleted: 'isDeleted',
-  isSynced: 'isSynced',
-  syncedAt: 'syncedAt',
-  createdBy: 'createdBy',
 };

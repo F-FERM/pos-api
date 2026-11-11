@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 
 export type ModuleDocument = Module & Document;
 
@@ -24,10 +24,9 @@ export const ModuleSchemaName = Module.name;
 
 // module model constants
 export const ModuleModelConstants: { [K in keyof Module]: K } = {
+  ...BaseModelConstants,
   identity: 'identity',
   label: 'label',
   isActive: 'isActive',
-  isDeleted: 'isDeleted',
-  createdBy: 'createdBy',
   isSystemGenerated: 'isSystemGenerated',
 };

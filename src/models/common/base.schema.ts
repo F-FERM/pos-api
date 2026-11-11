@@ -13,6 +13,12 @@ export class BaseSchema {
   @Prop({ type: Date, default: null })
   syncedAt?: Date | null;
 
+  @Prop({ type: Number, default: 1, min: 1 })
+  syncVersion?: number;
+
+  @Prop({ type: Date, default: null })
+  lastSyncedAt?: Date | null;
+
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -20,3 +26,12 @@ export class BaseSchema {
   })
   createdBy: Types.ObjectId;
 }
+
+export const BaseModelConstants: { [K in keyof BaseSchema]-?: K } = {
+  isDeleted: 'isDeleted',
+  isSynced: 'isSynced',
+  syncedAt: 'syncedAt',
+  syncVersion: 'syncVersion',
+  lastSyncedAt: 'lastSyncedAt',
+  createdBy: 'createdBy',
+};

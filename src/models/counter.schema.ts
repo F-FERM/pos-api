@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 
 export type CounterDocument = Counter & Document;
 
@@ -34,13 +34,10 @@ CounterSchema.index({ companyId: 1, name: 1 }, { unique: true });
 CounterSchema.index({ companyId: 1, code: 1 }, { unique: true });
 
 export const CounterModelConstants: { [K in keyof Counter]-?: K } = {
+  ...BaseModelConstants,
   name: 'name',
   code: 'code',
   isDefault: 'isDefault',
   isActive: 'isActive',
   companyId: 'companyId',
-  isDeleted: 'isDeleted',
-  isSynced: 'isSynced',
-  syncedAt: 'syncedAt',
-  createdBy: 'createdBy',
 };

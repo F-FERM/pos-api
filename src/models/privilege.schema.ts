@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 import { Role } from '../utils/role.enum';
 
 export type PrivilegesDocument = Privileges & Document;
@@ -60,11 +60,10 @@ export const PrivilegesSchemaName = Privileges.name;
 
 // privileges model constants field names
 export const PrivilegesModelConstants: { [K in keyof Privileges]: K } = {
+  ...BaseModelConstants,
   name: 'name',
   description: 'description',
   roles: 'roles',
-  isDeleted: 'isDeleted',
-  createdBy: 'createdBy',
   isSystemGenerated: 'isSystemGenerated',
   companyId: 'companyId',
   modules: 'modules',

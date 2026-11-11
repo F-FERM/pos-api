@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 
 export type StoreLicenseDocument = StoreLicense & Document;
 
@@ -71,6 +71,7 @@ export const StoreLicenseSchemaName = StoreLicense.name;
 export const StoreLicenseModelConstants: {
   [K in keyof StoreLicense]-?: K;
 } = {
+  ...BaseModelConstants,
   licenseKey: 'licenseKey',
   assignedEmail: 'assignedEmail',
   companyId: 'companyId',
@@ -82,8 +83,4 @@ export const StoreLicenseModelConstants: {
   expiresAt: 'expiresAt',
   redeemedAt: 'redeemedAt',
   notes: 'notes',
-  isDeleted: 'isDeleted',
-  isSynced: 'isSynced',
-  syncedAt: 'syncedAt',
-  createdBy: 'createdBy',
 };

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 import mongoose, { Document, Types } from 'mongoose';
 import { PaymentTermType } from 'src/utils/common.enum';
 
@@ -43,12 +43,11 @@ export const PaymentTermSchema = SchemaFactory.createForClass(PaymentTerm);
 export const PaymentTermSchemaName = PaymentTerm.name;
 
 export const PaymentTermModelConstants: { [K in keyof PaymentTerm]: K } = {
+  ...BaseModelConstants,
   companyId: 'companyId',
   name: 'name',
   type: 'type',
   numberOfDays: 'numberOfDays',
   isSystemGenerated: 'isSystemGenerated',
   isActive: 'isActive',
-  isDeleted: 'isDeleted',
-  createdBy: 'createdBy',
 };

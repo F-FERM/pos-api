@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 
 export type PurchaseDocument = Purchase & Document;
 
@@ -74,6 +74,7 @@ PurchaseSchema.index({ companyId: 1, billNumber: 1 });
 PurchaseSchema.index({ companyId: 1, purchaseDate: -1 });
 
 export const PurchaseModelConstants: { [K in keyof Purchase]-?: K } = {
+  ...BaseModelConstants,
   billNumber: 'billNumber',
   supplierId: 'supplierId',
   items: 'items',
@@ -83,8 +84,4 @@ export const PurchaseModelConstants: { [K in keyof Purchase]-?: K } = {
   purchaseDate: 'purchaseDate',
   companyId: 'companyId',
   notes: 'notes',
-  isDeleted: 'isDeleted',
-  isSynced: 'isSynced',
-  syncedAt: 'syncedAt',
-  createdBy: 'createdBy',
 };

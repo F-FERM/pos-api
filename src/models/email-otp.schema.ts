@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 
 export type EmailOtpDocument = EmailOtp & Document;
 
@@ -29,13 +29,10 @@ EmailOtpSchema.index({ email: 1, otp: 1 });
 EmailOtpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export const EmailOtpModelConstants: { [K in keyof EmailOtp]-?: K } = {
+  ...BaseModelConstants,
   email: 'email',
   otp: 'otp',
   expiresAt: 'expiresAt',
   isVerified: 'isVerified',
   registrationPayload: 'registrationPayload',
-  isDeleted: 'isDeleted',
-  isSynced: 'isSynced',
-  syncedAt: 'syncedAt',
-  createdBy: 'createdBy',
 };

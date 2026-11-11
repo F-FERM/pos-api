@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 
 export type LoyaltySettingDocument = LoyaltySetting & Document;
 
@@ -35,13 +35,10 @@ export const LoyaltySettingSchemaName = LoyaltySetting.name;
 export const LoyaltySettingModelConstants: {
   [K in keyof LoyaltySetting]-?: K;
 } = {
+  ...BaseModelConstants,
   companyId: 'companyId',
   loyaltyAmountPerPoint: 'loyaltyAmountPerPoint',
   minLoyaltyPointsToRedeem: 'minLoyaltyPointsToRedeem',
   loyaltyPointMonetaryValue: 'loyaltyPointMonetaryValue',
   isEnabled: 'isEnabled',
-  isDeleted: 'isDeleted',
-  isSynced: 'isSynced',
-  syncedAt: 'syncedAt',
-  createdBy: 'createdBy',
 };

@@ -2310,6 +2310,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "isActive",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -2317,7 +2325,7 @@
             "description": ""
           }
         },
-        "summary": "Get all suppliers",
+        "summary": "Get all suppliers with optional isActive filter",
         "tags": [
           "Supplier"
         ]
@@ -2572,6 +2580,27 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tag",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "REGULAR",
+                "VIP",
+                "WHOLESALE"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "isActive",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -2579,7 +2608,7 @@
             "description": ""
           }
         },
-        "summary": "Get all customers",
+        "summary": "Get all customers with optional tag and isActive tab filters",
         "tags": [
           "Customer"
         ]
@@ -4495,6 +4524,41 @@
           },
           "deviceRegistrations": {
             "description": "Array of terminal device registration updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "paymentTerms": {
+            "description": "Array of payment term updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "loyaltySettings": {
+            "description": "Array of loyalty setting updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "numberSettings": {
+            "description": "Array of number setting updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "staff": {
+            "description": "Array of staff model updates",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "privileges": {
+            "description": "Array of privilege model updates",
             "type": "array",
             "items": {
               "type": "object"

@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 
 export type UnitDocument = Unit & Document;
 
@@ -28,13 +28,10 @@ export const UnitSchemaName = Unit.name;
 UnitSchema.index({ companyId: 1, name: 1 }, { unique: true });
 
 export const UnitModelConstants: { [K in keyof Unit]: K } = {
+  ...BaseModelConstants,
   name: 'name',
   symbol: 'symbol',
   companyId: 'companyId',
   isActive: 'isActive',
-  isDeleted: 'isDeleted',
-  createdBy: 'createdBy',
-  isSynced: 'isSynced',
-  syncedAt: 'syncedAt',
   isSystemGenerated: 'isSystemGenerated',
 };

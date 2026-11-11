@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 import { CustomerTag } from '../utils/common.enum';
 
 export type CustomerDocument = Customer & Document;
@@ -54,6 +54,7 @@ CustomerSchema.index({ companyId: 1, phone: 1 });
 CustomerSchema.index({ companyId: 1, name: 1 });
 
 export const CustomerModelConstants: { [K in keyof Customer]-?: K } = {
+  ...BaseModelConstants,
   name: 'name',
   phone: 'phone',
   email: 'email',
@@ -64,8 +65,4 @@ export const CustomerModelConstants: { [K in keyof Customer]-?: K } = {
   tag: 'tag',
   companyId: 'companyId',
   isActive: 'isActive',
-  isDeleted: 'isDeleted',
-  isSynced: 'isSynced',
-  syncedAt: 'syncedAt',
-  createdBy: 'createdBy',
 };

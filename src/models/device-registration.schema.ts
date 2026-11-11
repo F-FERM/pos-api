@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 
 export type DeviceRegistrationDocument = DeviceRegistration & Document;
 
@@ -66,6 +66,7 @@ DeviceRegistrationSchema.index({ licenseKey: 1 });
 export const DeviceRegistrationModelConstants: {
   [K in keyof DeviceRegistration]-?: K;
 } = {
+  ...BaseModelConstants,
   deviceId: 'deviceId',
   deviceName: 'deviceName',
   licenseKey: 'licenseKey',
@@ -76,8 +77,4 @@ export const DeviceRegistrationModelConstants: {
   counterId: 'counterId',
   ipAddress: 'ipAddress',
   lastPingAt: 'lastPingAt',
-  isDeleted: 'isDeleted',
-  isSynced: 'isSynced',
-  syncedAt: 'syncedAt',
-  createdBy: 'createdBy',
 };

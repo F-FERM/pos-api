@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 import {
   CompanyBusinessType,
   CompanyIndustry,
@@ -381,12 +381,6 @@ export class Company extends BaseSchema {
 
   /* ----------------------- Offline Sync Readiness ----------------------- */
 
-  @Prop({ type: Number, default: 1, min: 1 })
-  syncVersion: number;
-
-  @Prop({ type: Date, default: null })
-  lastSyncedAt?: Date | null;
-
   @Prop({ type: Date, default: null })
   deletedAt?: Date | null;
 }
@@ -401,6 +395,7 @@ CompanySchema.index({ createdAt: -1 });
 CompanySchema.index({ deletedAt: 1 });
 
 export const CompanyModelConstants: { [K in keyof Company]: K } = {
+  ...BaseModelConstants,
   // identity
   name: 'name',
   legalName: 'legalName',
@@ -447,13 +442,5 @@ export const CompanyModelConstants: { [K in keyof Company]: K } = {
   suspensionReason: 'suspensionReason',
   activatedAt: 'activatedAt',
   lastActivityAt: 'lastActivityAt',
-
-  // sync / soft delete
-  syncVersion: 'syncVersion',
-  lastSyncedAt: 'lastSyncedAt',
   deletedAt: 'deletedAt',
-
-  // base
-  isDeleted: 'isDeleted',
-  createdBy: 'createdBy',
 };

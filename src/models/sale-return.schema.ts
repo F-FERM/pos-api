@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 import { RefundMethod } from '../utils/common.enum';
 
 export type SaleReturnDocument = SaleReturn & Document;
@@ -102,6 +102,7 @@ SaleReturnSchema.index({ companyId: 1, saleId: 1 });
 SaleReturnSchema.index({ companyId: 1, createdAt: -1 });
 
 export const SaleReturnModelConstants: { [K in keyof SaleReturn]-?: K } = {
+  ...BaseModelConstants,
   returnNumber: 'returnNumber',
   saleId: 'saleId',
   invoiceNumber: 'invoiceNumber',
@@ -114,8 +115,4 @@ export const SaleReturnModelConstants: { [K in keyof SaleReturn]-?: K } = {
   registerSessionId: 'registerSessionId',
   notes: 'notes',
   companyId: 'companyId',
-  isDeleted: 'isDeleted',
-  isSynced: 'isSynced',
-  syncedAt: 'syncedAt',
-  createdBy: 'createdBy',
 };

@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 import { PaperWidth } from '../utils/common.enum';
 
 export type PrinterDocument = Printer & Document;
@@ -51,6 +51,7 @@ PrinterSchema.index({ companyId: 1, counterId: 1 });
 PrinterSchema.index({ companyId: 1, isDefault: 1 });
 
 export const PrinterModelConstants: { [K in keyof Printer]-?: K } = {
+  ...BaseModelConstants,
   printerName: 'printerName',
   printerIp: 'printerIp',
   counterId: 'counterId',
@@ -58,8 +59,4 @@ export const PrinterModelConstants: { [K in keyof Printer]-?: K } = {
   isDefault: 'isDefault',
   isActive: 'isActive',
   companyId: 'companyId',
-  isDeleted: 'isDeleted',
-  isSynced: 'isSynced',
-  syncedAt: 'syncedAt',
-  createdBy: 'createdBy',
 };

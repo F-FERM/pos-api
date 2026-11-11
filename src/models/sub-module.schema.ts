@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document, Types } from 'mongoose';
-import { BaseSchema } from './common/base.schema';
+import { BaseSchema, BaseModelConstants } from './common/base.schema';
 
 export type SubModuleDocument = SubModule & Document;
 
@@ -30,11 +30,10 @@ export const SubModuleSchema = SchemaFactory.createForClass(SubModule);
 export const SubModuleSchemaName = SubModule.name;
 
 export const SubModuleModelConstants: { [K in keyof SubModule]: K } = {
+  ...BaseModelConstants,
   identity: 'identity',
   label: 'label',
   moduleId: 'moduleId',
   isActive: 'isActive',
-  isDeleted: 'isDeleted',
-  createdBy: 'createdBy',
   isSystemGenerated: 'isSystemGenerated',
 };
