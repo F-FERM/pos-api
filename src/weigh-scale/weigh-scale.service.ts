@@ -223,6 +223,7 @@ export class WeighScaleService {
           );
         }
 
+        const exactSellingPrice = exactProduct.pricingAndTax?.sellingPrice ?? 0;
         return {
           success: true,
           message: 'Product retrieved by exact barcode',
@@ -230,8 +231,8 @@ export class WeighScaleService {
             isScaleBarcode: false,
             product: exactProduct,
             quantity: 1,
-            unitPrice: exactProduct.sellingPrice,
-            totalPrice: exactProduct.sellingPrice,
+            unitPrice: exactSellingPrice,
+            totalPrice: exactSellingPrice,
           },
           statusCode: HttpStatus.OK,
         };
@@ -249,9 +250,9 @@ export class WeighScaleService {
         $or: [
           { scalePlu: pluCode },
           { scalePlu: pluCode.replace(/^0+/, '') },
-          { barcode: pluCode },
-          { barcode: rawBarcode },
-          { sku: pluCode },
+          { 'basicInfo.barcode': pluCode },
+          { 'basicInfo.barcode': rawBarcode },
+          { 'basicInfo.sku': pluCode },
         ],
         isDeleted: false,
       });
@@ -263,8 +264,9 @@ export class WeighScaleService {
       }
 
       let netQuantity = 1;
-      let totalPrice = product.sellingPrice;
-      const unitPrice = product.sellingPrice;
+      const sellingPrice = product.pricingAndTax?.sellingPrice ?? 0;
+      let totalPrice = sellingPrice;
+      const unitPrice = sellingPrice;
 
       if (settings.barcodeType === ScaleBarcodeType.PRICE_EMBEDDED) {
         totalPrice = Math.round((rawNum / 100) * 100) / 100;
@@ -279,6 +281,8 @@ export class WeighScaleService {
         totalPrice = Math.round(netQuantity * unitPrice * 100) / 100;
       }
 
+      const scaleUnitOfMeasure = product.scaleUnit || 'KG';
+
       return {
         success: true,
         message: 'Scale barcode parsed successfully',
@@ -286,19 +290,19 @@ export class WeighScaleService {
           isScaleBarcode: true,
           product: {
             id: product._id,
-            name: product.name,
-            sku: product.sku,
-            barcode: product.barcode,
+            name: product.basicInfo?.name || '',
+            sku: product.basicInfo?.sku,
+            barcode: product.basicInfo?.barcode,
             scalePlu: product.scalePlu,
-            unitOfMeasure: product.scaleUnit || product.unitOfMeasure || 'KG',
-            sellingPrice: product.sellingPrice,
+            unitOfMeasure: scaleUnitOfMeasure,
+            sellingPrice,
             isWeighted: true,
           },
           pluCode,
           quantity: netQuantity,
           unitPrice,
           totalPrice,
-          unitOfMeasure: product.scaleUnit || product.unitOfMeasure || 'KG',
+          unitOfMeasure: scaleUnitOfMeasure,
         },
         statusCode: HttpStatus.OK,
       };
@@ -354,14 +358,14 @@ export class WeighScaleService {
         if (product) {
           const tare = product.tareWeight || 0;
           netWeight = Math.max(0, parsed.weight - tare);
-          unitPrice = product.sellingPrice;
+          unitPrice = product.pricingAndTax?.sellingPrice ?? 0;
           totalPrice = Math.round(netWeight * unitPrice * 100) / 100;
 
           productDetails = {
             id: product._id,
-            name: product.name,
-            sku: product.sku,
-            unitOfMeasure: product.scaleUnit || product.unitOfMeasure || 'KG',
+            name: product.basicInfo?.name || '',
+            sku: product.basicInfo?.sku,
+            unitOfMeasure: product.scaleUnit || 'KG',
             sellingPrice: unitPrice,
             tareWeight: tare,
           };
@@ -421,7 +425,7 @@ export class WeighScaleService {
 
       const netWeight = Math.max(0, grossWeight - tareDeduction);
       const roundedNetWeight = Math.round(netWeight * 1000) / 1000;
-      const unitPrice = product.sellingPrice;
+      const unitPrice = product.pricingAndTax?.sellingPrice ?? 0;
       const totalPrice = Math.round(roundedNetWeight * unitPrice * 100) / 100;
 
       return {
@@ -429,13 +433,13 @@ export class WeighScaleService {
         message: 'Weight and price calculated successfully',
         data: {
           productId: product._id,
-          productName: product.name,
+          productName: product.basicInfo?.name || '',
           grossWeight,
           tareWeight: tareDeduction,
           netWeight: roundedNetWeight,
           unitPrice,
           totalPrice,
-          unitOfMeasure: product.scaleUnit || product.unitOfMeasure || 'KG',
+          unitOfMeasure: product.scaleUnit || 'KG',
         },
         statusCode: HttpStatus.OK,
       };
