@@ -91,7 +91,7 @@ export class PurchaseService extends GenericDatabase<Model<PurchaseDocument>> {
 
           preparedItems.push({
             productId: new Types.ObjectId(itemDto.productId),
-            productName: product.name,
+            productName: product.basicInfo?.name || '',
             quantity: itemDto.quantity,
             costPrice: itemDto.costPrice,
             totalCost,
@@ -123,8 +123,8 @@ export class PurchaseService extends GenericDatabase<Model<PurchaseDocument>> {
           await this.productModel.updateOne(
             { _id: item.productId },
             {
-              $inc: { stockQuantity: item.quantity },
-              $set: { costPrice: item.costPrice },
+              $inc: { 'inventoryManagement.openingStock': item.quantity },
+              $set: { 'pricingAndTax.purchasePrice': item.costPrice },
             },
             { session },
           );
