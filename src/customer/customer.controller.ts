@@ -11,7 +11,7 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ParseObjectIdPipe } from '@nestjs/mongoose';
 import { CustomerService } from './customer.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
@@ -20,6 +20,7 @@ import { type AuthedRequest } from '../utils/common.types';
 import { CheckPermission } from '../common/decorators/check-permission.decorator';
 import { SUB_MODULES } from '../common/constants/submodules.constants';
 import { ACTIONS } from '../common/constants/actions.constants';
+import { CustomerTag } from '../utils/common.enum';
 
 @ApiTags('Customer')
 @Controller('customer')
@@ -37,7 +38,9 @@ export class CustomerController {
     );
   }
 
-  @ApiOperation({ summary: 'Get all customers' })
+  @ApiOperation({ summary: 'Get all customers with optional tag and isActive tab filters' })
+  @ApiQuery({ name: 'tag', required: false, enum: CustomerTag })
+  @ApiQuery({ name: 'isActive', required: false, type: Boolean })
   @CheckPermission({ subModule: SUB_MODULES.CUSTOMER, action: ACTIONS.READ })
   @Get()
   findAll(
@@ -45,6 +48,8 @@ export class CustomerController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search?: string,
+    @Query('tag') tag?: CustomerTag,
+    @Query('isActive') isActive?: boolean,
   ) {
     return this.customerService.findAllCustomers(
       req.user.userId,
@@ -53,6 +58,8 @@ export class CustomerController {
       page,
       limit,
       search,
+      tag,
+      isActive,
     );
   }
 
