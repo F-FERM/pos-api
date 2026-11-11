@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsMongoId,
@@ -6,44 +7,31 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  Length,
   Min,
+  ValidateNested,
 } from 'class-validator';
 
-export class CreateProductDto {
-  /* ====================== MANDATORY FIELDS ====================== */
-
+/* ====================== TAB 1: BASIC INFO DTO ====================== */
+export class BasicInfoDto {
   @ApiProperty({
-    description:
-      'Product name (Required for all business types - Supermarket, Dress Shop, Spare Parts)',
-    example: 'Basmati Rice 5kg / Men Casual Shirt Blue L / Brake Pad Swift',
+    description: 'Product name',
+    example: 'Fortune Sunflower Oil 1L',
   })
   @IsString()
   @IsNotEmpty()
-  @Length(2, 200)
   name: string;
 
-  @ApiProperty({
-    description: 'Selling price per unit (Required)',
-    example: 450.0,
+  @ApiPropertyOptional({
+    description: 'Product image URL or path',
+    example: 'https://example.com/images/oil.jpg',
   })
-  @IsNumber()
-  @Min(0)
-  sellingPrice: number;
-
-  @ApiProperty({
-    description: 'Unit ID (Required)',
-    example: '65f987654321abcdef654322',
-  })
-  @IsNotEmpty()
-  @IsMongoId()
-  unitId: string;
-
-  /* ====================== OPTIONAL MINIMAL FIELDS ====================== */
+  @IsOptional()
+  @IsString()
+  image?: string;
 
   @ApiPropertyOptional({
     description: 'Stock Keeping Unit / Product Code',
-    example: 'SKU-10023',
+    example: 'PRD-001',
   })
   @IsOptional()
   @IsString()
@@ -51,7 +39,7 @@ export class CreateProductDto {
 
   @ApiPropertyOptional({
     description: 'Product barcode string for scanner checkout',
-    example: '2012345678901',
+    example: '8901234567890',
   })
   @IsOptional()
   @IsString()
@@ -73,6 +61,14 @@ export class CreateProductDto {
   @IsMongoId()
   brandId?: string;
 
+  @ApiProperty({
+    description: 'Unit ID',
+    example: '65f987654321abcdef654322',
+  })
+  @IsNotEmpty()
+  @IsMongoId()
+  unitId: string;
+
   @ApiPropertyOptional({
     description: 'Supplier ID',
     example: '65f987654321abcdef654324',
@@ -80,126 +76,159 @@ export class CreateProductDto {
   @IsOptional()
   @IsMongoId()
   supplierId?: string;
+}
 
-  @ApiPropertyOptional({
-    default: 'PCS',
-    description: 'Unit of measure (e.g. PCS, KG, G, LTR, BOX, NOS)',
-    example: 'PCS',
-  })
-  @IsOptional()
-  @IsString()
-  unitOfMeasure?: string;
-
+/* ====================== TAB 2: PRICING & TAX DTO ====================== */
+export class PricingAndTaxDto {
   @ApiPropertyOptional({
     default: 0,
-    description: 'Purchase cost price per unit',
-    example: 300.0,
+    description: 'Purchase price / cost price',
+    example: 8.5,
   })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  costPrice?: number;
+  purchasePrice?: number;
 
-  @ApiPropertyOptional({
-    description:
-      'Maximum Retail Price (Printed MRP for Supermarkets / Grocery)',
-    example: 500.0,
+  @ApiProperty({
+    description: 'Selling price per unit',
+    example: 10.0,
   })
-  @IsOptional()
   @IsNumber()
   @Min(0)
-  mrp?: number;
+  sellingPrice: number;
 
   @ApiPropertyOptional({
     default: 0,
-    description: 'Tax percentage rate (GST/VAT)',
+    description: 'VAT percentage rate',
     example: 5.0,
   })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  taxRate?: number;
-
-  @ApiPropertyOptional({
-    default: true,
-    description: 'Whether selling price is inclusive of tax',
-    example: true,
-  })
-  @IsOptional()
-  @IsBoolean()
-  isTaxInclusive?: boolean;
+  vatRate?: number;
 
   @ApiPropertyOptional({
     default: 0,
-    description: 'Initial stock quantity on hand',
-    example: 50,
+    description: 'Profit margin percentage',
+    example: 15.0,
   })
   @IsOptional()
   @IsNumber()
-  stockQuantity?: number;
+  profitMargin?: number;
 
   @ApiPropertyOptional({
-    default: 5,
-    description: 'Minimum stock alert threshold',
-    example: 5,
+    default: 0,
+    description: 'Selling price before VAT',
+    example: 10.0,
   })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  minStockAlert?: number;
+  sellingPriceBeforeVat?: number;
 
   @ApiPropertyOptional({
-    default: false,
-    description: 'Perishable item flag for batch/expiry tracking (Grocery)',
-    example: false,
+    default: 0,
+    description: 'VAT amount in currency',
+    example: 0.5,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  vatAmount?: number;
+
+  @ApiPropertyOptional({
+    default: 0,
+    description: 'Price including VAT',
+    example: 10.5,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  priceIncludingVat?: number;
+}
+
+/* ====================== TAB 3: INVENTORY MANAGEMENT DTO ====================== */
+export class InventoryManagementDto {
+  @ApiPropertyOptional({
+    default: true,
+    description: 'Enable stock tracking',
+    example: true,
   })
   @IsOptional()
   @IsBoolean()
-  hasBatchExpiry?: boolean;
+  enableStockTracking?: boolean;
 
   @ApiPropertyOptional({
-    description: 'Part / OEM Number (For Spare Parts & Hardware stores)',
-    example: 'BP-SWIFT-2020',
+    default: 0,
+    description: 'Opening stock quantity',
+    example: 100,
   })
   @IsOptional()
-  @IsString()
-  partNumber?: string;
+  @IsNumber()
+  openingStock?: number;
 
   @ApiPropertyOptional({
-    description: 'Size (For Dress / Apparel / Shoe shops)',
-    example: 'XL / 42',
+    default: 10,
+    description: 'Low stock alert threshold',
+    example: 10,
   })
   @IsOptional()
-  @IsString()
-  size?: string;
+  @IsNumber()
+  @Min(0)
+  lowStockAlert?: number;
 
   @ApiPropertyOptional({
-    description: 'Color (For Dress / Apparel shops)',
-    example: 'Navy Blue',
-  })
-  @IsOptional()
-  @IsString()
-  color?: string;
-
-  @ApiPropertyOptional({
-    description: 'Product description or notes',
-    example: 'Premium Cotton Comfort Fit Shirt',
+    description: 'Product description or details',
+    example: 'Enter product details, specification, or compatibility...',
   })
   @IsOptional()
   @IsString()
   description?: string;
+}
 
+/* ====================== MAIN CREATE PRODUCT DTO ====================== */
+export class CreateProductDto {
+  @ApiProperty({
+    type: () => BasicInfoDto,
+    description: 'Basic product info',
+  })
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => BasicInfoDto)
+  basicInfo: BasicInfoDto;
+
+  @ApiProperty({
+    type: () => PricingAndTaxDto,
+    description: 'Pricing & tax info',
+  })
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => PricingAndTaxDto)
+  pricingAndTax: PricingAndTaxDto;
+
+  @ApiProperty({
+    type: () => InventoryManagementDto,
+    description: 'Inventory management settings',
+  })
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => InventoryManagementDto)
+  inventoryManagement: InventoryManagementDto;
+
+  /* Weigh Scale Attributes */
   @ApiPropertyOptional({
     default: false,
     description: 'Flag indicating item is sold by weight / volume on scale',
-    example: true,
+    example: false,
   })
   @IsOptional()
   @IsBoolean()
   isWeighted?: boolean;
 
   @ApiPropertyOptional({
-    description: 'Short Price Look-Up (PLU) code mapped on weighing scale machine',
+    description:
+      'Short Price Look-Up (PLU) code mapped on weighing scale machine',
     example: '00012',
   })
   @IsOptional()
@@ -227,7 +256,7 @@ export class CreateProductDto {
 
   @ApiPropertyOptional({
     default: true,
-    description: 'Product active status',
+    description: 'Active product available for billing',
     example: true,
   })
   @IsOptional()
