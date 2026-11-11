@@ -128,6 +128,8 @@ export class CustomerService extends GenericDatabase<Model<CustomerDocument>> {
     page: number,
     limit: number,
     search?: string,
+    tag?: CustomerTag,
+    isActive?: boolean,
   ) {
     try {
       await this.userService.validateAuthenticatedUser(userId);
@@ -144,10 +146,19 @@ export class CustomerService extends GenericDatabase<Model<CustomerDocument>> {
         filter.companyId = new Types.ObjectId(companyId);
       }
 
+      if (tag) {
+        filter.tag = tag;
+      }
+
+      if (isActive !== undefined && isActive !== null) {
+        filter.isActive = String(isActive) === 'true';
+      }
+
       if (search) {
         filter.$or = [
           { name: { $regex: search, $options: 'i' } },
           { phone: { $regex: search, $options: 'i' } },
+          { tag: { $regex: search, $options: 'i' } },
         ];
       }
 
