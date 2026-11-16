@@ -8,8 +8,8 @@ import { SupplierSchema, SupplierSchemaName } from '../models/supplier.schema';
 import { LogModule } from '../log/log.module';
 import { CompanyModule } from '../company/company.module';
 import { UserModule } from '../user/user.module';
-
 import { AccountModule } from '../account/account.module';
+import { NumberSettingsModule } from '../number-settings/number-settings.module';
 
 @Module({
   imports: [
@@ -22,6 +22,7 @@ import { AccountModule } from '../account/account.module';
     CompanyModule,
     UserModule,
     AccountModule,
+    NumberSettingsModule,
   ],
   controllers: [PurchaseController],
   providers: [PurchaseService],
