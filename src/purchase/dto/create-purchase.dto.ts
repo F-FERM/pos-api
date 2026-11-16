@@ -29,10 +29,13 @@ export class CreatePurchaseItemDto {
 }
 
 export class CreatePurchaseDto {
-  @ApiProperty()
+  @ApiPropertyOptional({
+    description:
+      'Purchase bill / order number (Optional - Auto-generated if omitted in Auto mode)',
+  })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  billNumber: string;
+  billNumber?: string;
 
   @ApiProperty()
   @IsMongoId()
@@ -45,7 +48,6 @@ export class CreatePurchaseDto {
   items: CreatePurchaseItemDto[];
 
   @ApiProperty()
-  @IsNumber()
   @Min(0)
   paidAmount: number;
 
