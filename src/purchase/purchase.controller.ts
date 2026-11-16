@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
   Req,
@@ -13,6 +14,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ParseObjectIdPipe } from '@nestjs/mongoose';
 import { PurchaseService } from './purchase.service';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
+import { UpdatePurchaseDto } from './dto/update-purchase.dto';
 import { type AuthedRequest } from '../utils/common.types';
 import { CheckPermission } from '../common/decorators/check-permission.decorator';
 import { SUB_MODULES } from '../common/constants/submodules.constants';
@@ -65,6 +67,23 @@ export class PurchaseController {
       req.user.userId,
       req.user.companyId,
       req.user.roles,
+    );
+  }
+
+  @ApiOperation({ summary: 'Update purchase bill' })
+  @CheckPermission({ subModule: SUB_MODULES.PURCHASE, action: ACTIONS.UPDATE })
+  @Patch(':id')
+  update(
+    @Param('id', ParseObjectIdPipe) id: string,
+    @Body() dto: UpdatePurchaseDto,
+    @Req() req: AuthedRequest,
+  ) {
+    return this.purchaseService.updatePurchase(
+      id,
+      dto,
+      req.user.userId,
+      req.user.companyId,
+      req,
     );
   }
 }
