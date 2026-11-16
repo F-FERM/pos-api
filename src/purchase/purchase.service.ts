@@ -16,12 +16,14 @@ import {
 import { ProductDocument, ProductSchemaName } from '../models/product.schema';
 import { SupplierDocument, SupplierSchemaName } from '../models/supplier.schema';
 import { CreatePurchaseDto } from './dto/create-purchase.dto';
+import { UpdatePurchaseDto } from './dto/update-purchase.dto';
 import { LogService } from '../log/log.service';
 import { CompanyService } from '../company/company.service';
 import { UserService } from '../user/user.service';
 import { AccountService } from '../account/account.service';
+import { NumberSettingsService } from '../number-settings/number-settings.service';
 import { AuthedRequest } from '../utils/common.types';
-import { LogActions, LogEntityType, LogStatus } from '../utils/common.enum';
+import { LogActions, LogEntityType, LogStatus, numberSettingsDocumentType } from '../utils/common.enum';
 import { Role } from '../utils/role.enum';
 
 @Injectable()
@@ -37,6 +39,7 @@ export class PurchaseService extends GenericDatabase<Model<PurchaseDocument>> {
     private readonly companyService: CompanyService,
     private readonly userService: UserService,
     private readonly accountService: AccountService,
+    private readonly numberSettingsService: NumberSettingsService,
   ) {
     super(purchaseModel);
   }
@@ -64,6 +67,40 @@ export class PurchaseService extends GenericDatabase<Model<PurchaseDocument>> {
       if (!dto.items || dto.items.length === 0) {
         throw new BadRequestException(
           'Purchase must contain at least one item',
+        );
+      }
+
+      let billNumber: string;
+
+      if (dto.billNumber?.trim()) {
+        const exist: PurchaseDocument = await this.genericFindOne({
+          billNumber: dto.billNumber.trim(),
+          companyId: new Types.ObjectId(dto.companyId),
+          isDeleted: false,
+        });
+
+        if (exist) {
+          throw new BadRequestException('Purchase order number already exists');
+        }
+
+        billNumber = dto.billNumber.trim();
+      } else {
+        const setting = await this.numberSettingsService.getOne(
+          dto.companyId,
+          userId,
+          numberSettingsDocumentType.PURCHASE_ORDER,
+        );
+
+        if (setting.data.mode !== 'Auto') {
+          throw new BadRequestException(
+            'Purchase order number required in manual mode',
+          );
+        }
+
+        billNumber = await this.numberSettingsService.generateNumber(
+          dto.companyId,
+          userId,
+          numberSettingsDocumentType.PURCHASE_ORDER,
         );
       }
 
@@ -103,7 +140,7 @@ export class PurchaseService extends GenericDatabase<Model<PurchaseDocument>> {
         const created = await this.genericCreateOne(
           {
             ...dto,
-            billNumber: dto.billNumber.trim(),
+            billNumber,
             supplierId: new Types.ObjectId(dto.supplierId),
             items: preparedItems,
             totalAmount,
@@ -192,6 +229,106 @@ export class PurchaseService extends GenericDatabase<Model<PurchaseDocument>> {
         throw new BadRequestException(error.message);
       }
       throw new BadRequestException('Error creating purchase');
+    }
+  }
+
+  async updatePurchase(
+    id: string,
+    dto: UpdatePurchaseDto,
+    userId: string,
+    companyId: string,
+    req: AuthedRequest,
+  ) {
+    try {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.userService.validateAuthenticatedUser(userId);
+      await this.companyService.validateCompany(companyId, userId);
+
+      const existingPurchase = await this.genericFindOne({
+        _id: id,
+        companyId: new Types.ObjectId(companyId),
+        isDeleted: false,
+      });
+
+      if (!existingPurchase) {
+        throw new NotFoundException('Purchase bill not found');
+      }
+
+      let billNumber: string | undefined = undefined;
+
+      if (dto.billNumber?.trim()) {
+        const exist: PurchaseDocument = await this.genericFindOne({
+          billNumber: dto.billNumber.trim(),
+          companyId: new Types.ObjectId(companyId),
+          _id: { $ne: new Types.ObjectId(id) },
+          isDeleted: false,
+        });
+
+        if (exist) {
+          throw new BadRequestException('Purchase order number already exists');
+        }
+
+        billNumber = dto.billNumber.trim();
+      }
+
+      if (dto.supplierId) {
+        const supplier = await this.supplierModel.findOne({
+          _id: dto.supplierId,
+          companyId: new Types.ObjectId(companyId),
+          isDeleted: false,
+        });
+
+        if (!supplier) {
+          throw new BadRequestException('Supplier not found for this company');
+        }
+      }
+
+      const updated = await this.genericUpdateOne(id, {
+        ...dto,
+        ...(billNumber && { billNumber }),
+        ...(dto.supplierId && { supplierId: new Types.ObjectId(dto.supplierId) }),
+        ...(dto.notes !== undefined && { notes: dto.notes.trim() }),
+      });
+
+      await this.logService.createLog({
+        companyId: new Types.ObjectId(companyId),
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.UPDATE_PURCHASE,
+        entityType: LogEntityType.PURCHASE,
+        entityId: new Types.ObjectId(id),
+        description: `Purchase Bill ${updated?.billNumber || existingPurchase.billNumber} updated`,
+        ipAddress,
+        path: req.url,
+        status: LogStatus.SUCCESS,
+      });
+
+      return {
+        success: true,
+        message: 'Purchase updated successfully',
+        data: updated,
+        statusCode: HttpStatus.OK,
+      };
+    } catch (error: unknown) {
+      const ipAddress = await this.getClientIpAddress(req);
+      await this.logService.createLog({
+        companyId: new Types.ObjectId(companyId),
+        createdBy: new Types.ObjectId(userId),
+        action: LogActions.UPDATE_PURCHASE,
+        entityType: LogEntityType.PURCHASE,
+        entityId: new Types.ObjectId(id),
+        description: `Failed to update purchase`,
+        ipAddress,
+        path: req.url,
+        status: LogStatus.FAILED,
+        additionalData: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+      });
+
+      if (error instanceof Error) {
+        throw new BadRequestException(error.message);
+      }
+      throw new BadRequestException('Error updating purchase');
     }
   }
 
