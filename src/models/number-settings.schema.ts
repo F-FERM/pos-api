@@ -29,6 +29,9 @@ export class NumberSetting extends BaseSchema {
 
   @Prop({ type: String, default: '00001' })
   nextNumberRaw: string;
+
+  @Prop({ type: String, enum: ['Auto', 'Manual'], default: 'Auto' })
+  mode: 'Auto' | 'Manual';
 }
 
 export const NumberSettingSchema = SchemaFactory.createForClass(NumberSetting);
@@ -45,4 +48,5 @@ export const NumberSettingModelConstants: {
   prefix: 'prefix',
   nextNumber: 'nextNumber',
   nextNumberRaw: 'nextNumberRaw',
+  mode: 'mode',
 };
