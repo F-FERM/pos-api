@@ -17,4 +17,9 @@ export class UpdateNumberSettingDto {
   @IsNumber()
   @Min(1)
   nextNumber?: number;
+
+  @ApiPropertyOptional({ enum: ['Auto', 'Manual'] })
+  @IsOptional()
+  @IsString()
+  mode?: 'Auto' | 'Manual';
 }
