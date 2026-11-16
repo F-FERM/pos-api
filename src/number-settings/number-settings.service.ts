@@ -45,6 +45,7 @@ export class NumberSettingsService extends GenericDatabase<
     config: {
       prefix: string;
       nextNumber: number;
+      mode?: 'Auto' | 'Manual';
     },
     session?: mongoose.ClientSession,
   ): Promise<NumberSettingDocument> {
@@ -65,6 +66,7 @@ export class NumberSettingsService extends GenericDatabase<
         prefix: config.prefix,
         nextNumber: config.nextNumber,
         nextNumberRaw: paddedNumber,
+        mode: config.mode || 'Auto',
         isDeleted: false,
         createdBy: new mongoose.Types.ObjectId(userId),
       };
@@ -80,6 +82,7 @@ export class NumberSettingsService extends GenericDatabase<
           prefix: config.prefix,
           nextNumber: config.nextNumber,
           nextNumberRaw: paddedNumber,
+          ...(config.mode && { mode: config.mode }),
         };
 
         const updated = await this.model.findOneAndUpdate(
@@ -134,6 +137,7 @@ export class NumberSettingsService extends GenericDatabase<
             {
               prefix: config.prefix,
               nextNumber: config.nextNumber,
+              mode: config.mode || 'Auto',
             },
             session,
           );
@@ -158,6 +162,7 @@ export class NumberSettingsService extends GenericDatabase<
     data?: {
       prefix?: string;
       nextNumber?: number;
+      mode?: 'Auto' | 'Manual';
     },
     req?: AuthedRequest,
   ) {
@@ -188,6 +193,13 @@ export class NumberSettingsService extends GenericDatabase<
         setData.prefix = cleanPrefix;
       }
 
+      if (data?.mode !== undefined) {
+        if (!['Auto', 'Manual'].includes(data.mode)) {
+          throw new BadRequestException('Mode must be Auto or Manual');
+        }
+        setData.mode = data.mode;
+      }
+
       if (data?.prefix === undefined) {
         setOnInsert.prefix = this.getPrefix(docType);
       }
@@ -195,6 +207,10 @@ export class NumberSettingsService extends GenericDatabase<
       if (data?.nextNumber === undefined) {
         setOnInsert.nextNumber = 1;
         setOnInsert.nextNumberRaw = '00001';
+      }
+
+      if (data?.mode === undefined) {
+        setOnInsert.mode = 'Auto';
       }
 
       const result = await this.model.findOneAndUpdate(
@@ -223,7 +239,7 @@ export class NumberSettingsService extends GenericDatabase<
         action: LogActions.UPDATE_NUMBER_SETTING,
         entityType: LogEntityType.NUMBER_SETTING,
         entityId: new mongoose.Types.ObjectId(result._id),
-        description: `Number setting for ${docType} updated (${result.prefix})`,
+        description: `Number setting for ${docType} updated (${result.prefix}, mode: ${result.mode})`,
         ipAddress,
         path: req?.url || '/number-settings',
         status: LogStatus.SUCCESS,
@@ -281,6 +297,7 @@ export class NumberSettingsService extends GenericDatabase<
         {
           prefix: this.getPrefix(docType),
           nextNumber: 1,
+          mode: 'Auto',
         },
         session,
       );
