@@ -11,7 +11,6 @@ import {
 } from 'class-validator';
 import { ScaleBarcodeType } from '../../utils/common.enum';
 
-export { ScaleBarcodeType };
 
 export class UpdateWeighScaleSettingsDto {
   @ApiPropertyOptional({
