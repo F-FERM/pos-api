@@ -3249,6 +3249,38 @@
         "tags": [
           "Purchase"
         ]
+      },
+      "patch": {
+        "operationId": "PurchaseController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePurchaseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update purchase bill",
+        "tags": [
+          "Purchase"
+        ]
       }
     },
     "/api/label-designer/generate": {
@@ -4596,6 +4628,13 @@
           "nextNumber": {
             "type": "number",
             "example": 1
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "Auto",
+              "Manual"
+            ]
           }
         },
         "required": [
@@ -5272,33 +5311,28 @@
           }
         }
       },
-      "CreateProductDto": {
+      "BasicInfoDto": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string",
-            "description": "Product name (Required for all business types - Supermarket, Dress Shop, Spare Parts)",
-            "example": "Basmati Rice 5kg / Men Casual Shirt Blue L / Brake Pad Swift"
+            "description": "Product name",
+            "example": "Fortune Sunflower Oil 1L"
           },
-          "sellingPrice": {
-            "type": "number",
-            "description": "Selling price per unit (Required)",
-            "example": 450
-          },
-          "unitId": {
+          "image": {
             "type": "string",
-            "description": "Unit ID (Required)",
-            "example": "65f987654321abcdef654322"
+            "description": "Product image URL or path",
+            "example": "https://example.com/images/oil.jpg"
           },
           "sku": {
             "type": "string",
             "description": "Stock Keeping Unit / Product Code",
-            "example": "SKU-10023"
+            "example": "PRD-001"
           },
           "barcode": {
             "type": "string",
             "description": "Product barcode string for scanner checkout",
-            "example": "2012345678901"
+            "example": "8901234567890"
           },
           "categoryId": {
             "type": "string",
@@ -5310,83 +5344,131 @@
             "description": "Brand ID",
             "example": "65f987654321abcdef654323"
           },
+          "unitId": {
+            "type": "string",
+            "description": "Unit ID",
+            "example": "65f987654321abcdef654322"
+          },
           "supplierId": {
             "type": "string",
             "description": "Supplier ID",
             "example": "65f987654321abcdef654324"
-          },
-          "unitOfMeasure": {
-            "type": "string",
-            "default": "PCS",
-            "description": "Unit of measure (e.g. PCS, KG, G, LTR, BOX, NOS)",
-            "example": "PCS"
-          },
-          "costPrice": {
+          }
+        },
+        "required": [
+          "name",
+          "unitId"
+        ]
+      },
+      "PricingAndTaxDto": {
+        "type": "object",
+        "properties": {
+          "purchasePrice": {
             "type": "number",
             "default": 0,
-            "description": "Purchase cost price per unit",
-            "example": 300
+            "description": "Purchase price / cost price",
+            "example": 8.5
           },
-          "mrp": {
+          "sellingPrice": {
             "type": "number",
-            "description": "Maximum Retail Price (Printed MRP for Supermarkets / Grocery)",
-            "example": 500
+            "description": "Selling price per unit",
+            "example": 10
           },
-          "taxRate": {
+          "vatRate": {
             "type": "number",
             "default": 0,
-            "description": "Tax percentage rate (GST/VAT)",
+            "description": "VAT percentage rate",
             "example": 5
           },
-          "isTaxInclusive": {
+          "profitMargin": {
+            "type": "number",
+            "default": 0,
+            "description": "Profit margin percentage",
+            "example": 15
+          },
+          "sellingPriceBeforeVat": {
+            "type": "number",
+            "default": 0,
+            "description": "Selling price before VAT",
+            "example": 10
+          },
+          "vatAmount": {
+            "type": "number",
+            "default": 0,
+            "description": "VAT amount in currency",
+            "example": 0.5
+          },
+          "priceIncludingVat": {
+            "type": "number",
+            "default": 0,
+            "description": "Price including VAT",
+            "example": 10.5
+          }
+        },
+        "required": [
+          "sellingPrice"
+        ]
+      },
+      "InventoryManagementDto": {
+        "type": "object",
+        "properties": {
+          "enableStockTracking": {
             "type": "boolean",
             "default": true,
-            "description": "Whether selling price is inclusive of tax",
+            "description": "Enable stock tracking",
             "example": true
           },
-          "stockQuantity": {
+          "openingStock": {
             "type": "number",
             "default": 0,
-            "description": "Initial stock quantity on hand",
-            "example": 50
+            "description": "Opening stock quantity",
+            "example": 100
           },
-          "minStockAlert": {
+          "lowStockAlert": {
             "type": "number",
-            "default": 5,
-            "description": "Minimum stock alert threshold",
-            "example": 5
-          },
-          "hasBatchExpiry": {
-            "type": "boolean",
-            "default": false,
-            "description": "Perishable item flag for batch/expiry tracking (Grocery)",
-            "example": false
-          },
-          "partNumber": {
-            "type": "string",
-            "description": "Part / OEM Number (For Spare Parts & Hardware stores)",
-            "example": "BP-SWIFT-2020"
-          },
-          "size": {
-            "type": "string",
-            "description": "Size (For Dress / Apparel / Shoe shops)",
-            "example": "XL / 42"
-          },
-          "color": {
-            "type": "string",
-            "description": "Color (For Dress / Apparel shops)",
-            "example": "Navy Blue"
+            "default": 10,
+            "description": "Low stock alert threshold",
+            "example": 10
           },
           "description": {
             "type": "string",
-            "description": "Product description or notes",
-            "example": "Premium Cotton Comfort Fit Shirt"
+            "description": "Product description or details",
+            "example": "Enter product details, specification, or compatibility..."
+          }
+        }
+      },
+      "CreateProductDto": {
+        "type": "object",
+        "properties": {
+          "basicInfo": {
+            "description": "Basic product info",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BasicInfoDto"
+              }
+            ]
+          },
+          "pricingAndTax": {
+            "description": "Pricing & tax info",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PricingAndTaxDto"
+              }
+            ]
+          },
+          "inventoryManagement": {
+            "description": "Inventory management settings",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/InventoryManagementDto"
+              }
+            ]
           },
           "isWeighted": {
             "type": "boolean",
             "default": false,
             "description": "Flag indicating item is sold by weight / volume on scale",
-            "example": true
+            "example": false
           },
           "scalePlu": {
             "type": "string",
@@ -5408,131 +5490,48 @@
           "isActive": {
             "type": "boolean",
             "default": true,
-            "description": "Product active status",
+            "description": "Active product available for billing",
             "example": true
           }
         },
         "required": [
-          "name",
-          "sellingPrice",
-          "unitId"
+          "basicInfo",
+          "pricingAndTax",
+          "inventoryManagement"
         ]
       },
       "UpdateProductDto": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "Product name (Required for all business types - Supermarket, Dress Shop, Spare Parts)",
-            "example": "Basmati Rice 5kg / Men Casual Shirt Blue L / Brake Pad Swift"
+          "basicInfo": {
+            "description": "Basic product info",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BasicInfoDto"
+              }
+            ]
           },
-          "sellingPrice": {
-            "type": "number",
-            "description": "Selling price per unit (Required)",
-            "example": 450
+          "pricingAndTax": {
+            "description": "Pricing & tax info",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PricingAndTaxDto"
+              }
+            ]
           },
-          "unitId": {
-            "type": "string",
-            "description": "Unit ID (Required)",
-            "example": "65f987654321abcdef654322"
-          },
-          "sku": {
-            "type": "string",
-            "description": "Stock Keeping Unit / Product Code",
-            "example": "SKU-10023"
-          },
-          "barcode": {
-            "type": "string",
-            "description": "Product barcode string for scanner checkout",
-            "example": "2012345678901"
-          },
-          "categoryId": {
-            "type": "string",
-            "description": "Category ID",
-            "example": "65f987654321abcdef654321"
-          },
-          "brandId": {
-            "type": "string",
-            "description": "Brand ID",
-            "example": "65f987654321abcdef654323"
-          },
-          "supplierId": {
-            "type": "string",
-            "description": "Supplier ID",
-            "example": "65f987654321abcdef654324"
-          },
-          "unitOfMeasure": {
-            "type": "string",
-            "default": "PCS",
-            "description": "Unit of measure (e.g. PCS, KG, G, LTR, BOX, NOS)",
-            "example": "PCS"
-          },
-          "costPrice": {
-            "type": "number",
-            "default": 0,
-            "description": "Purchase cost price per unit",
-            "example": 300
-          },
-          "mrp": {
-            "type": "number",
-            "description": "Maximum Retail Price (Printed MRP for Supermarkets / Grocery)",
-            "example": 500
-          },
-          "taxRate": {
-            "type": "number",
-            "default": 0,
-            "description": "Tax percentage rate (GST/VAT)",
-            "example": 5
-          },
-          "isTaxInclusive": {
-            "type": "boolean",
-            "default": true,
-            "description": "Whether selling price is inclusive of tax",
-            "example": true
-          },
-          "stockQuantity": {
-            "type": "number",
-            "default": 0,
-            "description": "Initial stock quantity on hand",
-            "example": 50
-          },
-          "minStockAlert": {
-            "type": "number",
-            "default": 5,
-            "description": "Minimum stock alert threshold",
-            "example": 5
-          },
-          "hasBatchExpiry": {
-            "type": "boolean",
-            "default": false,
-            "description": "Perishable item flag for batch/expiry tracking (Grocery)",
-            "example": false
-          },
-          "partNumber": {
-            "type": "string",
-            "description": "Part / OEM Number (For Spare Parts & Hardware stores)",
-            "example": "BP-SWIFT-2020"
-          },
-          "size": {
-            "type": "string",
-            "description": "Size (For Dress / Apparel / Shoe shops)",
-            "example": "XL / 42"
-          },
-          "color": {
-            "type": "string",
-            "description": "Color (For Dress / Apparel shops)",
-            "example": "Navy Blue"
-          },
-          "description": {
-            "type": "string",
-            "description": "Product description or notes",
-            "example": "Premium Cotton Comfort Fit Shirt"
+          "inventoryManagement": {
+            "description": "Inventory management settings",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/InventoryManagementDto"
+              }
+            ]
           },
           "isWeighted": {
             "type": "boolean",
             "default": false,
             "description": "Flag indicating item is sold by weight / volume on scale",
-            "example": true
+            "example": false
           },
           "scalePlu": {
             "type": "string",
@@ -5554,7 +5553,7 @@
           "isActive": {
             "type": "boolean",
             "default": true,
-            "description": "Product active status",
+            "description": "Active product available for billing",
             "example": true
           }
         }
@@ -5968,7 +5967,8 @@
         "type": "object",
         "properties": {
           "billNumber": {
-            "type": "string"
+            "type": "string",
+            "description": "Purchase bill / order number (Optional - Auto-generated if omitted in Auto mode)"
           },
           "supplierId": {
             "type": "string"
@@ -5990,11 +5990,37 @@
           }
         },
         "required": [
-          "billNumber",
           "supplierId",
           "items",
           "paidAmount"
         ]
+      },
+      "UpdatePurchaseDto": {
+        "type": "object",
+        "properties": {
+          "billNumber": {
+            "type": "string",
+            "description": "Purchase bill / order number (Optional - Auto-generated if omitted in Auto mode)"
+          },
+          "supplierId": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreatePurchaseItemDto"
+            }
+          },
+          "paidAmount": {
+            "type": "number"
+          },
+          "purchaseDate": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
       },
       "LabelItemDto": {
         "type": "object",
