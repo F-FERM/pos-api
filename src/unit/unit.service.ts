@@ -53,7 +53,7 @@ export class UnitService extends GenericDatabase<Model<UnitDocument>> {
       const creatorObjId = userId ? new Types.ObjectId(userId) : null;
 
       for (const unitSeed of DEFAULT_UNITS_SEED) {
-        const exists = await this.unitModel
+        const exists: UnitDocument | null = await this.unitModel
           .findOne({
             companyId: compObjId,
             name: { $regex: `^${unitSeed.name.trim()}$`, $options: 'i' },
@@ -88,11 +88,11 @@ export class UnitService extends GenericDatabase<Model<UnitDocument>> {
     req: AuthedRequest,
   ) {
     try {
-      const ipAddress = await this.getClientIpAddress(req);
+      const ipAddress: string = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);
       await this.companyService.validateCompany(companyId, userId);
 
-      const existing = await this.genericFindOne({
+      const existing: UnitDocument | null = await this.genericFindOne({
         companyId: new Types.ObjectId(companyId),
         name: { $regex: `^${dto.name.trim()}$`, $options: 'i' },
       });
@@ -103,7 +103,7 @@ export class UnitService extends GenericDatabase<Model<UnitDocument>> {
         );
       }
 
-      const created = await this.genericCreateOne({
+      const created: UnitDocument = await this.genericCreateOne({
         ...dto,
         name: dto.name.trim(),
         symbol: dto.symbol?.trim(),
@@ -167,7 +167,7 @@ export class UnitService extends GenericDatabase<Model<UnitDocument>> {
   ) {
     try {
       await this.userService.validateAuthenticatedUser(userId);
-      const isSuperAdmin = roles.includes(Role.superadmin);
+      const isSuperAdmin: boolean = roles.includes(Role.superadmin);
 
       const filter: Record<string, unknown> = {
         isDeleted: false,
@@ -187,13 +187,13 @@ export class UnitService extends GenericDatabase<Model<UnitDocument>> {
         ];
       }
 
-      const skip = (page - 1) * limit;
-      const [data, totalCount] = await Promise.all([
+      const skip: number = (page - 1) * limit;
+      const [data, totalCount]: [UnitDocument[], number] = await Promise.all([
         this.unitModel.find(filter).skip(skip).limit(limit).exec(),
         this.unitModel.countDocuments(filter).exec(),
       ]);
 
-      const totalPages = Math.ceil(totalCount / limit) || 1;
+      const totalPages: number = Math.ceil(totalCount / limit) || 1;
 
       return {
         success: true,
@@ -222,7 +222,7 @@ export class UnitService extends GenericDatabase<Model<UnitDocument>> {
       await this.userService.validateAuthenticatedUser(userId);
       await this.companyService.validateCompany(companyId, userId);
 
-      const unit = await this.genericFindOne({
+      const unit: UnitDocument | null = await this.genericFindOne({
         _id: id,
         companyId: new Types.ObjectId(companyId),
       });
@@ -253,11 +253,11 @@ export class UnitService extends GenericDatabase<Model<UnitDocument>> {
     req: AuthedRequest,
   ) {
     try {
-      const ipAddress = await this.getClientIpAddress(req);
+      const ipAddress: string = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);
       await this.companyService.validateCompany(companyId, userId);
 
-      const unit = await this.genericFindOne({
+      const unit: UnitDocument | null = await this.genericFindOne({
         _id: id,
         companyId: new Types.ObjectId(companyId),
       });
@@ -266,7 +266,7 @@ export class UnitService extends GenericDatabase<Model<UnitDocument>> {
         throw new NotFoundException('Unit not found');
       }
 
-      const updated = await this.genericUpdateOne(id, {
+      const updated: UnitDocument = await this.genericUpdateOne(id, {
         ...dto,
         ...(dto.name && { name: dto.name.trim() }),
         ...(dto.symbol !== undefined && { symbol: dto.symbol?.trim() }),
@@ -323,11 +323,11 @@ export class UnitService extends GenericDatabase<Model<UnitDocument>> {
     req: AuthedRequest,
   ) {
     try {
-      const ipAddress = await this.getClientIpAddress(req);
+      const ipAddress: string = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);
       await this.companyService.validateCompany(companyId, userId);
 
-      const unit = await this.genericFindOne({
+      const unit: UnitDocument | null = await this.genericFindOne({
         _id: id,
         companyId: new Types.ObjectId(companyId),
       });
