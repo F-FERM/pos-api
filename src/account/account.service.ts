@@ -81,7 +81,9 @@ export class AccountService
    */
   async seedDefaultAccountsForAllCompanies(): Promise<void> {
     try {
-      const companies = await this.companyModel.find({ isDeleted: false });
+      const companies: CompanyDocument[] = await this.companyModel.find({
+        isDeleted: false,
+      });
       for (const comp of companies) {
         const creatorId = comp.ownerId
           ? comp.ownerId.toString()
@@ -105,11 +107,11 @@ export class AccountService
     userId: string,
     session?: ClientSession,
   ): Promise<void> {
-    const compObjectId = new Types.ObjectId(companyId);
-    const userObjectId = new Types.ObjectId(userId);
+    const compObjectId: Types.ObjectId = new Types.ObjectId(companyId);
+    const userObjectId: Types.ObjectId = new Types.ObjectId(userId);
 
     for (const accConfig of DEFAULT_SYSTEM_ACCOUNTS) {
-      const existing = await this.accountModel.findOne({
+      const existing: AccountDocument | null = await this.accountModel.findOne({
         companyId: compObjectId,
         code: accConfig.code,
         isDeleted: false,
@@ -145,18 +147,19 @@ export class AccountService
     req: AuthedRequest,
   ) {
     try {
-      const ipAddress = await this.getClientIpAddress(req);
+      const ipAddress: string = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);
       await this.companyService.validateCompany(companyId, userId);
 
-      let cleanCode = dto.code?.trim().toUpperCase();
+      let cleanCode: string | undefined = dto.code?.trim().toUpperCase();
 
       if (cleanCode) {
-        const existing = await this.accountModel.findOne({
-          companyId: new Types.ObjectId(companyId),
-          code: cleanCode,
-          isDeleted: false,
-        });
+        const existing: AccountDocument | null =
+          await this.accountModel.findOne({
+            companyId: new Types.ObjectId(companyId),
+            code: cleanCode,
+            isDeleted: false,
+          });
 
         if (existing) {
           throw new BadRequestException(
@@ -226,7 +229,7 @@ export class AccountService
   ) {
     try {
       await this.userService.validateAuthenticatedUser(userId);
-      const isSuperAdmin = roles.includes(Role.superadmin);
+      const isSuperAdmin: boolean = roles.includes(Role.superadmin);
 
       const filter: Record<string, unknown> = {
         isDeleted: false,
@@ -248,15 +251,17 @@ export class AccountService
         ];
       }
 
-      const skip = (page - 1) * limit;
-      const [data, totalCount] = await Promise.all([
-        this.accountModel
-          .find(filter)
-          .sort({ code: 1 })
-          .skip(skip)
-          .limit(limit),
-        this.accountModel.countDocuments(filter),
-      ]);
+      const skip: number = (page - 1) * limit;
+      const [data, totalCount]: [AccountDocument[], number] = await Promise.all(
+        [
+          this.accountModel
+            .find(filter)
+            .sort({ code: 1 })
+            .skip(skip)
+            .limit(limit),
+          this.accountModel.countDocuments(filter),
+        ],
+      );
 
       return {
         success: true,
@@ -280,7 +285,7 @@ export class AccountService
     try {
       await this.userService.validateAuthenticatedUser(userId);
 
-      const account = await this.accountModel.findOne({
+      const account: AccountDocument | null = await this.accountModel.findOne({
         _id: new Types.ObjectId(id),
         companyId: new Types.ObjectId(companyId),
         isDeleted: false,
@@ -311,10 +316,10 @@ export class AccountService
     req: AuthedRequest,
   ) {
     try {
-      const ipAddress = await this.getClientIpAddress(req);
+      const ipAddress: string = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);
 
-      const account = await this.accountModel.findOne({
+      const account: AccountDocument | null = await this.accountModel.findOne({
         _id: new Types.ObjectId(id),
         companyId: new Types.ObjectId(companyId),
         isDeleted: false,
@@ -330,18 +335,20 @@ export class AccountService
             'System account code cannot be modified',
           );
         }
-        const dupCode = await this.accountModel.findOne({
-          companyId: new Types.ObjectId(companyId),
-          code: dto.code.trim().toUpperCase(),
-          _id: { $ne: new Types.ObjectId(id) },
-          isDeleted: false,
-        });
+        const dupCode: AccountDocument | null = await this.accountModel.findOne(
+          {
+            companyId: new Types.ObjectId(companyId),
+            code: dto.code.trim().toUpperCase(),
+            _id: { $ne: new Types.ObjectId(id) },
+            isDeleted: false,
+          },
+        );
         if (dupCode) {
           throw new BadRequestException('Account code already in use');
         }
       }
 
-      const updated = await this.genericUpdateOne(id, {
+      const updated: AccountDocument = await this.genericUpdateOne(id, {
         ...dto,
         ...(dto.code && { code: dto.code.trim().toUpperCase() }),
         ...(dto.name && { name: dto.name.trim() }),
@@ -399,10 +406,10 @@ export class AccountService
     req: AuthedRequest,
   ) {
     try {
-      const ipAddress = await this.getClientIpAddress(req);
+      const ipAddress: string = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);
 
-      const account = await this.accountModel.findOne({
+      const account: AccountDocument | null = await this.accountModel.findOne({
         _id: new Types.ObjectId(id),
         companyId: new Types.ObjectId(companyId),
         isDeleted: false,
@@ -484,10 +491,10 @@ export class AccountService
       );
     }
 
-    const compObjId = new Types.ObjectId(companyId);
-    const accObjId = new Types.ObjectId(accountId);
+    const compObjId: Types.ObjectId = new Types.ObjectId(companyId);
+    const accObjId: Types.ObjectId = new Types.ObjectId(accountId);
 
-    const account = await this.accountModel
+    const account: AccountDocument | null = await this.accountModel
       .findOne({
         _id: accObjId,
         companyId: compObjId,
@@ -504,11 +511,11 @@ export class AccountService
     // Determine balance direction based on Normal Account Types
     // Assets & Expenses increase with DEBIT, decrease with CREDIT
     // Liabilities, Equity, & Income increase with CREDIT, decrease with DEBIT
-    const isAssetOrExpense =
+    const isAssetOrExpense: boolean =
       account.type === AccountType.ASSET ||
       account.type === AccountType.EXPENSE;
 
-    const delta = isAssetOrExpense
+    const delta: number = isAssetOrExpense
       ? type === TransactionType.DEBIT
         ? amount
         : -amount
@@ -516,7 +523,7 @@ export class AccountService
         ? amount
         : -amount;
 
-    const newBalance = account.balance + delta;
+    const newBalance: number = account.balance + delta;
 
     await this.accountModel.updateOne(
       { _id: accObjId },
@@ -524,7 +531,7 @@ export class AccountService
       { session },
     );
 
-    let transactionNumber = `TXN-${Date.now().toString().slice(-6)}`;
+    let transactionNumber: string = `TXN-${Date.now().toString().slice(-6)}`;
     try {
       transactionNumber = await this.numberSettingsService.generateNumber(
         companyId,
@@ -552,9 +559,10 @@ export class AccountService
     };
 
     if (session) {
-      const [created] = await this.transactionModel.create([txnData], {
-        session,
-      });
+      const [created]: AccountTransactionDocument[] =
+        await this.transactionModel.create([txnData], {
+          session,
+        });
       return created;
     }
 
@@ -568,11 +576,11 @@ export class AccountService
     req: AuthedRequest,
   ) {
     try {
-      const ipAddress = await this.getClientIpAddress(req);
+      const ipAddress: string = await this.getClientIpAddress(req);
       await this.userService.validateAuthenticatedUser(userId);
       await this.companyService.validateCompany(companyId, userId);
 
-      const txn = await this.postEntry(
+      const txn: AccountTransactionDocument = await this.postEntry(
         companyId,
         userId,
         dto.accountId,
@@ -633,7 +641,7 @@ export class AccountService
     userId: string,
     session?: ClientSession,
   ): Promise<void> {
-    const compObjId = new Types.ObjectId(companyId);
+    const compObjId: Types.ObjectId = new Types.ObjectId(companyId);
 
     const findSystemAccount = async (code: SystemAccountCode) => {
       const acc = await this.accountModel
@@ -686,7 +694,7 @@ export class AccountService
     }
 
     // 2. Credit Sales Revenue by subtotal + tax
-    const totalGrossRevenue = sale.subtotal + sale.taxTotal;
+    const totalGrossRevenue: number = sale.subtotal + sale.taxTotal;
     if (revenueAccount && totalGrossRevenue > 0) {
       await this.postEntry(
         companyId,
@@ -748,7 +756,7 @@ export class AccountService
     userId: string,
     session?: ClientSession,
   ): Promise<void> {
-    const compObjId = new Types.ObjectId(companyId);
+    const compObjId: Types.ObjectId = new Types.ObjectId(companyId);
 
     const findSystemAccount = async (code: SystemAccountCode) => {
       return await this.accountModel
@@ -801,7 +809,7 @@ export class AccountService
     userId: string,
     session?: ClientSession,
   ): Promise<void> {
-    const compObjId = new Types.ObjectId(companyId);
+    const compObjId: Types.ObjectId = new Types.ObjectId(companyId);
 
     const findSystemAccount = async (code: SystemAccountCode) => {
       return await this.accountModel
@@ -873,7 +881,7 @@ export class AccountService
     userId: string,
     session?: ClientSession,
   ): Promise<void> {
-    const compObjId = new Types.ObjectId(companyId);
+    const compObjId: Types.ObjectId = new Types.ObjectId(companyId);
 
     const findSystemAccount = async (code: SystemAccountCode) => {
       return await this.accountModel
@@ -933,15 +941,16 @@ export class AccountService
         isDeleted: false,
       };
 
-      const skip = (page - 1) * limit;
-      const [data, totalCount] = await Promise.all([
-        this.transactionModel
-          .find(filter)
-          .sort({ transactionDate: -1, createdAt: -1 })
-          .skip(skip)
-          .limit(limit),
-        this.transactionModel.countDocuments(filter),
-      ]);
+      const skip: number = (page - 1) * limit;
+      const [data, totalCount]: [AccountTransactionDocument[], number] =
+        await Promise.all([
+          this.transactionModel
+            .find(filter)
+            .sort({ transactionDate: -1, createdAt: -1 })
+            .skip(skip)
+            .limit(limit),
+          this.transactionModel.countDocuments(filter),
+        ]);
 
       return {
         success: true,
@@ -965,16 +974,16 @@ export class AccountService
     try {
       await this.userService.validateAuthenticatedUser(userId);
 
-      const accounts = await this.accountModel.find({
+      const accounts: AccountDocument[] = await this.accountModel.find({
         companyId: new Types.ObjectId(companyId),
         isDeleted: false,
       });
 
-      let totalAssets = 0;
-      let totalLiabilities = 0;
-      let totalEquity = 0;
-      let totalIncome = 0;
-      let totalExpenses = 0;
+      let totalAssets: number = 0;
+      let totalLiabilities: number = 0;
+      let totalEquity: number = 0;
+      let totalIncome: number = 0;
+      let totalExpenses: number = 0;
 
       for (const acc of accounts) {
         if (acc.type === AccountType.ASSET) totalAssets += acc.balance;
@@ -985,7 +994,7 @@ export class AccountService
         else if (acc.type === AccountType.EXPENSE) totalExpenses += acc.balance;
       }
 
-      const netProfit = totalIncome - totalExpenses;
+      const netProfit: number = totalIncome - totalExpenses;
 
       return {
         success: true,
