@@ -17,6 +17,7 @@ import { ModuleModule } from './module/module.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { UnitModule } from './unit/unit.module';
 import { CategoryModule } from './category/category.module';
+import { SubCategoryModule } from './sub-category/sub-category.module';
 import { BrandModule } from './brand/brand.module';
 import { ProductModule } from './product/product.module';
 import { SupplierModule } from './supplier/supplier.module';
@@ -57,6 +58,7 @@ import { PaymentTermsModule } from './payment-terms/payment-terms.module';
     SubscriptionModule,
     UnitModule,
     CategoryModule,
+    SubCategoryModule,
     BrandModule,
     ProductModule,
     SupplierModule,
