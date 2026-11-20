@@ -4,6 +4,7 @@ export const SUB_MODULES = {
   PRIVILEGE: 'privilege',
   SUBSCRIPTION: 'subscription',
   CATEGORY: 'category',
+  SUB_CATEGORY: 'sub-category',
   BRAND: 'brand',
   PRODUCT: 'product',
   SUPPLIER: 'supplier',
