@@ -173,6 +173,7 @@ export enum LogEntityType {
   UNIT = 'Unit',
   SUBSCRIPTION_PLAN = 'SubscriptionPlan',
   CATEGORY = 'Category',
+  SUB_CATEGORY = 'SubCategory',
   BRAND = 'Brand',
   PRODUCT = 'Product',
   SUPPLIER = 'Supplier',
