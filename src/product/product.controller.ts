@@ -40,6 +40,7 @@ export class ProductController {
 
   @ApiOperation({ summary: 'Get all products' })
   @ApiQuery({ name: 'categoryId', required: false })
+  @ApiQuery({ name: 'subCategoryId', required: false })
   @ApiQuery({ name: 'brandId', required: false })
   @ApiQuery({ name: 'supplierId', required: false })
   @ApiQuery({ name: 'lowStockOnly', required: false, type: Boolean })
@@ -51,6 +52,7 @@ export class ProductController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
     @Query('search') search?: string,
     @Query('categoryId') categoryId?: string,
+    @Query('subCategoryId') subCategoryId?: string,
     @Query('brandId') brandId?: string,
     @Query('supplierId') supplierId?: string,
     @Query('lowStockOnly', new DefaultValuePipe(false), ParseBoolPipe)
@@ -64,6 +66,7 @@ export class ProductController {
       limit,
       search,
       categoryId,
+      subCategoryId,
       brandId,
       supplierId,
       lowStockOnly,
