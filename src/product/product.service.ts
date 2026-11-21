@@ -14,6 +14,7 @@ import {
   ProductSchemaName,
 } from '../models/product.schema';
 import { CategoryModelConstants } from '../models/category.schema';
+import { SubCategoryModelConstants } from '../models/sub-category.schema';
 import { BrandModelConstants } from '../models/brand.schema';
 import { SupplierModelConstants } from '../models/supplier.schema';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -22,6 +23,7 @@ import { LogService } from '../log/log.service';
 import { CompanyService } from '../company/company.service';
 import { UserService } from '../user/user.service';
 import { CategoryService } from '../category/category.service';
+import { SubCategoryService } from '../sub-category/sub-category.service';
 import { BrandService } from '../brand/brand.service';
 import { SupplierService } from '../supplier/supplier.service';
 import { SyncService } from '../sync/sync.service';
@@ -54,6 +56,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
     private readonly companyService: CompanyService,
     private readonly userService: UserService,
     private readonly categoryService: CategoryService,
+    private readonly subCategoryService: SubCategoryService,
     private readonly brandService: BrandService,
     private readonly supplierService: SupplierService,
     private readonly syncService: SyncService,
@@ -174,6 +177,19 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         }
       }
 
+      const subCategoryId = dto.basicInfo?.subCategoryId;
+      if (subCategoryId) {
+        const subCategory = await this.subCategoryService.genericFindOne({
+          _id: subCategoryId,
+          companyId: new Types.ObjectId(dto.companyId),
+        });
+        if (!subCategory) {
+          throw new BadRequestException(
+            'Sub Category not found for this company',
+          );
+        }
+      }
+
       const brandId = dto.basicInfo?.brandId;
       if (brandId) {
         const brand = await this.brandService.genericFindOne({
@@ -237,6 +253,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
 
       const purchasePrice = dto.pricingAndTax?.purchasePrice ?? 0;
       const vatRate = dto.pricingAndTax?.vatRate ?? 0;
+      const mrp = dto.pricingAndTax?.mrp ?? 0;
       const sellingPriceBeforeVat =
         dto.pricingAndTax?.sellingPriceBeforeVat ?? sellingPrice;
       const vatAmount =
@@ -257,25 +274,61 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         dto.inventoryManagement?.enableStockTracking ?? true;
       const openingStock = dto.inventoryManagement?.openingStock ?? 0;
       const lowStockAlert = dto.inventoryManagement?.lowStockAlert ?? 10;
-      const description = (dto.inventoryManagement?.description ?? '').trim();
+      const reorderQuantity = dto.inventoryManagement?.reorderQuantity ?? 0;
+      const allowSellingWhenOutOfStock =
+        dto.inventoryManagement?.allowSellingWhenOutOfStock ?? false;
+      const description = (
+        dto.basicInfo?.description ||
+        dto.inventoryManagement?.description ||
+        ''
+      ).trim();
+
+      const enableExpiryTracking =
+        dto.expiryTracking?.enableExpiryTracking ?? false;
+      const batches = (dto.expiryTracking?.batches ?? []).map((b) => ({
+        batchNumber: (b.batchNumber ?? '').trim(),
+        expiryDate: b.expiryDate ? new Date(b.expiryDate) : null,
+        batchQty: b.batchQty ?? 0,
+      }));
+      const expiryAlertBefore = (
+        dto.expiryTracking?.expiryAlertBefore ?? '15 Days'
+      ).trim();
+      const blockExpiredSales = dto.expiryTracking?.blockExpiredSales ?? false;
+
+      const serialNumber = (dto.advancedInfo?.serialNumber ?? '').trim();
+      const warrantyPeriod = (
+        dto.advancedInfo?.warrantyPeriod ?? 'No Warranty'
+      ).trim();
+      const returnPeriod = (
+        dto.advancedInfo?.returnPeriod ?? '7 Days'
+      ).trim();
+      const availableAtPos = dto.advancedInfo?.availableAtPos ?? true;
+      const internalNotes = (dto.advancedInfo?.internalNotes ?? '').trim();
+
       const isActive = dto.isActive ?? true;
 
       const created = await this.genericCreateOne({
         companyId: new Types.ObjectId(dto.companyId),
         basicInfo: {
           name: name.trim(),
+          aliasName: dto.basicInfo?.aliasName?.trim() || '',
           image: dto.basicInfo?.image?.trim() || '',
           sku: sku || undefined,
           barcode: barcode || undefined,
           categoryId: categoryId ? new Types.ObjectId(categoryId) : null,
+          subCategoryId: subCategoryId
+            ? new Types.ObjectId(subCategoryId)
+            : null,
           brandId: brandId ? new Types.ObjectId(brandId) : null,
           unitId: new Types.ObjectId(unitId),
           supplierId: supplierId ? new Types.ObjectId(supplierId) : null,
+          description,
         },
         pricingAndTax: {
           purchasePrice,
           sellingPrice,
           vatRate,
+          mrp,
           profitMargin,
           sellingPriceBeforeVat,
           vatAmount,
@@ -285,7 +338,22 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
           enableStockTracking,
           openingStock,
           lowStockAlert,
+          reorderQuantity,
+          allowSellingWhenOutOfStock,
           description,
+        },
+        expiryTracking: {
+          enableExpiryTracking,
+          batches,
+          expiryAlertBefore,
+          blockExpiredSales,
+        },
+        advancedInfo: {
+          serialNumber,
+          warrantyPeriod,
+          returnPeriod,
+          availableAtPos,
+          internalNotes,
         },
         isWeighted: dto.isWeighted ?? false,
         scalePlu: scalePlu || undefined,
@@ -347,6 +415,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
     limit: number,
     search?: string,
     categoryId?: string,
+    subCategoryId?: string,
     brandId?: string,
     supplierId?: string,
     lowStockOnly?: boolean,
@@ -370,6 +439,10 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         filter['basicInfo.categoryId'] = new Types.ObjectId(categoryId);
       }
 
+      if (subCategoryId) {
+        filter['basicInfo.subCategoryId'] = new Types.ObjectId(subCategoryId);
+      }
+
       if (brandId) {
         filter['basicInfo.brandId'] = new Types.ObjectId(brandId);
       }
@@ -381,6 +454,7 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
       if (search) {
         filter.$or = [
           { 'basicInfo.name': { $regex: search, $options: 'i' } },
+          { 'basicInfo.aliasName': { $regex: search, $options: 'i' } },
           { 'basicInfo.barcode': { $regex: search, $options: 'i' } },
           { 'basicInfo.sku': { $regex: search, $options: 'i' } },
         ];
@@ -407,6 +481,10 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
             {
               path: ProductModelConstants.categoryId,
               select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
+            },
+            {
+              path: ProductModelConstants.subCategoryId,
+              select: `${SubCategoryModelConstants.name} ${SubCategoryModelConstants.code}`,
             },
             {
               path: ProductModelConstants.brandId,
@@ -494,8 +572,16 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
           })
           .populate([
             {
+              path: ProductModelConstants.unitId,
+              select: `${UnitModelConstants.name} ${UnitModelConstants.symbol}`,
+            },
+            {
               path: ProductModelConstants.categoryId,
               select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
+            },
+            {
+              path: ProductModelConstants.subCategoryId,
+              select: `${SubCategoryModelConstants.name} ${SubCategoryModelConstants.code}`,
             },
             {
               path: ProductModelConstants.brandId,
@@ -553,8 +639,16 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         })
         .populate([
           {
+            path: ProductModelConstants.unitId,
+            select: `${UnitModelConstants.name} ${UnitModelConstants.symbol}`,
+          },
+          {
             path: ProductModelConstants.categoryId,
             select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
+          },
+          {
+            path: ProductModelConstants.subCategoryId,
+            select: `${SubCategoryModelConstants.name} ${SubCategoryModelConstants.code}`,
           },
           {
             path: ProductModelConstants.brandId,
@@ -608,8 +702,16 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
 
       const product = await this.productModel.findOne(filter).populate([
         {
+          path: ProductModelConstants.unitId,
+          select: `${UnitModelConstants.name} ${UnitModelConstants.symbol}`,
+        },
+        {
           path: ProductModelConstants.categoryId,
           select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
+        },
+        {
+          path: ProductModelConstants.subCategoryId,
+          select: `${SubCategoryModelConstants.name} ${SubCategoryModelConstants.code}`,
         },
         {
           path: ProductModelConstants.brandId,
@@ -667,6 +769,19 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         });
         if (!category) {
           throw new BadRequestException('Category not found for this company');
+        }
+      }
+
+      const subCategoryId = dto.basicInfo?.subCategoryId;
+      if (subCategoryId) {
+        const subCategory = await this.subCategoryService.genericFindOne({
+          _id: subCategoryId,
+          companyId: new Types.ObjectId(companyId),
+        });
+        if (!subCategory) {
+          throw new BadRequestException(
+            'Sub Category not found for this company',
+          );
         }
       }
 
@@ -738,6 +853,8 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
       if (dto.basicInfo) {
         if (dto.basicInfo.name !== undefined)
           updateFields['basicInfo.name'] = dto.basicInfo.name.trim();
+        if (dto.basicInfo.aliasName !== undefined)
+          updateFields['basicInfo.aliasName'] = dto.basicInfo.aliasName?.trim();
         if (dto.basicInfo.sku !== undefined)
           updateFields['basicInfo.sku'] = dto.basicInfo.sku?.trim();
         if (dto.basicInfo.barcode !== undefined)
@@ -753,6 +870,11 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
             ? new Types.ObjectId(dto.basicInfo.categoryId)
             : null;
         }
+        if (dto.basicInfo.subCategoryId !== undefined) {
+          updateFields['basicInfo.subCategoryId'] = dto.basicInfo.subCategoryId
+            ? new Types.ObjectId(dto.basicInfo.subCategoryId)
+            : null;
+        }
         if (dto.basicInfo.brandId !== undefined) {
           updateFields['basicInfo.brandId'] = dto.basicInfo.brandId
             ? new Types.ObjectId(dto.basicInfo.brandId)
@@ -763,6 +885,9 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
             ? new Types.ObjectId(dto.basicInfo.supplierId)
             : null;
         }
+        if (dto.basicInfo.description !== undefined)
+          updateFields['basicInfo.description'] =
+            dto.basicInfo.description?.trim();
       }
 
       if (dto.pricingAndTax) {
@@ -774,6 +899,8 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
             dto.pricingAndTax.sellingPrice;
         if (dto.pricingAndTax.vatRate !== undefined)
           updateFields['pricingAndTax.vatRate'] = dto.pricingAndTax.vatRate;
+        if (dto.pricingAndTax.mrp !== undefined)
+          updateFields['pricingAndTax.mrp'] = dto.pricingAndTax.mrp;
         if (dto.pricingAndTax.profitMargin !== undefined)
           updateFields['pricingAndTax.profitMargin'] =
             dto.pricingAndTax.profitMargin;
@@ -797,9 +924,53 @@ export class ProductService extends GenericDatabase<Model<ProductDocument>> {
         if (dto.inventoryManagement.lowStockAlert !== undefined)
           updateFields['inventoryManagement.lowStockAlert'] =
             dto.inventoryManagement.lowStockAlert;
+        if (dto.inventoryManagement.reorderQuantity !== undefined)
+          updateFields['inventoryManagement.reorderQuantity'] =
+            dto.inventoryManagement.reorderQuantity;
+        if (dto.inventoryManagement.allowSellingWhenOutOfStock !== undefined)
+          updateFields['inventoryManagement.allowSellingWhenOutOfStock'] =
+            dto.inventoryManagement.allowSellingWhenOutOfStock;
         if (dto.inventoryManagement.description !== undefined)
           updateFields['inventoryManagement.description'] =
             dto.inventoryManagement.description?.trim();
+      }
+
+      if (dto.expiryTracking) {
+        if (dto.expiryTracking.enableExpiryTracking !== undefined)
+          updateFields['expiryTracking.enableExpiryTracking'] =
+            dto.expiryTracking.enableExpiryTracking;
+        if (dto.expiryTracking.batches !== undefined)
+          updateFields['expiryTracking.batches'] = (
+            dto.expiryTracking.batches || []
+          ).map((b) => ({
+            batchNumber: (b.batchNumber ?? '').trim(),
+            expiryDate: b.expiryDate ? new Date(b.expiryDate) : null,
+            batchQty: b.batchQty ?? 0,
+          }));
+        if (dto.expiryTracking.expiryAlertBefore !== undefined)
+          updateFields['expiryTracking.expiryAlertBefore'] =
+            dto.expiryTracking.expiryAlertBefore?.trim();
+        if (dto.expiryTracking.blockExpiredSales !== undefined)
+          updateFields['expiryTracking.blockExpiredSales'] =
+            dto.expiryTracking.blockExpiredSales;
+      }
+
+      if (dto.advancedInfo) {
+        if (dto.advancedInfo.serialNumber !== undefined)
+          updateFields['advancedInfo.serialNumber'] =
+            dto.advancedInfo.serialNumber?.trim();
+        if (dto.advancedInfo.warrantyPeriod !== undefined)
+          updateFields['advancedInfo.warrantyPeriod'] =
+            dto.advancedInfo.warrantyPeriod?.trim();
+        if (dto.advancedInfo.returnPeriod !== undefined)
+          updateFields['advancedInfo.returnPeriod'] =
+            dto.advancedInfo.returnPeriod?.trim();
+        if (dto.advancedInfo.availableAtPos !== undefined)
+          updateFields['advancedInfo.availableAtPos'] =
+            dto.advancedInfo.availableAtPos;
+        if (dto.advancedInfo.internalNotes !== undefined)
+          updateFields['advancedInfo.internalNotes'] =
+            dto.advancedInfo.internalNotes?.trim();
       }
 
       if (dto.isActive !== undefined) updateFields['isActive'] = dto.isActive;
