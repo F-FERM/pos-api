@@ -71,11 +71,15 @@ export class NumberSettingsService extends GenericDatabase<
         createdBy: new mongoose.Types.ObjectId(userId),
       };
 
-      const existing = await this.model.findOne({
-        companyId: new mongoose.Types.ObjectId(companyId),
-        docType,
-        isDeleted: false,
-      });
+      const existing = await this.model.findOne(
+        {
+          companyId: new mongoose.Types.ObjectId(companyId),
+          docType,
+          isDeleted: false,
+        },
+        null,
+        { session },
+      );
 
       if (existing) {
         const updateData = {
@@ -283,11 +287,15 @@ export class NumberSettingsService extends GenericDatabase<
     await this.userService.validateAuthenticatedUser(userId);
     await this.companyService.validateCompany(companyId, userId);
 
-    let setting: NumberSettingDocument | null = await this.model.findOne({
-      companyId: new mongoose.Types.ObjectId(companyId),
-      docType,
-      isDeleted: false,
-    });
+    let setting: NumberSettingDocument | null = await this.model.findOne(
+      {
+        companyId: new mongoose.Types.ObjectId(companyId),
+        docType,
+        isDeleted: false,
+      },
+      null,
+      { session },
+    );
 
     if (!setting) {
       setting = await this.createDefaultSetting(
