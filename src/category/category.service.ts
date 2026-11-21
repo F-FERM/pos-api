@@ -61,7 +61,6 @@ export class CategoryService extends GenericDatabase<Model<CategoryDocument>> {
         name: dto.name.trim(),
         code: dto.code?.trim(),
         description: dto.description?.trim(),
-        parentId: dto.parentId ? new Types.ObjectId(dto.parentId) : null,
         companyId: new Types.ObjectId(dto.companyId),
         isActive: dto.isActive ?? true,
         createdBy: new Types.ObjectId(userId),
@@ -143,12 +142,6 @@ export class CategoryService extends GenericDatabase<Model<CategoryDocument>> {
       const [data, totalCount] = await Promise.all([
         this.categoryModel
           .find(filter)
-          .populate([
-            {
-              path: CategoryModelConstants.parentId,
-              select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
-            },
-          ])
           .sort({ createdAt: -1 })
           .skip(skip)
           .limit(limit),
@@ -194,12 +187,7 @@ export class CategoryService extends GenericDatabase<Model<CategoryDocument>> {
         filter.companyId = new Types.ObjectId(companyId);
       }
 
-      const category = await this.categoryModel.findOne(filter).populate([
-        {
-          path: CategoryModelConstants.parentId,
-          select: `${CategoryModelConstants.name} ${CategoryModelConstants.code}`,
-        },
-      ]);
+      const category = await this.categoryModel.findOne(filter);
 
       if (!category) {
         throw new NotFoundException('Category not found');
@@ -239,21 +227,12 @@ export class CategoryService extends GenericDatabase<Model<CategoryDocument>> {
         throw new NotFoundException('Category not found');
       }
 
-      if (dto.parentId && dto.parentId.toString() === id) {
-        throw new BadRequestException(
-          'A category cannot be set as its own parent category',
-        );
-      }
-
       const updated = await this.genericUpdateOne(id, {
         ...dto,
         ...(dto.name && { name: dto.name.trim() }),
         ...(dto.code !== undefined && { code: dto.code?.trim() }),
         ...(dto.description !== undefined && {
           description: dto.description?.trim(),
-        }),
-        ...(dto.parentId !== undefined && {
-          parentId: dto.parentId ? new Types.ObjectId(dto.parentId) : null,
         }),
       });
 
