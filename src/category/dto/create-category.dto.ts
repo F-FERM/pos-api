@@ -27,11 +27,6 @@ export class CreateCategoryDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsMongoId()
-  parentId?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
   @IsBoolean()
   isActive?: boolean;
 }
