@@ -17,13 +17,6 @@ export class Category extends BaseSchema {
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category',
-    default: null,
-  })
-  parentId?: Types.ObjectId | null;
-
-  @Prop({
-    type: mongoose.Schema.Types.ObjectId,
     ref: 'Company',
     required: true,
     index: true,
@@ -44,7 +37,6 @@ export const CategoryModelConstants: { [K in keyof Category]-?: K } = {
   name: 'name',
   code: 'code',
   description: 'description',
-  parentId: 'parentId',
   companyId: 'companyId',
   isActive: 'isActive',
 };
