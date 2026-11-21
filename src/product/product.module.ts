@@ -4,6 +4,7 @@ import { ProductController } from './product.controller';
 import { ProductService } from './product.service';
 import { ProductSchema, ProductSchemaName } from '../models/product.schema';
 import { CategoryModule } from '../category/category.module';
+import { SubCategoryModule } from '../sub-category/sub-category.module';
 import { BrandModule } from '../brand/brand.module';
 import { SupplierModule } from '../supplier/supplier.module';
 import { LogModule } from '../log/log.module';
@@ -25,6 +26,7 @@ import { CompanySchema, CompanySchemaName } from '../models/company.schema';
     ]),
     UnitModule,
     CategoryModule,
+    SubCategoryModule,
     BrandModule,
     SupplierModule,
     LogModule,
