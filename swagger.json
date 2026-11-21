@@ -1907,6 +1907,156 @@
         ]
       }
     },
+    "/api/sub-category": {
+      "post": {
+        "operationId": "SubCategoryController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create sub-category",
+        "tags": [
+          "SubCategory"
+        ]
+      },
+      "get": {
+        "operationId": "SubCategoryController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by main category ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get all sub-categories",
+        "tags": [
+          "SubCategory"
+        ]
+      }
+    },
+    "/api/sub-category/{id}": {
+      "get": {
+        "operationId": "SubCategoryController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Get sub-category by ID",
+        "tags": [
+          "SubCategory"
+        ]
+      },
+      "patch": {
+        "operationId": "SubCategoryController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update sub-category",
+        "tags": [
+          "SubCategory"
+        ]
+      },
+      "delete": {
+        "operationId": "SubCategoryController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete sub-category",
+        "tags": [
+          "SubCategory"
+        ]
+      }
+    },
     "/api/brand": {
       "post": {
         "operationId": "BrandController_create",
@@ -2101,6 +2251,14 @@
           },
           {
             "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subCategoryId",
             "required": false,
             "in": "query",
             "schema": {
@@ -5249,9 +5407,6 @@
           "description": {
             "type": "string"
           },
-          "parentId": {
-            "type": "string"
-          },
           "isActive": {
             "type": "boolean"
           }
@@ -5272,11 +5427,72 @@
           "description": {
             "type": "string"
           },
-          "parentId": {
-            "type": "string"
-          },
           "isActive": {
             "type": "boolean"
+          }
+        }
+      },
+      "CreateSubCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Sub category name",
+            "example": "Wheat Flour"
+          },
+          "code": {
+            "type": "string",
+            "description": "Sub category code",
+            "example": "SUB-FLOUR-01"
+          },
+          "description": {
+            "type": "string",
+            "description": "Sub category description",
+            "example": "All types of wheat flour"
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "Main Category ID",
+            "example": "65f987654321abcdef654321"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true,
+            "example": true
+          }
+        },
+        "required": [
+          "name",
+          "categoryId"
+        ]
+      },
+      "UpdateSubCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Sub category name",
+            "example": "Wheat Flour"
+          },
+          "code": {
+            "type": "string",
+            "description": "Sub category code",
+            "example": "SUB-FLOUR-01"
+          },
+          "description": {
+            "type": "string",
+            "description": "Sub category description",
+            "example": "All types of wheat flour"
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "Main Category ID",
+            "example": "65f987654321abcdef654321"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true,
+            "example": true
           }
         }
       },
@@ -5319,6 +5535,11 @@
             "description": "Product name",
             "example": "Fortune Sunflower Oil 1L"
           },
+          "aliasName": {
+            "type": "string",
+            "description": "Alias name",
+            "example": "Fortune Oil 1L"
+          },
           "image": {
             "type": "string",
             "description": "Product image URL or path",
@@ -5339,6 +5560,11 @@
             "description": "Category ID",
             "example": "65f987654321abcdef654321"
           },
+          "subCategoryId": {
+            "type": "string",
+            "description": "Sub Category ID",
+            "example": "65f987654321abcdef654325"
+          },
           "brandId": {
             "type": "string",
             "description": "Brand ID",
@@ -5353,6 +5579,11 @@
             "type": "string",
             "description": "Supplier ID",
             "example": "65f987654321abcdef654324"
+          },
+          "description": {
+            "type": "string",
+            "description": "Product description or details",
+            "example": "Enter product description.."
           }
         },
         "required": [
@@ -5379,6 +5610,12 @@
             "default": 0,
             "description": "VAT percentage rate",
             "example": 5
+          },
+          "mrp": {
+            "type": "number",
+            "default": 0,
+            "description": "MRP (Maximum Retail Price)",
+            "example": 12
           },
           "profitMargin": {
             "type": "number",
@@ -5430,10 +5667,107 @@
             "description": "Low stock alert threshold",
             "example": 10
           },
+          "reorderQuantity": {
+            "type": "number",
+            "default": 0,
+            "description": "Reorder quantity",
+            "example": 20
+          },
+          "allowSellingWhenOutOfStock": {
+            "type": "boolean",
+            "default": false,
+            "description": "Allow selling when out of stock",
+            "example": false
+          },
           "description": {
             "type": "string",
             "description": "Product description or details",
-            "example": "Enter product details, specification, or compatibility..."
+            "example": "Enter product details..."
+          }
+        }
+      },
+      "BatchItemDto": {
+        "type": "object",
+        "properties": {
+          "batchNumber": {
+            "type": "string",
+            "description": "Batch or Lot Number",
+            "example": "500ml"
+          },
+          "expiryDate": {
+            "format": "date-time",
+            "type": "string",
+            "description": "Expiry date ISO string",
+            "example": "2026-12-31"
+          },
+          "batchQty": {
+            "type": "number",
+            "default": 0,
+            "description": "Quantity for this batch",
+            "example": 10
+          }
+        }
+      },
+      "ExpiryTrackingDto": {
+        "type": "object",
+        "properties": {
+          "enableExpiryTracking": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable expiry date tracking",
+            "example": false
+          },
+          "batches": {
+            "description": "List of product batch/lot items",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BatchItemDto"
+            }
+          },
+          "expiryAlertBefore": {
+            "type": "string",
+            "default": "15 Days",
+            "description": "Expiry alert threshold before date",
+            "example": "15 Days"
+          },
+          "blockExpiredSales": {
+            "type": "boolean",
+            "default": false,
+            "description": "Block sales of expired products",
+            "example": false
+          }
+        }
+      },
+      "AdvancedInfoDto": {
+        "type": "object",
+        "properties": {
+          "serialNumber": {
+            "type": "string",
+            "description": "Serial Number / IMEI",
+            "example": "SN123456789"
+          },
+          "warrantyPeriod": {
+            "type": "string",
+            "default": "No Warranty",
+            "description": "Warranty period",
+            "example": "No Warranty"
+          },
+          "returnPeriod": {
+            "type": "string",
+            "default": "7 Days",
+            "description": "Return period",
+            "example": "7 Days"
+          },
+          "availableAtPos": {
+            "type": "boolean",
+            "default": true,
+            "description": "Available at POS billing",
+            "example": true
+          },
+          "internalNotes": {
+            "type": "string",
+            "description": "Internal notes or remarks",
+            "example": "Fragile item, handle with care"
           }
         }
       },
@@ -5461,6 +5795,22 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/InventoryManagementDto"
+              }
+            ]
+          },
+          "expiryTracking": {
+            "description": "Expiry tracking configuration and batches",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExpiryTrackingDto"
+              }
+            ]
+          },
+          "advancedInfo": {
+            "description": "Advanced product options",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdvancedInfoDto"
               }
             ]
           },
@@ -5524,6 +5874,22 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/InventoryManagementDto"
+              }
+            ]
+          },
+          "expiryTracking": {
+            "description": "Expiry tracking configuration and batches",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExpiryTrackingDto"
+              }
+            ]
+          },
+          "advancedInfo": {
+            "description": "Advanced product options",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdvancedInfoDto"
               }
             ]
           },
