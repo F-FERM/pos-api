@@ -1,7 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  IsArray,
   IsBoolean,
+  IsDateString,
   IsMongoId,
   IsNotEmpty,
   IsNumber,
@@ -20,6 +22,14 @@ export class BasicInfoDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @ApiPropertyOptional({
+    description: 'Alias name',
+    example: 'Fortune Oil 1L',
+  })
+  @IsOptional()
+  @IsString()
+  aliasName?: string;
 
   @ApiPropertyOptional({
     description: 'Product image URL or path',
@@ -54,6 +64,14 @@ export class BasicInfoDto {
   categoryId?: string;
 
   @ApiPropertyOptional({
+    description: 'Sub Category ID',
+    example: '65f987654321abcdef654325',
+  })
+  @IsOptional()
+  @IsMongoId()
+  subCategoryId?: string;
+
+  @ApiPropertyOptional({
     description: 'Brand ID',
     example: '65f987654321abcdef654323',
   })
@@ -76,6 +94,14 @@ export class BasicInfoDto {
   @IsOptional()
   @IsMongoId()
   supplierId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Product description or details',
+    example: 'Enter product description..',
+  })
+  @IsOptional()
+  @IsString()
+  description?: string;
 }
 
 /* ====================== TAB 2: PRICING & TAX DTO ====================== */
@@ -107,6 +133,16 @@ export class PricingAndTaxDto {
   @IsNumber()
   @Min(0)
   vatRate?: number;
+
+  @ApiPropertyOptional({
+    default: 0,
+    description: 'MRP (Maximum Retail Price)',
+    example: 12.0,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  mrp?: number;
 
   @ApiPropertyOptional({
     default: 0,
@@ -179,12 +215,145 @@ export class InventoryManagementDto {
   lowStockAlert?: number;
 
   @ApiPropertyOptional({
+    default: 0,
+    description: 'Reorder quantity',
+    example: 20,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  reorderQuantity?: number;
+
+  @ApiPropertyOptional({
+    default: false,
+    description: 'Allow selling when out of stock',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  allowSellingWhenOutOfStock?: boolean;
+
+  @ApiPropertyOptional({
     description: 'Product description or details',
-    example: 'Enter product details, specification, or compatibility...',
+    example: 'Enter product details...',
   })
   @IsOptional()
   @IsString()
   description?: string;
+}
+
+/* ====================== TAB 4: EXPIRY TRACKING DTO ====================== */
+export class BatchItemDto {
+  @ApiPropertyOptional({
+    description: 'Batch or Lot Number',
+    example: '500ml',
+  })
+  @IsOptional()
+  @IsString()
+  batchNumber?: string;
+
+  @ApiPropertyOptional({
+    description: 'Expiry date ISO string',
+    example: '2026-12-31',
+  })
+  @IsOptional()
+  @IsDateString()
+  expiryDate?: Date;
+
+  @ApiPropertyOptional({
+    default: 0,
+    description: 'Quantity for this batch',
+    example: 10,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  batchQty?: number;
+}
+
+export class ExpiryTrackingDto {
+  @ApiPropertyOptional({
+    default: false,
+    description: 'Enable expiry date tracking',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  enableExpiryTracking?: boolean;
+
+  @ApiPropertyOptional({
+    type: [BatchItemDto],
+    description: 'List of product batch/lot items',
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => BatchItemDto)
+  batches?: BatchItemDto[];
+
+  @ApiPropertyOptional({
+    default: '15 Days',
+    description: 'Expiry alert threshold before date',
+    example: '15 Days',
+  })
+  @IsOptional()
+  @IsString()
+  expiryAlertBefore?: string;
+
+  @ApiPropertyOptional({
+    default: false,
+    description: 'Block sales of expired products',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  blockExpiredSales?: boolean;
+}
+
+/* ====================== TAB 5: ADVANCED INFO DTO ====================== */
+export class AdvancedInfoDto {
+  @ApiPropertyOptional({
+    description: 'Serial Number / IMEI',
+    example: 'SN123456789',
+  })
+  @IsOptional()
+  @IsString()
+  serialNumber?: string;
+
+  @ApiPropertyOptional({
+    default: 'No Warranty',
+    description: 'Warranty period',
+    example: 'No Warranty',
+  })
+  @IsOptional()
+  @IsString()
+  warrantyPeriod?: string;
+
+  @ApiPropertyOptional({
+    default: '7 Days',
+    description: 'Return period',
+    example: '7 Days',
+  })
+  @IsOptional()
+  @IsString()
+  returnPeriod?: string;
+
+  @ApiPropertyOptional({
+    default: true,
+    description: 'Available at POS billing',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  availableAtPos?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Internal notes or remarks',
+    example: 'Fragile item, handle with care',
+  })
+  @IsOptional()
+  @IsString()
+  internalNotes?: string;
 }
 
 /* ====================== MAIN CREATE PRODUCT DTO ====================== */
@@ -215,6 +384,24 @@ export class CreateProductDto {
   @ValidateNested()
   @Type(() => InventoryManagementDto)
   inventoryManagement: InventoryManagementDto;
+
+  @ApiPropertyOptional({
+    type: () => ExpiryTrackingDto,
+    description: 'Expiry tracking configuration and batches',
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ExpiryTrackingDto)
+  expiryTracking?: ExpiryTrackingDto;
+
+  @ApiPropertyOptional({
+    type: () => AdvancedInfoDto,
+    description: 'Advanced product options',
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => AdvancedInfoDto)
+  advancedInfo?: AdvancedInfoDto;
 
   /* Weigh Scale Attributes */
   @ApiPropertyOptional({
